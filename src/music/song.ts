@@ -72,7 +72,8 @@ export interface Song {
   sections: Section[];
 }
 
-export type StepStatus = 'done' | 'hit' | 'missed';
+/** `stumbled`: riktig til slutt, men med bom først (Vent på meg). */
+export type StepStatus = 'done' | 'hit' | 'stumbled' | 'missed';
 export type Judgement = 'hit' | 'miss';
 
 interface Placed {
@@ -90,6 +91,10 @@ export type Step = (NoteEvent | ChordEvent) & Placed & {
   dur?: number;
   /** Tidsvindu i sekunder til hver side. */
   win?: number;
+  /** Bommet minst én gang før riktig tone (Vent på meg). */
+  stumbled?: boolean;
+  /** Avvik i sekunder for et treff i takt-modus. Positivt er for sent. */
+  offset?: number;
 };
 
 export type Item = Step | (RestEvent & Placed);

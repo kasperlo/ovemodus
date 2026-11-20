@@ -12,8 +12,14 @@
   --ink: #f2f4ff;
   --muted: #a9b2e6;
   --finger: #9cbcff;
-  --ok: #3ad98b;
+  --ok: #3ad98b;   /* tilkobling og status */
   --bad: #ff5c5c;
+  /* Spilt riktig, nølt/utenfor takt og bom. Blå og oransje skilles også av fargeblinde. *-ink er for notearket (lys bakgrunn). */
+  --done: #6ea8ff;
+  --done-ink: #1f5fd6;
+  --slip: #ffa24a;
+  --slip-ink: #c25a00;
+  --bad-ink: #c62f2f;
   --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --body: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color-scheme: dark;
@@ -207,7 +213,11 @@ button:focus-visible, select:focus-visible, input:focus-visible {
 .chip.chord .nm { font-size: 0.9rem; }
 .chip.chord .fg { font-size: 0.62rem; white-space: nowrap; }
 .chip.rest { background: transparent; border-style: dashed; opacity: 0.45; }
-.chip.done, .chip.hit { background: rgba(58,217,139,0.16); border-color: rgba(58,217,139,0.45); color: var(--ok); }
+.chip.done, .chip.hit { background: rgba(110,168,255,0.18); border-color: rgba(110,168,255,0.5); color: var(--done); }
+.chip.stumbled { background: rgba(255,162,74,0.16); border-color: rgba(255,162,74,0.55); color: var(--slip); }
+.chip.early .nm::before, .chip.late .nm::after { color: var(--slip); font-size: 0.7em; }
+.chip.early .nm::before { content: "◂"; }
+.chip.late .nm::after { content: "▸"; }
 .chip.missed { background: rgba(255,92,92,0.16); border-color: rgba(255,92,92,0.55); color: var(--bad); }
 .chip.current { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); transform: translateY(-2px); box-shadow: 0 0 0 3px rgba(255,204,51,0.3); }
 .chip.current .fg { color: #5b4400; }
@@ -238,7 +248,7 @@ button:focus-visible, select:focus-visible, input:focus-visible {
 .key.black.demo { background: linear-gradient(#7aa2ff, #3a64d8); }
 .key.white.down { background: #d9d5c7; }
 .key.black.down { background: #4a4d5c; }
-.key.hit { background: var(--ok) !important; }
+.key.hit { background: var(--done) !important; }
 .key.wrong { background: var(--bad) !important; }
 .heard { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; margin: 10px 2px 0; font-size: 0.95rem; color: var(--muted); }
 .heard strong { color: var(--ink); font-family: var(--display); font-size: 1.1rem; letter-spacing: 0.03em; }
@@ -264,8 +274,13 @@ button:focus-visible, select:focus-visible, input:focus-visible {
 .sheet svg { display: block; }
 .sheet .abc-cursor { fill: var(--gold); opacity: 0.6; transition: x 0.12s, y 0.12s; }
 .sheet .abc-cursor.bad { fill: var(--bad); opacity: 0.55; }
-.sheet .n-done, .sheet .n-done * { fill: #12814a; }
-.sheet .n-missed, .sheet .n-missed * { fill: #c62f2f; }
+.sheet .n-done > :not(.abc-label), .sheet .abcjs-beam-elem.n-done { fill: var(--done-ink); }
+.sheet .n-stumbled > :not(.abc-label) { fill: var(--slip-ink); }
+.sheet .n-missed > :not(.abc-label) { fill: var(--bad-ink); }
+.sheet .abc-timing { fill: var(--slip-ink); }
+.sheet .abc-ghost { fill: var(--bad-ink); opacity: 0.6; animation: ghost-in 0.18s ease-out; }
+.sheet .abc-ghost line { stroke: var(--bad-ink); stroke-width: 1; }
+@keyframes ghost-in { from { opacity: 0; } }
 .sheet .abcjs-note { cursor: pointer; }
 .sheet .abcjs-lyric, .sheet .abcjs-annotation { font-family: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-weight: 700; }
 .sheet-msg { padding: 12px; color: #444; }

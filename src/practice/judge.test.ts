@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CH, N, q } from '../music/song';
-import { hitWindow, matches, timingText } from './judge';
+import { hitWindow, matches, timingClass, timingText } from './judge';
 
 describe('matches', () => {
   const a4 = N('A4', q, 1);
@@ -31,6 +31,15 @@ describe('hitWindow', () => {
     expect(hitWindow(e8, e8)).toBeCloseTo(0.15);
     expect(hitWindow(4 * e8, e8)).toBeCloseTo(0.2);
     expect(hitWindow(0.5 * (30 / 220), 30 / 220)).toBeCloseTo(0.09);
+  });
+});
+
+describe('timingClass', () => {
+  it('merker toner som er mer enn 30 ms for tidlig eller sent', () => {
+    expect(timingClass(0.029)).toBeNull();
+    expect(timingClass(-0.029)).toBeNull();
+    expect(timingClass(0.031)).toBe('late');
+    expect(timingClass(-0.05)).toBe('early');
   });
 });
 

@@ -1,5 +1,6 @@
 import type { Section, Step, StepStatus } from '../music/song';
-import { sheet, paintSheet, sheetCursor } from '../notation/sheet';
+import { clearOverlay, sheet, paintSheet, paintTiming, sheetCursor } from '../notation/sheet';
+import { timingClass } from '../practice/judge';
 import { avgOffsetMs, currentIndex, elapsed, mic, run, state, type ClueAction } from '../state';
 import { taktRecord, waitRecord } from '../storage';
 import { els, segButtons } from './dom';
@@ -24,13 +25,20 @@ export function markStep(si: number, status: StepStatus): void {
   if (st) st.status = status;
   const c = chipEls[si];
   if (c) { c.classList.remove('shake'); c.classList.add(status); }
-  paintSheet(si, status);
+  paintSheet(si, status, state.model.steps);
+}
+
+export function markTiming(si: number, offsetS: number): void {
+  const kind = timingClass(offsetS);
+  if (kind) chipEls[si]?.classList.add(kind);
+  paintTiming(si, offsetS);
 }
 
 export function clearMarks(): void {
   state.model.steps.forEach(st => { st.status = null; });
-  chipEls.forEach(c => c.classList.remove('done', 'hit', 'missed', 'current', 'shake'));
-  sheet.notes.forEach((_n, i) => paintSheet(i, null));
+  chipEls.forEach(c => c.classList.remove('done', 'hit', 'stumbled', 'missed', 'current', 'shake', 'early', 'late'));
+  sheet.notes.forEach((_n, i) => paintSheet(i, null, state.model.steps));
+  clearOverlay();
 }
 
 export function shakeStep(si: number): void {

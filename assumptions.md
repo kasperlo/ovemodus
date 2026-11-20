@@ -44,3 +44,11 @@
 
 ### Ikke testet
 - Ekte iPad: mikrofon i Safari, skjermlås og «Legg til på Hjem-skjerm». Testene bruker Chromium med iPad-størrelser.
+
+## 2026-11-20 – Notearket: farger og tilbakemelding
+
+- **Farge for riktig spilt:** blå (`--done-ink: #1f5fd6` på notearket, `--done: #6ea8ff` på mørk bakgrunn) i stedet for grønn. Grunner: blå og oransje skilles også av fargeblinde, og blått passer appens farger. Grønt er beholdt for status og tilkobling.
+- **Bjelker:** blir blå når alle notene under er spilt (også oransje). En bjelke over en note som er bom, forblir svart.
+- **Timingmerker:** vises fra 30 ms avvik, samme grense som «Timingen sitter.». De står under tonenavnet, fordi de kolliderte med nabonoter da de stod ved siden av.
+- **Spøkelsesnote:** bare i «Vent på meg». I takt-modus ville den blinket forbi for fort til å være nyttig. Når alle oktaver godtas, vises den i oktaven nærmest tonen man skulle spille. Ellers vises den der den ble spilt.
+- **Lagdeling:** `notation/sheet.ts` bruker `timingClass` fra `practice/judge.ts`. Det er en ren funksjon, så avhengigheten er akseptert i stedet for å duplisere grensen.

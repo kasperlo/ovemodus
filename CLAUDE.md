@@ -6,7 +6,7 @@ Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, vise
 
 - Appen er Vite + TypeScript uten rammeverk (`index.html`, `src/`). abcjs 6.4.4 kommer fra npm.
 - `prototype/ovemodus.html` er den opprinnelige appen i én fil. Den er referansen for oppførselen og kan fortsatt testes (`npm run test:e2e:prototype`).
-- `tests/e2e/` har 16 Playwright-tester som kjører mot `vite preview`. To av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`. De 6 i `ipad.spec.ts` (layout, skjermlås, PWA) hoppes over mot prototypen.
+- `tests/e2e/` har 18 Playwright-tester som kjører mot `vite preview`. To av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`. De 8 i `ipad.spec.ts` (layout, skjermlås, PWA) og `sheet.spec.ts` (farger, timingmerker, spøkelsesnote) hoppes over mot prototypen.
 - `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon, `build`, `toAbc` og dømming.
 - `noter/` har LilyPond-kildene til notearket (PDF), lydfilene (MP3) og skriptet som lager dem.
 
@@ -36,7 +36,7 @@ Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpne
 - **Vent på meg:** står stille til riktig tone kommer. Tid måles fra første riktige tone. Klikk på en note eller bokstavbrikke for å starte derfra (da lagres ikke rekord).
 - **Spill i takt:** én takt med innteller, metronom, valgfri venstre hånd. Hver tone dømmes treff/bom innenfor et tidsvindu. Resultat i prosent og gjennomsnittlig timing. Rekorden er høyeste tempo med minst 90 % treff.
 - **Hør hvordan det går:** appen spiller delen selv og viser tangentene.
-- **Visning:** noteark (abcjs) med fingersetting over og tonenavn under, eller bokstavbrikker. Gul markør = neste tone, grønn = riktig, rød = bom.
+- **Visning:** noteark (abcjs) med fingersetting over og tonenavn under, eller bokstavbrikker. Gul markør = neste tone, blå = riktig, oransje = riktig etter bom (Vent på meg), rød = bom. I takt-modus står ◂ (for tidlig) eller ▸ (for sent) under tonenavnet når avviket er minst 30 ms. Spiller du feil i «Vent på meg», vises tonen du spilte som en blek rød spøkelsesnote ved siden av.
 - Innstillinger og rekorder lagres i `localStorage` under nøkkelen `dovregubben-ovemodus-v1`.
 - **iPad på notestativet:** under 1040 px kan oppsettet felles sammen til én linje (`#btnSetup`, huskes i `setupOpen`). Fra 740 px står neste tone og noter side om side. Over 1040 px er layouten som før, og oppsettet vises alltid.
 - **Skjermlås:** `src/wakeLock.ts` holder skjermen våken mens mikrofonen er på, MIDI er koblet til eller en runde spilles.
@@ -75,6 +75,11 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - Kobling note ↔ tone: noteelementene i `tune.lines[].staff[0].voices[0]` (uten pauser) i rekkefølge. Antallet sjekkes mot `steps` (`sheet.ok`).
 - Markøren er et `<rect>` lagt først i SVG-en, plassert med `getBBox()` på `abselem.elemset`. `getBBox` virker ikke på skjulte elementer, så arket tegnes først når det er synlig, og tegnes på nytt etter at fontene har lastet.
 - abcjs fanger klikk på hele SVG-en. I tester må man klikke på koordinatene til noten, ikke på elementet.
+- Hver note er en `<g class="abcjs-note abcjs-pN">`. Fargene settes som klasse på den gruppen (`n-done`, `n-stumbled`, `n-missed`).
+- Fingertall og etiketter («Del A») er begge `abcjs-annotation`. Etiketter får klassen `abc-label` (alt som ikke er sifre) og farges ikke.
+- Bjelker er egne elementer uten kobling til notene. `findBeams` kobler dem via x-posisjonen til notehalsene. En bjelke blir blå når alle notene under den er spilt.
+- Spøkelsesnoten plasseres fra notehodet til noten man skulle spille: ett diatonisk trinn er en åttedel av høyden på notesystemet (`sheet.halfSpace`). Logikken står i `src/notation/staff.ts`.
+- Timingmerker, spøkelsesnote og markør ligger i egne SVG-elementer (`abc-overlay`, `abc-cursor`) og lages på nytt når arket tegnes.
 
 ## Testkroken
 
@@ -112,7 +117,7 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 ## Konvensjoner
 
 - All tekst i appen er på norsk bokmål. Kode og identifikatorer på engelsk, kommentarer gjerne på norsk.
-- Designet er et gameshow-brett: dyp blå flate, gull for «det du skal gjøre nå», grønt og rødt bare for treff og bom. Fargene ligger som tokens i `:root`.
+- Designet er et gameshow-brett: dyp blå flate, gull for «det du skal gjøre nå», blått for riktig spilt, oransje for nøling og timing, rødt for bom. Blått og oransje er valgt fordi fargeblinde også skiller dem. Grønt brukes bare for tilkobling og status («Mikrofon på»). Fargene ligger som tokens i `:root`.
 - Tydelig fokusmarkering, `prefers-reduced-motion` respekteres.
 - Bokstavnavn følger engelsk stavemåte (B, B♭); notearket sier at B heter H på norsk.
 

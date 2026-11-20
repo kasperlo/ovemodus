@@ -13,7 +13,15 @@ export const hitWindow = (dur: number, e8: number): number => Math.max(0.09, Mat
 /** Rekord i takt-modus krever minst så mange prosent treff. */
 export const RECORD_MIN_PCT = 90;
 
+/** Avvik mindre enn dette regnes som i takt, både i snittet og per note. */
+export const ON_TIME_S = 0.03;
+
+export function timingClass(offsetS: number): 'early' | 'late' | null {
+  if (Math.abs(offsetS) < ON_TIME_S) return null;
+  return offsetS > 0 ? 'late' : 'early';
+}
+
 export function timingText(avgOffsetMs: number): string {
   const a = avgOffsetMs;
-  return Math.abs(a) < 30 ? 'Timingen sitter.' : a > 0 ? `I snitt ${Math.round(a)} ms for sent.` : `I snitt ${Math.round(-a)} ms for tidlig.`;
+  return Math.abs(a) < ON_TIME_S * 1000 ? 'Timingen sitter.' : a > 0 ? `I snitt ${Math.round(a)} ms for sent.` : `I snitt ${Math.round(-a)} ms for tidlig.`;
 }

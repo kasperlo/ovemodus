@@ -3,6 +3,7 @@ import { elapsed, spell, state } from '../state';
 import { setWaitRecord, waitRecord } from '../storage';
 import { els } from '../ui/dom';
 import { flashKey } from '../ui/keyboard';
+import { clearGhost, showGhost } from '../notation/sheet';
 import { celebrate, fmtSec, markStep, refresh, renderStats, setHint, shakeStep } from '../ui/view';
 import type { InputEvent } from './input';
 import { matches } from './judge';
@@ -20,7 +21,8 @@ export function judgeWait(m: number, ev: InputEvent): void {
     if (state.tStart == null) state.tStart = performance.now();
     state.hits++;
     state.lastAcc = m;
-    markStep(step.si, 'done');
+    clearGhost();
+    markStep(step.si, step.stumbled ? 'stumbled' : 'done');
     flashKey(m, 'hit');
     state.cur++;
     if (state.cur >= state.model.steps.length) finishWait();
@@ -29,8 +31,10 @@ export function judgeWait(m: number, ev: InputEvent): void {
   }
   if (mic && ev.phase !== 'sustain') return; // vent til tonen er stabil før vi kaller det bom
   state.misses++;
+  step.stumbled = true;
   flashKey(m, 'wrong');
   shakeStep(step.si);
+  showGhost(step, m, els.optOct.checked);
   setHint(`Du spilte ${spell(m)}. Neste er ${step.name}.`, 'bad');
   renderStats();
 }
@@ -49,7 +53,7 @@ function finishWait(): void {
   state.result = {
     label: 'Ferdig!', big: fmtSec(secs), small: true,
     sub: `${state.partial ? state.hits + ' av ' + n : n} toner · ${state.misses} bom`,
-    then: state.misses === 0 ? 'Feilfritt. Prøv den i takt.' : 'Ta en runde til, og se om bommene forsvinner.',
+    then: state.misses === 0 ? 'Feilfritt. Prøv den i takt.' : 'Oransje noter viser hvor du bommet. Ta en runde til, og se om de forsvinner.',
     badge,
     actions: [['Én gang til', () => { resetProgress(); refresh(); }, true], ['Prøv i takt', () => setMode('takt')]]
   };

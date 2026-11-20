@@ -4,7 +4,7 @@ import { avgOffsetMs, mic, run, spell, state, type RunKind } from '../state';
 import { setTaktRecord, taktRecord } from '../storage';
 import { els } from '../ui/dom';
 import { flashKey } from '../ui/keyboard';
-import { celebrate, markStep, refresh, setHint } from '../ui/view';
+import { celebrate, markStep, markTiming, refresh, setHint } from '../ui/view';
 import { keepAwake } from '../wakeLock';
 import type { InputEvent } from './input';
 import { RECORD_MIN_PCT, hitWindow, matches, timingText } from './judge';
@@ -104,8 +104,10 @@ export function judgeTakt(m: number, t: number, ev: InputEvent): void {
     best.judged = 'hit';
     state.hits++;
     state.lastAcc = m;
-    run.offsets.push(tt - best.t!);
+    best.offset = tt - best.t!;
+    run.offsets.push(best.offset);
     markStep(best.si, 'hit');
+    markTiming(best.si, best.offset);
     flashKey(m, 'hit');
   } else {
     if (ev.src === 'mic' && !ev.attack && state.lastAcc != null && pc(m) === pc(state.lastAcc)) return;
