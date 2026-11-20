@@ -6,7 +6,7 @@ Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, vise
 
 - Appen er Vite + TypeScript uten rammeverk (`index.html`, `src/`). abcjs 6.4.4 kommer fra npm.
 - `prototype/ovemodus.html` er den opprinnelige appen i én fil. Den er referansen for oppførselen og kan fortsatt testes (`npm run test:e2e:prototype`).
-- `tests/e2e/` har 9 Playwright-tester som kjører mot `vite preview`. To av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`.
+- `tests/e2e/` har 10 Playwright-tester som kjører mot `vite preview`. To av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`.
 - `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon, `build`, `toAbc` og dømming.
 - `noter/` har LilyPond-kildene til notearket (PDF), lydfilene (MP3) og skriptet som lager dem.
 

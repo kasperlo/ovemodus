@@ -90,3 +90,15 @@ test('demo spiller av og stopper av seg selv', async ({ page }) => {
   await expect(page.locator('#clueLabel')).toHaveText('Hør etter');
   await expect.poll(() => page.evaluate(() => window.ovemodus.state.runActive), { timeout: 10_000 }).toBe(false);
 });
+
+test('bokstavvisningen skjuler notearket, og notevisningen viser det igjen', async ({ page }) => {
+  const sheet = page.locator('#sheet'), strip = page.locator('#strip');
+  await expect(sheet).toBeVisible();
+  await page.click('#segView button[data-view="bokstaver"]');
+  await expect(sheet).toBeHidden();
+  await expect(strip).toBeVisible();
+  await page.click('#segView button[data-view="noter"]');
+  await expect(sheet).toBeVisible();
+  await expect(strip).toBeHidden();
+  expect(await page.evaluate(() => window.ovemodus.state.sheet.ok)).toBe(true);
+});

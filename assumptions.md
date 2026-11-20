@@ -17,9 +17,9 @@
 - `build` og `toAbc` er sammenlignet direkte mot prototypens kode for alle 5 deler × 2 linjebredder × med/uten venstre hånd: identiske (engangstest, ikke sjekket inn).
 - Skjermbilder ved 1366×900: like for øyet. Notearket har subpikselforskjeller i tekst. Bokstaver-visningen er 1 px høyere. Sannsynlig årsak er at abcjs nå kommer fra npm-pakken (`index.js`) i stedet for `abcjs_basic.min.js`.
 
-### Funnet, ikke rettet (eksisterer også i prototypen)
-- **Notearket skjules ikke i «Bokstaver»-visningen.** abcjs med `responsive: 'resize'` setter `display: inline-block` inline på `#sheet`, og det overstyrer `[hidden]`. Begge visningene vises da samtidig.
-- **Oppfølging:** Rett i et eget steg, for eksempel med `.sheet[hidden] { display: none !important; }`, eller ved å legge abcjs i et indre element.
+### Funnet og rettet etterpå (fantes også i prototypen)
+- **Notearket ble ikke skjult i «Bokstaver»-visningen.** abcjs med `responsive: 'resize'` setter `display: inline-block` inline på `#sheet`, og det overstyrte `[hidden]`.
+- **Beslutning:** `display: none !important` på `.sheet[hidden]` og `.strip[hidden]`, både i `src/styles.css` og i prototypen. Prototypen fikk samme retting så den fortsatt kan brukes som referanse og består de samme testene. Dekkes av e2e-testen «bokstavvisningen skjuler notearket …».
 
 ### Bundle-størrelse
 - Vite advarer om en chunk over 500 kB (abcjs er ca. 480 kB av den). Prototypen var like stor. Ikke håndtert nå. Vurderes når PWA-en lages i steg 3.

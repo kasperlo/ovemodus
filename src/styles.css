@@ -237,7 +237,8 @@ button:focus-visible, select:focus-visible, input:focus-visible {
 .music-bar .opt[hidden] { display: none; }
 .music-tip { margin-left: auto; font-size: 0.85rem; color: var(--muted); }
 .sheet { max-height: 318px; overflow-y: auto; padding: 4px 6px; background: #fbf8ef; color: #15161c; border-radius: 6px; }
-.sheet[hidden], .strip[hidden] { display: none; }
+/* abcjs (responsive: 'resize') setter display inline på #sheet, og det overstyrer [hidden] uten !important. */
+.sheet[hidden], .strip[hidden] { display: none !important; }
 .sheet svg { display: block; }
 .sheet .abc-cursor { fill: var(--gold); opacity: 0.6; transition: x 0.12s, y 0.12s; }
 .sheet .abc-cursor.bad { fill: var(--bad); opacity: 0.55; }
