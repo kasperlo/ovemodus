@@ -71,3 +71,46 @@ test('mikrofontest: viser innstillinger, kalibrerer, og del A gjenkjennes med ka
     await second.close();
   }
 });
+
+test('mikrofontest: svak lyd som på iPad (−17 dB) blir hørt med kalibrert følsomhet', async ({ playwright }) => {
+  // Opptaket er del A dempet 17 dB, samme nivå som iPad-mikrofonen målte i notestativet (svake toner rundt −59 dB).
+  // Med «Høy» høres nesten ingen toner.
+  test.setTimeout(90_000);
+  let calGate: number;
+
+  const first = await playwright.chromium.launch({ args: fakeMicArgs('del-a-svak-ipad.wav') });
+  try {
+    const page = await newPage(first);
+    await page.goto(appUrl());
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    await page.click('#btnDiag');
+    // Trykker med en gang, før mikrofonen er klar: kalibreringen skal vente på den
+    await page.click('#btnCal');
+    await expect(page.locator('#diagStep')).toHaveText('Ferdig.', { timeout: 15_000 });
+    await expect(page.locator('#diagResult')).toContainText('svake');
+    await page.click('#btnUseCal');
+    calGate = await page.evaluate(k => JSON.parse(localStorage.getItem(k)!).settings.calGate, STORE_KEY);
+  } finally {
+    await first.close();
+  }
+
+  const second = await playwright.chromium.launch({ args: fakeMicArgs('del-a-svak-ipad.wav') });
+  try {
+    const page = await newPage(second);
+    await page.goto(appUrl());
+    await page.evaluate(([k, g]) => {
+      localStorage.clear();
+      localStorage.setItem(k as string, JSON.stringify({ settings: { sens: 'kalibrert', calGate: g } }));
+    }, [STORE_KEY, calGate!]);
+    await page.reload();
+    await page.evaluate(() => { window.ovemodus.setSection('delA'); window.ovemodus.setMode('vent'); });
+    await page.click('#btnMic');
+    await expect.poll(() => page.evaluate(() => window.ovemodus.state.finished), { timeout: 30_000 }).toBe(true);
+    const st = await page.evaluate(() => window.ovemodus.state);
+    expect(st.cur).toBe(26);
+    expect(st.misses).toBe(0);
+  } finally {
+    await second.close();
+  }
+});

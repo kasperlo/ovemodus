@@ -60,3 +60,12 @@
 - **Kalibrert grense:** maks av 3 × støy (median i 2 s stillhet) og 0,4 × svake toner (25. persentil av rammer med sikker tone), mellom 0,0008 og 0,03. På opptaket av del A blir grensen −53 dB, lavere enn «Høy» (−49 dB). Alle 26 tonene gjenkjennes uten bom (micdiag.spec.ts). Det dynamiske støygulvet (× 3) i mic.ts gjelder fortsatt, så grensen kan ikke havne under støyen i rommet.
 - **Råd:** svake toner under −48 dB (0,004), støy over halvparten av svake toner, eller under 50 % gjenkjenning gir råd i klartekst.
 - **Ikke verifisert:** hva Safari på iPad rapporterer og gjør. Det er hele poenget med testen. Kasper kjører den på iPaden og limer inn rapporten.
+
+## 2026-11-20 – iPad-mikrofonen: måling og beslutning
+
+- **Rapport fra iPaden** (keyboard på fullt volum, iPad liggende i notestativet): ekkofjerning av, støydemping og automatisk volum ikke oppgitt, 48 kHz. Stillhet −91 dB, svake toner −59 dB, 97 % gjenkjent, anbefalt grense −62 dB.
+- **Konklusjon:** tonegjenkjenningen virker på iPaden. Lyden er for svak for de faste følsomhetene. «Høy» (−49 dB) ligger 10 dB over de svake tonene.
+- **Gjenskapt:** del A dempet 17 dB gir samme målinger. «Høy» hører 1 av 26 toner, «Kalibrert» (−62 dB) hører 26 av 26 uten bom. Også dempet 20 og 23 dB gir 26/26 med kalibrert følsomhet.
+- **Beslutning:** ikke senke minimumsgrensene i mic.ts (støygulv ≥ 0,0003, kalibrert grense ≥ 0,0008) eller endre anslagsgjenkjenningen. Målingene viser at det ikke trengs for del A, og tonegjenkjenningen er den mest følsomme delen av appen.
+- **Oppfølging:** hvis fanfaren («C så C-dur», som trenger anslagsgjenkjenning) bommer på iPaden, er det faste hoppet på 0,001 (−60 dB) i anslagsgjenkjenningen neste mistenkte. Det bør gjøres relativt til grensen.
+- **Rettet:** «Start kalibrering» gjorde ingenting hvis man trykket før mikrofonen var klar. Nå venter den.

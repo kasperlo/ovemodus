@@ -118,9 +118,16 @@ function countdown(text: string, ms: number, done: () => void): void {
   tick();
 }
 
-function startCalibration(): void {
-  if (!mic.on) return;
+let micStarting: Promise<void> | null = null;
+
+async function startCalibration(): Promise<void> {
   els.btnCal.disabled = true;
+  await micStarting;
+  if (!mic.on) {
+    els.diagStep.textContent = 'Mikrofonen er ikke på. Se meldingen under mikrofonknappen.';
+    els.btnCal.disabled = false;
+    return;
+  }
   els.diagResult.innerHTML = '';
   diag.frames = [];
   setDiagMode('sample');
@@ -168,7 +175,11 @@ async function copyReport(): Promise<void> {
 async function openMicDiag(): Promise<void> {
   els.diag.showModal();
   setDiagMode('live');
-  if (!mic.on) await toggleMic();
+  if (!mic.on) {
+    micStarting = toggleMic();
+    await micStarting;
+    micStarting = null;
+  }
   renderSettings();
   renderLive();
   liveTimer = window.setInterval(renderLive, 150);
@@ -185,7 +196,7 @@ function onClose(): void {
 export function initMicDiag(): void {
   ensureCalibratedOption();
   els.btnDiag.addEventListener('click', () => { void openMicDiag(); });
-  els.btnCal.addEventListener('click', startCalibration);
+  els.btnCal.addEventListener('click', () => { void startCalibration(); });
   els.btnCopy.addEventListener('click', () => { void copyReport(); });
   els.diag.addEventListener('close', onClose);
 }

@@ -42,7 +42,7 @@ export function analyzeCalibration(silence: number[], playing: Frame[]): Calibra
   if (!pitched.length) {
     advice.push('Fant ingen toner. Spill litt kraftigere, skru opp volumet på keyboardet eller flytt iPaden nærmere høyttalerne.');
   } else {
-    if (note < 0.004) advice.push('Tonene er svake når de når mikrofonen. Skru opp volumet på keyboardet eller flytt iPaden nærmere høyttalerne.');
+    if (note < 0.004) advice.push('Tonene er svake når de når mikrofonen. «Bruk denne følsomheten» tar høyde for det. Blir toner fortsatt borte, flytt iPaden nærmere høyttalerne.');
     if (noise * 3 > note * 0.5) advice.push('Bakgrunnsstøyen er nesten like sterk som tonene. Finn et roligere sted eller skru opp keyboardet.');
     if (pitchedShare < 0.5) advice.push('Mange toner var vanskelige å kjenne igjen. Bruk en ren pianolyd uten klang eller chorus.');
   }

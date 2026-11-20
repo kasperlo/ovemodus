@@ -6,7 +6,7 @@ Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, vise
 
 - Appen er Vite + TypeScript uten rammeverk (`index.html`, `src/`). abcjs 6.4.4 kommer fra npm.
 - `prototype/ovemodus.html` er den opprinnelige appen i én fil. Den er referansen for oppførselen og kan fortsatt testes (`npm run test:e2e:prototype`).
-- `tests/e2e/` har 19 Playwright-tester som kjører mot `vite preview`. Tre av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`. De 9 i `ipad.spec.ts` (layout, skjermlås, PWA), `sheet.spec.ts` (farger, timingmerker, spøkelsesnote) og `micdiag.spec.ts` (mikrofontest og kalibrering) hoppes over mot prototypen.
+- `tests/e2e/` har 20 Playwright-tester som kjører mot `vite preview`. Fire av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`. De 10 i `ipad.spec.ts` (layout, skjermlås, PWA), `sheet.spec.ts` (farger, timingmerker, spøkelsesnote) og `micdiag.spec.ts` (mikrofontest og kalibrering) hoppes over mot prototypen.
 - `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon, `build`, `toAbc` og dømming.
 - `noter/` har LilyPond-kildene til notearket (PDF), lydfilene (MP3) og skriptet som lager dem.
 
@@ -103,6 +103,7 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - Falsk mikrofon i Chromium: `--use-fake-ui-for-media-stream --use-fake-device-for-media-stream --use-file-for-fake-audio-capture=<fil.wav>%noloop`. Lyden starter når appen kaller `getUserMedia`. Flaggene settes per nettleser, så hver mikrofontest starter sin egen.
 - `tests/fixtures/del-a-hoyre-hand.wav`: høyre hånd i del A, 100 BPM, staccato, 1,5 s stillhet først. Forventet: 26/26, 0 bom.
 - `tests/fixtures/del-a-oktav-ned-feil-tone.wav`: samme en oktav lavere, med en feil F4 (0,45 s) før tone 8. Forventet: 26/26, 1 bom.
+- `tests/fixtures/del-a-svak-ipad.wav`: `del-a-hoyre-hand.wav` dempet 17 dB (`ffmpeg -af volume=-17dB`). Det er samme nivå som iPad-mikrofonen målte i notestativet. Med «Høy» høres 1 av 26 toner, med kalibrert følsomhet alle 26 uten bom.
 - Lydfilene er laget fra `noter/lyd-ovetempo.ly` → MIDI → `noter/scripts/postprocess.py` → fluidsynth (FluidR3_GM, 48 kHz) → ffmpeg (mono, 16 bit, 3 s stillhet til slutt).
 - Testene kjører med én worker fordi takt-testene måler timing.
 
