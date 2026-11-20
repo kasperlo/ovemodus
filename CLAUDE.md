@@ -24,7 +24,7 @@ npm run test:e2e                  # bygger, starter vite preview (port 4173) og 
 npm run test:e2e:prototype        # samme tester mot prototypen
 ```
 
-Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpnes direkte i Chrome eller Edge (`open -a "Google Chrome" prototype/ovemodus.html`). Mikrofonen virker ikke i forhåndsvisninger som kjører i en sandkasse (for eksempel inne i Claude).
+Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpnes direkte i Chrome eller Edge (`open -a "Google Chrome" prototype/ovemodus.html`). Mikrofonen virker ikke i innebygde forhåndsvisninger som kjører i en sandkasse.
 
 ## Hva appen gjør
 

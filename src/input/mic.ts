@@ -125,7 +125,7 @@ export async function toggleMic(): Promise<void> {
     const name = (err as { name?: string } | null)?.name || '';
     setPill(els.pillMic, 'Mikrofon blokkert', 'bad');
     if (name === 'NotAllowedError' || name === 'SecurityError') {
-      setStatus('Nettleseren ga ikke tilgang til mikrofonen. Klikk på mikrofonikonet i adressefeltet, velg «Tillat» og prøv igjen. I forhåndsvisningen i Claude er mikrofonen alltid blokkert.', 'bad');
+      setStatus('Nettleseren ga ikke tilgang til mikrofonen. Klikk på mikrofonikonet i adressefeltet, velg «Tillat» og prøv igjen.', 'bad');
     } else if (name === 'NotFoundError') {
       setStatus('Fant ingen mikrofon. Sjekk at PC-en har en mikrofon som er slått på.', 'bad');
     } else {
