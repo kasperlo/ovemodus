@@ -43,10 +43,10 @@ function finishWait(): void {
   state.finished = true;
   state.tEnd = performance.now();
   const secs = elapsed();
-  const prev = waitRecord(state.sec.id);
+  const prev = waitRecord(state.sec.id, state.hand);
   let badge: string | null = null;
   if (!state.partial && (!prev || secs < prev.time)) {
-    setWaitRecord(state.sec.id, { time: secs, misses: state.misses });
+    setWaitRecord(state.sec.id, state.hand, { time: secs, misses: state.misses });
     badge = prev ? 'Ny rekord!' : null;
   }
   const n = state.model.steps.length;

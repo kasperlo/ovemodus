@@ -1,11 +1,16 @@
+import type { Hand } from './music/song';
+
 export type Mode = 'vent' | 'takt';
 export type View = 'noter' | 'bokstaver';
 export type Sensitivity = 'lav' | 'middels' | 'hoy' | 'kalibrert';
 
 export interface Settings {
   section: string;
+  /** Hånden man øver på. */
+  hand: Hand;
   mode: Mode;
   oct: boolean;
+  /** MIDI: ignorer den andre hånden (delt ved midtre C). Navnet er fra da bare venstre hånd kunne ignoreres. */
   lh: boolean;
   acc: boolean;
   sens: Sensitivity;
@@ -24,14 +29,14 @@ export interface TaktRecord { tempo: number; pct: number }
 
 export interface Store {
   settings: Settings;
-  /** Nøkkel: `${delId}|vent` eller `${delId}|takt`. */
+  /** Nøkkel: `${delId}|vent` og `${delId}|takt` for høyre hånd, `${delId}|lh|vent` og `${delId}|lh|takt` for venstre. */
   rec: Record<string, WaitRecord | TaktRecord>;
 }
 
 const STORE_KEY = 'dovregubben-ovemodus-v1';
 
 export const store: Store = {
-  settings: { section: 'delA', mode: 'vent', oct: true, lh: true, acc: true, sens: 'middels', tempo: {}, view: 'noter', lhStaff: false, setupOpen: true },
+  settings: { section: 'delA', hand: 'rh', mode: 'vent', oct: true, lh: true, acc: true, sens: 'middels', tempo: {}, view: 'noter', lhStaff: false, setupOpen: true },
   rec: {}
 };
 
@@ -47,7 +52,10 @@ export function save(): void {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch { /* ignorer */ }
 }
 
-export const waitRecord = (sectionId: string): WaitRecord | undefined => store.rec[sectionId + '|vent'] as WaitRecord | undefined;
-export const taktRecord = (sectionId: string): TaktRecord | undefined => store.rec[sectionId + '|takt'] as TaktRecord | undefined;
-export function setWaitRecord(sectionId: string, r: WaitRecord): void { store.rec[sectionId + '|vent'] = r; save(); }
-export function setTaktRecord(sectionId: string, r: TaktRecord): void { store.rec[sectionId + '|takt'] = r; save(); }
+// Høyre hånd beholder nøklene fra før venstre hånd fantes, så gamle rekorder gjelder fortsatt.
+const recKey = (sectionId: string, hand: Hand, mode: Mode): string => `${sectionId}${hand === 'lh' ? '|lh' : ''}|${mode}`;
+
+export const waitRecord = (sectionId: string, hand: Hand): WaitRecord | undefined => store.rec[recKey(sectionId, hand, 'vent')] as WaitRecord | undefined;
+export const taktRecord = (sectionId: string, hand: Hand): TaktRecord | undefined => store.rec[recKey(sectionId, hand, 'takt')] as TaktRecord | undefined;
+export function setWaitRecord(sectionId: string, hand: Hand, r: WaitRecord): void { store.rec[recKey(sectionId, hand, 'vent')] = r; save(); }
+export function setTaktRecord(sectionId: string, hand: Hand, r: TaktRecord): void { store.rec[recKey(sectionId, hand, 'takt')] = r; save(); }

@@ -1,4 +1,5 @@
 import { audio, audioCtx, click, masterBus, tone } from '../audio/synth';
+import { clickLength, countInBars, type Hand } from '../music/song';
 import { pc } from '../music/theory';
 import { avgOffsetMs, mic, run, spell, state, type RunKind } from '../state';
 import { setTaktRecord, taktRecord } from '../storage';
@@ -10,8 +11,11 @@ import type { InputEvent } from './input';
 import { RECORD_MIN_PCT, hitWindow, matches, timingText } from './judge';
 import { TEMPO_MAX, TEMPO_MIN, resetProgress, setTempo } from './progress';
 
-/** Når appen spiller venstre hånd gjennom høyttaleren, er mikrofontoner under dette venstre hånd. */
-const MIC_LH_BELOW = 55;
+/**
+ * Når appen spiller den andre hånden gjennom høyttaleren, hører mikrofonen den også.
+ * Øver man høyre hånd, er toner under MIDI 55 appens venstre hånd. Øver man venstre, er toner fra midtre C og opp appens høyre hånd.
+ */
+const isAccompaniment = (m: number, hand: Hand): boolean => hand === 'rh' ? m < 55 : m >= 60;
 
 /** Starter «Spill i takt» (innteller + metronom) eller demo (appen spiller selv). */
 export function startRun(kind: RunKind): void {
@@ -20,13 +24,15 @@ export function startRun(kind: RunKind): void {
   resetProgress();
   const M = state.model;
   const tempo = state.tempo, e8 = 30 / tempo;
-  const countIn = kind === 'takt' ? 8 * e8 : 0;
+  const meter = M.song.meter;
+  const clickLen = clickLength(meter);
+  const countIn = kind === 'takt' ? countInBars(meter) * M.barLen * e8 : 0;
   const lead = 0.3;
   const outLat = (ac.outputLatency || ac.baseLatency || 0);
   const at = ac.currentTime + lead;
   run.t0 = performance.now() + (lead + outLat) * 1000;
   keepAwake('run', true);
-  Object.assign(run, { active: true, kind, e8, countIn, tempo, cursor: -1, lastCursor: -2, lastBeat: -1, offsets: [] });
+  Object.assign(run, { active: true, kind, e8, countIn, clickLen, countInClicks: Math.round(countIn / (clickLen * e8)), tempo, cursor: -1, lastCursor: -2, lastBeat: -1, offsets: [] });
   const bus = ac.createGain();
   bus.connect(masterBus());
   run.bus = bus;
@@ -38,14 +44,15 @@ export function startRun(kind: RunKind): void {
   });
   run.end = countIn + M.total * e8;
   if (kind === 'takt') {
-    const beats = Math.round(run.end / (2 * e8));
-    for (let b = 0; b < beats; b++) click(at + b * 2 * e8, b % 4 === 0, bus);
+    const clicks = Math.round(run.end / (clickLen * e8));
+    const perBar = Math.round(M.barLen / clickLen);
+    for (let b = 0; b < clicks; b++) click(at + b * clickLen * e8, b % perBar === 0, bus);
   } else {
     M.steps.forEach(s => (s.type === 'chord' ? s.midis : [s.midi])
       .forEach(m => tone(m, at + s.t!, s.dur! * (s.d >= 4 ? 0.85 : 0.55), 0.9, bus)));
   }
   if (els.optAcc.checked) {
-    M.lh.forEach(ev => ev.midis.forEach(m => tone(m, at + countIn + ev.pos * e8, ev.d * e8 * 0.5, 0.55, bus)));
+    M.acc.forEach(ev => ev.midis.forEach(m => tone(m, at + countIn + ev.pos * e8, ev.d * e8 * 0.5, 0.55, bus)));
   }
   if (kind === 'takt' && mic.on && els.optAcc.checked) setHint('Tips: bruk hodetelefoner, så forveksler ikke mikrofonen venstre hånd med deg.', '');
   refresh();
@@ -76,7 +83,7 @@ export function runFrame(now: number): void {
       }
     }
     run.cursor = steps.findIndex(s => !s.judged);
-    const beat = tt < run.countIn ? Math.floor(tt / (2 * run.e8)) : 99;
+    const beat = tt < run.countIn ? Math.floor(tt / (run.clickLen * run.e8)) : 99;
     if (beat !== run.lastBeat) { run.lastBeat = beat; changed = true; }
   } else {
     let c = -1;
@@ -90,7 +97,7 @@ export function runFrame(now: number): void {
 
 export function judgeTakt(m: number, t: number, ev: InputEvent): void {
   if (ev.src === 'mic' && ev.phase === 'sustain') return;
-  if (ev.src === 'mic' && els.optAcc.checked && m < MIC_LH_BELOW) return;
+  if (ev.src === 'mic' && els.optAcc.checked && isAccompaniment(m, state.hand)) return;
   const tt = (t - run.t0) / 1000;
   if (tt < run.countIn - 0.3) return;
   let best = null, bd = 1e9;
@@ -128,10 +135,10 @@ function finishRun(): void {
     const steps = state.model.steps, n = steps.length;
     const hits = steps.filter(s => s.judged === 'hit').length;
     const pct = Math.round(100 * hits / n);
-    const prev = taktRecord(state.sec.id);
+    const prev = taktRecord(state.sec.id, state.hand);
     let badge: string | null = null;
     if (pct >= RECORD_MIN_PCT && (!prev || state.tempo > prev.tempo)) {
-      setTaktRecord(state.sec.id, { tempo: state.tempo, pct });
+      setTaktRecord(state.sec.id, state.hand, { tempo: state.tempo, pct });
       badge = prev ? 'Ny rekord!' : 'Rekord lagret';
     }
     const timing = run.offsets.length ? timingText(avgOffsetMs()) : 'Ingen treff denne gangen. Prøv et lavere tempo.';

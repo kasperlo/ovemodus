@@ -1,11 +1,12 @@
-import { build } from '../music/song';
+import { build, type Hand } from '../music/song';
 import { renderSheet, sheet } from '../notation/sheet';
-import { currentSong } from '../songs';
+import { findSection } from '../songs';
 import { run, state } from '../state';
 import { save, store, type Mode, type View } from '../storage';
 import { els, segButtons } from '../ui/dom';
+import { KB_RANGE, renderKeyboard } from '../ui/keyboard';
 import { renderStrip } from '../ui/strip';
-import { refresh, setHint } from '../ui/view';
+import { refresh, renderSegments, setHint } from '../ui/view';
 import { resetProgress, setTempo } from './progress';
 import { stopRun } from './takt';
 
@@ -13,18 +14,53 @@ export function drawSheet(): void {
   renderSheet(els.sheet, state.model, els.optLHStaff.checked, jumpTo);
 }
 
-export function setSection(id: string): void {
+const HAND_TEXT: Record<Hand, { name: string; other: string }> = {
+  rh: { name: 'høyre hånd', other: 'venstre hånd' },
+  lh: { name: 'venstre hånd', other: 'høyre hånd' }
+};
+
+/** Tekster som avhenger av hvilken hånd man øver på. */
+function handTexts(): void {
+  const t = HAND_TEXT[state.hand];
+  els.subText.textContent = `Spill ${t.name}. Siden lytter, viser neste tangent og går videre når du treffer riktig.`;
+  els.optLHText.textContent = state.hand === 'rh' ? 'MIDI: ignorer venstre hånd (under midtre C)' : 'MIDI: ignorer høyre hånd (fra midtre C og opp)';
+  els.optAccText.textContent = `Spill ${t.other} for meg`;
+  els.optLHStaffText.textContent = `Vis ${t.other}`;
+  segButtons(els.segHand).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.hand === state.hand)));
+}
+
+/** Bygger modellen på nytt for valgt del og hånd, og tegner alt som avhenger av den. */
+function load(): void {
   stopRun(true);
-  state.sec = currentSong.sections.find(s => s.id === id) || currentSong.sections[0];
-  state.model = build(currentSong, state.sec);
-  store.settings.section = state.sec.id;
-  setTempo(store.settings.tempo[state.sec.id] || state.sec.tempo, true);
+  state.model = build(state.song, state.sec, state.hand);
+  renderKeyboard(KB_RANGE[state.hand]);
   renderStrip(state.model, jumpTo);
+  handTexts();
   sheet.dirty = true;
   drawSheet();
   resetProgress();
-  save();
   refresh();
+}
+
+export function setSection(id: string): void {
+  const { song, sec } = findSection(id);
+  state.song = song;
+  state.sec = sec;
+  renderSegments(song.sections, setSection);
+  els.selSong.value = song.id;
+  els.songTitle.textContent = song.title;
+  els.secUse.textContent = [sec.use, song.by !== 'Egen' ? song.by : ''].filter(Boolean).join(' ');
+  store.settings.section = sec.id;
+  setTempo(store.settings.tempo[sec.id] || sec.tempo, true);
+  save();
+  load();
+}
+
+export function setHand(hand: Hand): void {
+  state.hand = hand === 'lh' ? 'lh' : 'rh';
+  store.settings.hand = state.hand;
+  save();
+  load();
 }
 
 export function setMode(mode: Mode): void {

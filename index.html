@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dovregubben-øving</title>
+<title>Øvemodus</title>
 <meta name="theme-color" content="#060d45">
 <meta name="apple-mobile-web-app-title" content="Øvemodus">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
@@ -17,8 +17,8 @@
 <header class="top">
   <div>
     <p class="kicker">Øvemodus for keyboard</p>
-    <h1>Dovregubben-øving</h1>
-    <p class="sub">Spill høyre hånd. Siden lytter, viser neste tangent og går videre når du treffer riktig.</p>
+    <h1 id="songTitle">I Dovregubbens hall</h1>
+    <p class="sub" id="subText">Spill høyre hånd. Siden lytter, viser neste tangent og går videre når du treffer riktig.</p>
   </div>
   <div class="conn" aria-label="Tilkoblinger">
     <span class="pill" id="pillMic">Mikrofon av</span>
@@ -36,7 +36,13 @@
     <div class="setup-body" id="setupBody">
     <section class="step">
       <h2><span class="num">1</span>Hva vil du øve på?</h2>
-      <div class="seg" id="segSection" role="group" aria-label="Velg stykke"></div>
+      <label class="opt pick" for="selSong">Låt <select id="selSong"></select></label>
+      <div class="seg pick-row" id="segSection" role="group" aria-label="Velg del"></div>
+      <p class="use" id="secUse"></p>
+      <div class="seg pick-row" id="segHand" role="group" aria-label="Velg hånd">
+        <button type="button" data-hand="rh" aria-pressed="true">Høyre hånd</button>
+        <button type="button" data-hand="lh" aria-pressed="false">Venstre hånd</button>
+      </div>
     </section>
 
     <section class="step">
@@ -56,7 +62,7 @@
         </select>
       </label>
       <label class="opt" for="optOct"><input type="checkbox" id="optOct" checked> Godta riktig tone i alle oktaver</label>
-      <label class="opt" for="optLH"><input type="checkbox" id="optLH" checked> MIDI: ignorer venstre hånd (under midtre C)</label>
+      <label class="opt" for="optLH"><input type="checkbox" id="optLH" checked> <span id="optLHText">MIDI: ignorer venstre hånd (under midtre C)</span></label>
     </section>
 
     <section class="step">
@@ -70,7 +76,7 @@
         <input type="range" id="tempo" min="50" max="220" step="5" value="100">
         <output id="tempoOut" for="tempo">100 BPM</output>
       </div>
-      <label class="opt" for="optAcc"><input type="checkbox" id="optAcc" checked> Spill venstre hånd for meg</label>
+      <label class="opt" for="optAcc"><input type="checkbox" id="optAcc" checked> <span id="optAccText">Spill venstre hånd for meg</span></label>
       <div class="row go">
         <button type="button" class="btn primary" id="btnGo" hidden>Start i takt</button>
         <button type="button" class="btn" id="btnDemo">Hør hvordan det går</button>
@@ -105,7 +111,7 @@
             <button type="button" data-view="noter" aria-pressed="true">Noter</button>
             <button type="button" data-view="bokstaver" aria-pressed="false">Bokstaver</button>
           </div>
-          <label class="opt" for="optLHStaff" id="optLHStaffLabel"><input type="checkbox" id="optLHStaff"> Vis venstre hånd</label>
+          <label class="opt" for="optLHStaff" id="optLHStaffLabel"><input type="checkbox" id="optLHStaff"> <span id="optLHStaffText">Vis venstre hånd</span></label>
           <span class="music-tip">Klikk på en note for å starte derfra</span>
         </div>
         <div class="sheet" id="sheet" aria-label="Noteark for høyre hånd med fingersetting og tonenavn"></div>
@@ -125,11 +131,11 @@
   <div class="help-grid">
     <div class="help-card">
       <h3>Mikrofon</h3>
-      <p>Spill bare høyre hånd, og sett PC-en nær høyttaleren på keyboardet. Viser «Hører» feil tone, prøv en annen følsomhet. Mikrofonen virker når du åpner filen direkte i Chrome eller Edge.</p>
+      <p>Spill bare den hånden du øver på, og sett iPaden eller PC-en nær høyttaleren på keyboardet. Hører den dårlig, kjør «Mikrofontest» og bruk den kalibrerte følsomheten.</p>
     </div>
     <div class="help-card">
       <h3>MIDI-keyboard</h3>
-      <p>Har keyboardet USB, kobler du det til PC-en og trykker «Koble til MIDI-keyboard». Da ser siden nøyaktig hvilke tangenter du trykker, og du kan spille med begge hender.</p>
+      <p>Har keyboardet USB, kobler du det til PC-en og trykker «Koble til MIDI-keyboard». Da ser siden nøyaktig hvilke tangenter du trykker. MIDI virker i Chrome og Edge, ikke i Safari på iPad.</p>
     </div>
     <div class="help-card">
       <h3>Vent på meg</h3>
@@ -140,7 +146,7 @@
       <p>Du får fire klikk, så går siden videre i tempoet du har valgt. Etterpå ser du hvor mange toner du traff i tide. Øk tempoet litt for hver runde, som i nedtellingen.</p>
     </div>
   </div>
-  <p class="help-note">Bokstavene og fingersettingen er de samme som i notearket. B heter H på norsk. Høyre hånd starter på A over midtre C.</p>
+  <p class="help-note">Bokstavene og fingersettingen er de samme som i notearket. B heter H på norsk. Høyre hånd spiller fra midtre C og opp, venstre hånd under.</p>
 </section>
 
 <dialog class="diag" id="diag" aria-labelledby="diagTitle">

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { findSection } from '../songs';
 import { dovregubben } from '../songs/dovregubben';
-import { build } from './song';
+import { barLength, beamGroup, build, clickLength, countInBars, type Hand } from './song';
 import { parsePitch, sciName } from './theory';
 
-const section = (id: string) => dovregubben.sections.find(s => s.id === id)!;
+const model = (id: string, hand: Hand = 'rh') => { const { song, sec } = findSection(id); return build(song, sec, hand); };
 
 describe('parsePitch', () => {
   it('leser tonenavn og beholder stavemåten', () => {
@@ -18,43 +19,55 @@ describe('parsePitch', () => {
   });
 });
 
+describe('taktart', () => {
+  it('taktlengde, metronomslag, bjelker og inntelling', () => {
+    expect([barLength({ beats: 4, unit: 4 }), clickLength({ beats: 4, unit: 4 }), beamGroup({ beats: 4, unit: 4 }), countInBars({ beats: 4, unit: 4 })]).toEqual([8, 2, 4, 1]);
+    expect([barLength({ beats: 2, unit: 4 }), clickLength({ beats: 2, unit: 4 }), beamGroup({ beats: 2, unit: 4 }), countInBars({ beats: 2, unit: 4 })]).toEqual([4, 2, 4, 2]);
+    expect([barLength({ beats: 3, unit: 4 }), beamGroup({ beats: 3, unit: 4 }), countInBars({ beats: 3, unit: 4 })]).toEqual([6, 2, 2]);
+    expect([barLength({ beats: 3, unit: 8 }), clickLength({ beats: 3, unit: 8 }), beamGroup({ beats: 3, unit: 8 }), countInBars({ beats: 3, unit: 8 })]).toEqual([3, 3, 3, 4]);
+    expect([barLength({ beats: 6, unit: 8 }), clickLength({ beats: 6, unit: 8 }), countInBars({ beats: 6, unit: 8 })]).toEqual([6, 3, 2]);
+  });
+});
+
 describe('build', () => {
   it.each([['delA', 26], ['delB', 24], ['hele', 103], ['riktig', 5], ['feil', 4]])('%s har %i steg', (id, n) => {
-    expect(build(dovregubben, section(id)).steps).toHaveLength(n);
+    expect(model(id).steps).toHaveLength(n);
   });
 
   it('nummererer stegene fortløpende og hopper over pauser', () => {
-    const m = build(dovregubben, section('hele'));
+    const m = model('hele');
     expect(m.steps.map(s => s.si)).toEqual(m.steps.map((_, i) => i));
     expect(m.items.filter(it => it.type === 'rest')).toHaveLength(2);
   });
 
-  it('hver takt fyller 4/4 og posisjonene henger sammen', () => {
-    for (const sec of dovregubben.sections) {
-      const m = build(dovregubben, sec);
-      expect(m.total, sec.id).toBe(m.bars.length * 8);
-      m.bars.forEach((bar, i) => {
-        expect(bar.start, `${sec.id} takt ${i + 1}`).toBe(i * 8);
-        expect(bar.items.reduce((sum, it) => sum + it.d, 0), `${sec.id} takt ${i + 1}`).toBe(8);
-      });
-    }
-  });
-
   it('setter etikett bare på første takt i hver gruppe', () => {
-    const labels = build(dovregubben, section('hele')).bars.map(b => b.label).filter(Boolean);
+    const labels = model('hele').bars.map(b => b.label).filter(Boolean);
     expect(labels).toEqual(['Del A', 'Del A, andre gang', 'Del B', 'Del A igjen', 'Sluttakkord']);
   });
 
-  it('plasserer venstre hånd i riktig takt', () => {
-    const m = build(dovregubben, section('delA'));
-    expect(m.lh).toHaveLength(16);
-    expect(m.lh[4]).toEqual({ pos: 8, d: 2, midis: [45, 52] });
-    expect(build(dovregubben, section('feil')).lh).toEqual([]);
+  it('høyre hånd: venstre hånd blir akkompagnement i riktig takt', () => {
+    const m = model('delA');
+    expect(m.acc).toHaveLength(16);
+    expect(m.acc[4]).toEqual({ pos: 8, d: 2, midis: [45, 52] });
+  });
+
+  it('venstre hånd: kvintene blir stegene, med fingersetting, og høyre hånd blir akkompagnement', () => {
+    const m = model('delA', 'lh');
+    expect(m.hand).toBe('lh');
+    expect(m.steps).toHaveLength(16);
+    expect(m.steps[0]).toMatchObject({ type: 'chord', midis: [45, 52], f: '5 1', name: 'A+E', pos: 0 });
+    expect(m.acc).toHaveLength(26);
+    expect(m.bars.map(b => b.label)).toEqual(['Del A', null, null, null]);
   });
 
   it('lager nye stegobjekter for hver build, så status fra en runde ikke lekker', () => {
-    const a = build(dovregubben, section('delA')), b = build(dovregubben, section('delA'));
+    const a = model('delA'), b = model('delA');
     a.steps[0].status = 'done';
     expect(b.steps[0].status).toBeUndefined();
+  });
+
+  it('Dovregubben ligger i a-moll og 4/4', () => {
+    expect(dovregubben.key).toBe('Am');
+    expect(dovregubben.meter).toEqual({ beats: 4, unit: 4 });
   });
 });

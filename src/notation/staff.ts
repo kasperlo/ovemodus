@@ -21,10 +21,13 @@ export function ghostMidi(played: number, target: number, anyOctave: boolean): n
   return m;
 }
 
-/** Hjelpelinjene en tone på `step` trenger i diskantnøkkel (linjene går fra E4 = 2 til F5 = 10). */
-export function ledgerSteps(step: number): number[] {
+/** Nederste notelinje: E4 i diskantnøkkel, G2 i bassnøkkel. Systemet har fem linjer, åtte trinn høyt. */
+export const TREBLE_BOTTOM = 2, BASS_BOTTOM = -10;
+
+/** Hjelpelinjene en tone på `step` trenger. */
+export function ledgerSteps(step: number, bottom = TREBLE_BOTTOM): number[] {
   const out: number[] = [];
-  for (let s = 0; s >= step; s -= 2) out.push(s);
-  for (let s = 12; s <= step; s += 2) out.push(s);
+  for (let s = bottom - 2; s >= step; s -= 2) out.push(s);
+  for (let s = bottom + 10; s <= step; s += 2) out.push(s);
   return out;
 }

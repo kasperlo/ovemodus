@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { build } from '../music/song';
-import { dovregubben } from '../songs/dovregubben';
-import { abcNote, toAbc } from './abc';
+import { build, type Hand } from '../music/song';
+import { findSection } from '../songs';
+import { abcNote, keyAccidentals, toAbc } from './abc';
 
-const model = (id: string) => build(dovregubben, dovregubben.sections.find(s => s.id === id)!);
+const model = (id: string, hand: Hand = 'rh') => { const { song, sec } = findSection(id); return build(song, sec, hand); };
 
 describe('abcNote', () => {
   it('skriver oktaver med store/små bokstaver, komma og apostrof', () => {
@@ -17,6 +17,14 @@ describe('abcNote', () => {
   it('regner oktaven fra tonen uten fortegn, så B♯/C♭-grenser blir riktige', () => {
     expect(abcNote(70, 'B♭')).toEqual({ s: 'B', alt: -1, key: 'B4' });
     expect(abcNote(75, 'D♯')).toEqual({ s: 'd', alt: 1, key: 'D5' });
+  });
+});
+
+describe('keyAccidentals', () => {
+  it('gir faste fortegn i riktig rekkefølge', () => {
+    expect(keyAccidentals('Am')).toEqual({});
+    expect(keyAccidentals('D')).toEqual({ F: 1, C: 1 });
+    expect(keyAccidentals('Cm')).toEqual({ B: -1, E: -1, A: -1 });
   });
 });
 
@@ -38,8 +46,8 @@ describe('toAbc', () => {
 
   it('akkorder og pauser', () => {
     const abc = toAbc(model('hele'), 4, false);
-    expect(abc).toContain('"^Sluttakkord"[Acea]2 z2 z4 |]');
-    expect(toAbc(model('riktig'), 4, false)).toContain('[CEGc]6');
+    expect(abc).toContain('"^Sluttakkord"!1!!2!!3!!5![Acea]2 z2 z4 |]');
+    expect(toAbc(model('riktig'), 4, false)).toContain('!1!!2!!3!!5![CEGc]6');
   });
 
   it('har like mange tonenavn under arket som steg', () => {
@@ -62,4 +70,26 @@ describe('toAbc', () => {
     const abc = toAbc(model('riktig'), 4, true);
     expect(abc).toContain('[V:LH] z2 [C,,C,]6 |]');
   });
+
+  it('venstre hånd alene: bassnøkkel, fingersetting og tonenavn på kvintene', () => {
+    const abc = toAbc(model('delA', 'lh'), 2, false).split('\n');
+    expect(abc[3]).toBe('K:Am clef=bass');
+    expect(abc[4]).toBe('"^Del A"!5!!1![A,,E,]2 !5!!1![A,,E,]2 !5!!1![A,,E,]2 !5!!1![A,,E,]2 | !5!!1![A,,E,]2 !5!!1![A,,E,]2 !5!!1![A,,E,]2 !5!!1![A,,E,]2 |');
+    expect(abc[5]).toBe('w: A+E A+E A+E A+E | A+E A+E A+E A+E');
+  });
+
+  it('venstre hånd med høyre hånd vist: høyre øverst uten fingre, tonenavn under venstre', () => {
+    const abc = toAbc(model('riktig', 'lh'), 4, true).split('\n');
+    expect(abc.slice(4, 7)).toEqual(['%%score {RH LH}', 'V:RH clef=treble', 'V:LH clef=bass']);
+    expect(abc[7]).toBe('[V:RH] C/E/G/c/ [CEGc]6 |]');
+    expect(abc[8]).toBe('[V:LH] "^Riktig svar – fanfare"z2 !5!!1![C,,C,]6 |]');
+    expect(abc[9]).toBe('w: C+C');
+  });
+
+  it('toneart og taktart fra låten, og fortegn ut fra tonearten', () => {
+    const abc = toAbc(model('intro'), 4, false);
+    expect(abc).toContain('M:4/4');
+    expect(abc).toContain('K:F');
+  });
 });
+

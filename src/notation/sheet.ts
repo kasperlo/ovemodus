@@ -2,7 +2,7 @@ import abcjs from 'abcjs';
 import type { Model, Step, StepStatus } from '../music/song';
 import { timingClass } from '../practice/judge';
 import { abcNote, toAbc } from './abc';
-import { ghostMidi, ghostPitch, ledgerSteps, staffStep } from './staff';
+import { BASS_BOTTOM, TREBLE_BOTTOM, ghostMidi, ghostPitch, ledgerSteps, staffStep } from './staff';
 import { SHARP, pc, sciName } from '../music/theory';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -40,6 +40,8 @@ export const sheet = {
   overlay: null as SVGGElement | null,
   /** Avstand mellom to diatoniske trinn på notelinjene, i SVG-enheter. */
   halfSpace: 4,
+  /** Nederste notelinje i nøkkelen til hånden man øver på (E4 i diskant, G2 i bass), i trinn over C4. */
+  bottomLine: 2,
   /** Må tegnes på nytt neste gang arket er synlig. */
   dirty: true,
   perLine: 0,
@@ -106,14 +108,17 @@ function findBeams(svg: SVGSVGElement): Beam[] {
 export const sheetPerLine = (container: HTMLElement): number => container.clientWidth >= 900 ? 4 : 2;
 
 // getBBox virker ikke på skjulte elementer, så arket tegnes bare når det er synlig.
-export function renderSheet(container: HTMLElement, model: Model, lhChecked: boolean, onJump: (si: number) => void): void {
+export function renderSheet(container: HTMLElement, model: Model, otherChecked: boolean, onJump: (si: number) => void): void {
   sheet.notes = []; sheet.beams = []; sheet.map = new Map(); sheet.cursor = null; sheet.overlay = null; sheet.ok = false;
   if (container.hidden || !container.clientWidth) { sheet.dirty = true; return; }
   sheet.dirty = false;
   container.innerHTML = '';
   const perLine = sheet.perLine = sheetPerLine(container);
-  const showLH = lhChecked && model.lh.length > 0;
-  const tunes = abcjs.renderAbc(container, toAbc(model, perLine, showLH), {
+  const showOther = otherChecked && model.acc.length > 0;
+  // Høyre hånd står alltid øverst i pianosystemet, så venstre hånd er system 2 når begge vises
+  const staffIdx = model.hand === 'lh' && showOther ? 1 : 0;
+  sheet.bottomLine = model.hand === 'lh' ? BASS_BOTTOM : TREBLE_BOTTOM;
+  const tunes = abcjs.renderAbc(container, toAbc(model, perLine, showOther), {
     add_classes: true, responsive: 'resize', staffwidth: perLine === 4 ? 900 : 500,
     paddingtop: 6, paddingbottom: 6, paddingleft: 6, paddingright: 6,
     selectionColor: '#15161c',
@@ -132,7 +137,7 @@ export function renderSheet(container: HTMLElement, model: Model, lhChecked: boo
 
   const list: VoiceElem[] = [];
   (tunes[0]?.lines || []).forEach(line => {
-    const v = line.staff?.[0]?.voices?.[0] as VoiceElem[] | undefined;
+    const v = line.staff?.[staffIdx]?.voices?.[0] as VoiceElem[] | undefined;
     if (v) v.forEach(el => { if (el.el_type === 'note' && !el.rest) list.push(el); });
   });
   sheet.ok = list.length === model.steps.length;
@@ -209,7 +214,7 @@ export function showGhost(step: Step, played: number, anyOctave: boolean): void 
   const cx = n.head.x + n.head.w / 2 + 3.5 * s, cy = yOf(g.step);
   const el = svgEl('g', { class: 'abc-ghost' }, sheet.overlay);
   svgEl('title', {}, el).textContent = `Du spilte ${sciName(played)}`;
-  ledgerSteps(g.step).forEach(st => svgEl('line', { x1: cx - 2 * s, x2: cx + 2 * s, y1: yOf(st), y2: yOf(st) }, el));
+  ledgerSteps(g.step, sheet.bottomLine).forEach(st => svgEl('line', { x1: cx - 2 * s, x2: cx + 2 * s, y1: yOf(st), y2: yOf(st) }, el));
   svgEl('ellipse', { cx, cy, rx: 1.3 * s, ry: 0.95 * s, transform: `rotate(-20 ${cx} ${cy})` }, el);
   if (g.sharp) svgEl('text', { x: cx - 2.4 * s, y: cy + 1.1 * s, 'font-size': 3 * s, 'text-anchor': 'middle' }, el).textContent = '♯';
 }

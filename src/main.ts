@@ -4,16 +4,15 @@ import { micFrame, toggleMic } from './input/mic';
 import { sheet, sheetPerLine } from './notation/sheet';
 import { emitInput } from './practice/input';
 import { resetProgress, setTempo } from './practice/progress';
-import { drawSheet, setMode, setSection, setView } from './practice/session';
+import { drawSheet, setHand, setMode, setSection, setView } from './practice/session';
 import { runFrame, startRun, stopRun } from './practice/takt';
-import { currentSong } from './songs';
+import { CATEGORY_LABEL, songs } from './songs';
 import { elapsed, mic, run, spell, state } from './state';
 import { save, store, type Mode, type Sensitivity } from './storage';
 import { installTestHook } from './testHook';
 import { els } from './ui/dom';
-import { renderKeyboard } from './ui/keyboard';
 import { initMicDiag } from './ui/micDiag';
-import { fmtSec, refresh, renderSegments, setSetupOpen } from './ui/view';
+import { fmtSec, refresh, setSetupOpen } from './ui/view';
 
 /* ---------- Skjermtastatur ---------- */
 function pressKey(k: HTMLElement): void {
@@ -46,6 +45,30 @@ els.kbd.addEventListener('click', e => {
 });
 
 /* ---------- Kontroller ---------- */
+function renderSongSelect(): void {
+  els.selSong.innerHTML = '';
+  (Object.keys(CATEGORY_LABEL) as (keyof typeof CATEGORY_LABEL)[]).forEach(cat => {
+    const list = songs.filter(s => s.category === cat);
+    if (!list.length) return;
+    const group = document.createElement('optgroup');
+    group.label = CATEGORY_LABEL[cat];
+    list.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.id; o.textContent = s.title;
+      group.append(o);
+    });
+    els.selSong.append(group);
+  });
+}
+els.selSong.addEventListener('change', () => {
+  const song = songs.find(s => s.id === els.selSong.value);
+  if (song) setSection(song.sections[0].id);
+});
+els.segHand.addEventListener('click', e => {
+  const b = (e.target as Element).closest<HTMLElement>('button[data-hand]');
+  if (b) setHand(b.dataset.hand === 'lh' ? 'lh' : 'rh');
+});
+
 els.segMode.addEventListener('click', e => {
   const b = (e.target as Element).closest<HTMLElement>('button[data-mode]');
   if (b) setMode(b.dataset.mode as Mode);
@@ -104,8 +127,8 @@ function frame(now: number): void {
 }
 
 /* ---------- Start ---------- */
-renderSegments(currentSong.sections, setSection);
-renderKeyboard();
+renderSongSelect();
+state.hand = store.settings.hand === 'lh' ? 'lh' : 'rh';
 state.mode = store.settings.mode === 'takt' ? 'takt' : 'vent';
 setSection(store.settings.section);
 setView(store.settings.view);

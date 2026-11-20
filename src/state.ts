@@ -1,6 +1,6 @@
-import { build, type Model, type Section } from './music/song';
+import { build, type Hand, type Model, type Section, type Song } from './music/song';
 import { sciName, octOf, pc } from './music/theory';
-import { currentSong } from './songs';
+import { songs } from './songs';
 import type { Mode } from './storage';
 
 export type ClueAction = [text: string, fn: () => void, primary?: boolean];
@@ -17,11 +17,13 @@ export interface Result {
 
 export type RunKind = 'takt' | 'demo';
 
-const firstSection = currentSong.sections[0];
+const firstSong = songs[0], firstSection = firstSong.sections[0];
 
 export const state = {
+  song: firstSong as Song,
   sec: firstSection as Section,
-  model: build(currentSong, firstSection) as Model,
+  hand: 'rh' as Hand,
+  model: build(firstSong, firstSection) as Model,
   mode: 'vent' as Mode,
   tempo: 100,
   cur: 0,
@@ -48,6 +50,9 @@ export const run = {
   /** Sekunder per åttedel. */
   e8: 0.3,
   countIn: 0,
+  /** Metronomslag i åttedeler (2 = fjerdedel, 3 = punktert fjerdedel). */
+  clickLen: 2,
+  countInClicks: 4,
   end: 0,
   tempo: 100,
   cursor: -1,

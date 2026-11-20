@@ -1,12 +1,12 @@
 import { sciName } from '../music/theory';
 import { emitInput } from '../practice/input';
-import { spell } from '../state';
+import { spell, state } from '../state';
 import { els } from '../ui/dom';
 import { inRange, keyEls } from '../ui/keyboard';
 import { setHint, setPill, setStatus } from '../ui/view';
 import { keepAwake } from '../wakeLock';
 
-/** Toner under midtre C regnes som venstre hånd og ignoreres når valget er på. */
+/** Når valget er på, regnes toner under midtre C som venstre hånd og resten som høyre, og hånden man ikke øver på ignoreres. */
 const MIDDLE_C = 60;
 
 let midiAccess: MIDIAccess | null = null;
@@ -46,8 +46,9 @@ function onMidi(e: MIDIMessageEvent): void {
   const [st, d1, d2] = e.data;
   const cmd = st & 0xf0;
   if (cmd === 0x90 && d2 > 0) {
-    if (els.optLH.checked && d1 < MIDDLE_C) {
-      setHint(`Ignorerte ${sciName(d1)} (venstre hånd).`, '');
+    const otherHand = state.hand === 'rh' ? d1 < MIDDLE_C : d1 >= MIDDLE_C;
+    if (els.optLH.checked && otherHand) {
+      setHint(`Ignorerte ${sciName(d1)} (${state.hand === 'rh' ? 'venstre' : 'høyre'} hånd).`, '');
       return;
     }
     const k = keyEls[inRange(d1)];

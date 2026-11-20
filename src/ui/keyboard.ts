@@ -2,17 +2,21 @@ import { SHARP, isBlack, octOf, pc, sciName } from '../music/theory';
 import type { Step } from '../music/song';
 import { els } from './dom';
 
-export const KB_LO = 60, KB_HI = 84;
-export const keyEls: Record<number, HTMLButtonElement> = {};
+/** Tangentene skjermtastaturet viser: to oktaver fra C4 for høyre hånd, fra C2 for venstre. */
+export const KB_RANGE = { rh: [60, 84], lh: [36, 60] } as const;
+let lo = 60, hi = 84;
+export let keyEls: Record<number, HTMLButtonElement> = {};
 const flashTimers = new WeakMap<HTMLElement, number>();
 
-export function renderKeyboard(): void {
+export function renderKeyboard(range: readonly [number, number] = KB_RANGE.rh): void {
+  [lo, hi] = range;
+  keyEls = {};
   els.kbd.innerHTML = '';
   let whites = 0;
-  for (let m = KB_LO; m <= KB_HI; m++) if (!isBlack(m)) whites++;
+  for (let m = lo; m <= hi; m++) if (!isBlack(m)) whites++;
   const W = 100 / whites;
   let wi = 0;
-  for (let m = KB_LO; m <= KB_HI; m++) {
+  for (let m = lo; m <= hi; m++) {
     const k = document.createElement('button');
     k.type = 'button';
     k.className = 'key ' + (isBlack(m) ? 'black' : 'white');
@@ -35,7 +39,7 @@ export function renderKeyboard(): void {
 }
 
 /** Flytter tonen inn i oktavene skjermtastaturet viser. */
-export const inRange = (m: number): number => { while (m < KB_LO) m += 12; while (m > KB_HI) m -= 12; return m; };
+export const inRange = (m: number): number => { while (m < lo) m += 12; while (m > hi) m -= 12; return m; };
 
 export function flashKey(m: number, kind: 'hit' | 'wrong'): void {
   const k = keyEls[inRange(m)];
@@ -56,14 +60,14 @@ export function setTargets(step: Step | null | undefined, next: Step | null | un
   const mids = step.type === 'chord' ? step.midis : [step.midi];
   const fingers = step.type === 'chord' ? step.f.split(' ') : [step.f];
   mids.forEach((m, i) => {
-    const k = keyEls[m];
+    const k = keyEls[m] ?? keyEls[inRange(m)];
     if (!k) return;
     k.classList.add(demo ? 'demo' : 'target');
     k.querySelector('.bub')!.textContent = fingers[i] || '';
   });
   if (next && !demo) {
     (next.type === 'chord' ? next.midis : [next.midi]).forEach(m => {
-      const k = keyEls[m];
+      const k = keyEls[m] ?? keyEls[inRange(m)];
       if (k && !k.classList.contains('target')) k.classList.add('then');
     });
   }

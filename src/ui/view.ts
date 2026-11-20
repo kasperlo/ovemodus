@@ -1,4 +1,4 @@
-import type { Section, Step, StepStatus } from '../music/song';
+import { clickLength, countInBars, type Section, type Step, type StepStatus } from '../music/song';
 import { clearOverlay, sheet, paintSheet, paintTiming, sheetCursor } from '../notation/sheet';
 import { timingClass } from '../practice/judge';
 import { avgOffsetMs, currentIndex, elapsed, mic, run, state, type ClueAction } from '../state';
@@ -18,6 +18,7 @@ export function renderSegments(sections: Section[], onSelect: (id: string) => vo
     b.addEventListener('click', () => onSelect(sec.id));
     els.segSection.append(b);
   });
+  els.segSection.hidden = sections.length < 2;
 }
 
 export function markStep(si: number, status: StepStatus): void {
@@ -110,8 +111,8 @@ function renderClue(ci: number): void {
   if (run.active) {
     const tt = (performance.now() - run.t0) / 1000;
     if (run.kind === 'takt' && tt < run.countIn) {
-      const beat = Math.floor(tt / (2 * run.e8));
-      setClue('Gjør deg klar', beat < 0 ? '…' : String(Math.max(1, 4 - beat)), `${run.tempo} BPM`, 'Første tone: ' + steps[0].name);
+      const beat = Math.floor(tt / (run.clickLen * run.e8));
+      setClue('Gjør deg klar', beat < 0 ? '…' : String(Math.max(1, run.countInClicks - beat)), `${run.tempo} BPM`, 'Første tone: ' + steps[0].name);
       return;
     }
     const s = steps[ci];
@@ -121,7 +122,7 @@ function renderClue(ci: number): void {
     return;
   }
   if (state.mode === 'takt') {
-    setClue('Spill i takt', `${state.tempo} BPM`, 'Trykk «Start i takt». Du får fire klikk før første tone.', 'Første tone: ' + steps[0].name + ' · finger ' + steps[0].f, { small: true });
+    setClue('Spill i takt', `${state.tempo} BPM`, `Trykk «Start i takt». Du får ${countInText()} før første tone.`, 'Første tone: ' + steps[0].name + ' · finger ' + steps[0].f, { small: true });
     return;
   }
   const s = steps[state.cur];
@@ -130,13 +131,21 @@ function renderClue(ci: number): void {
   setClue(s.type === 'chord' ? 'Neste akkord' : 'Neste tone', s.name, stepSub(s), nx ? 'deretter ' + nx.name : 'siste tone!', { small: s.type === 'chord' });
 }
 
+const NUMBER_WORDS: Record<number, string> = { 2: 'to', 3: 'tre', 4: 'fire', 5: 'fem', 6: 'seks', 8: 'åtte' };
+
+function countInText(): string {
+  const meter = state.song.meter;
+  const n = Math.round(countInBars(meter) * state.model.barLen / clickLength(meter));
+  return `${NUMBER_WORDS[n] ?? n} klikk`;
+}
+
 function recText(): string {
   const id = state.sec.id;
   if (state.mode === 'vent') {
-    const r = waitRecord(id);
+    const r = waitRecord(id, state.hand);
     return r ? fmtSec(r.time) : '–';
   }
-  const r = taktRecord(id);
+  const r = taktRecord(id, state.hand);
   return r ? `${r.tempo} BPM` : '–';
 }
 
@@ -174,7 +183,8 @@ export function updateButtons(): void {
   segButtons(els.segSection).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sec === state.sec.id)));
   segButtons(els.segMode).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === state.mode)));
   els.btnMic.textContent = mic.on ? 'Slå av mikrofon' : 'Bruk mikrofon';
-  els.setupSum.textContent = [state.sec.title, state.mode === 'vent' ? 'Vent på meg' : 'Spill i takt', `${state.tempo} BPM`].join(' · ');
+  els.setupSum.textContent = [state.sec.title, state.hand === 'lh' ? 'Venstre hånd' : '', state.mode === 'vent' ? 'Vent på meg' : 'Spill i takt', `${state.tempo} BPM`]
+    .filter(Boolean).join(' · ');
 }
 
 export function setSetupOpen(open: boolean): void {

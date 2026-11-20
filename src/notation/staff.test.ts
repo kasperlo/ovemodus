@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ghostMidi, ghostPitch, ledgerSteps, staffStep } from './staff';
+import { BASS_BOTTOM, ghostMidi, ghostPitch, ledgerSteps, staffStep } from './staff';
 
 describe('staffStep', () => {
   it('teller diatoniske trinn fra midtre C, som abcjs-pN', () => {
@@ -33,6 +33,12 @@ describe('ledgerSteps', () => {
   it('ingen hjelpelinjer inne i systemet', () => {
     expect(ledgerSteps(1)).toEqual([]);
     expect(ledgerSteps(11)).toEqual([]);
+  });
+
+  it('i bassnøkkel', () => {
+    expect(ledgerSteps(-9, BASS_BOTTOM)).toEqual([]);
+    expect(ledgerSteps(0, BASS_BOTTOM)).toEqual([0]); // midtre C over bassystemet
+    expect(ledgerSteps(-13, BASS_BOTTOM)).toEqual([-12]);
   });
 
   it('hjelpelinjer under og over', () => {
