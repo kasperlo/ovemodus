@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dovregubben-øving</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/src/styles.css">
+</head>
+<body>
+<header class="top">
+  <div>
+    <p class="kicker">Øvemodus for keyboard</p>
+    <h1>Dovregubben-øving</h1>
+    <p class="sub">Spill høyre hånd. Siden lytter, viser neste tangent og går videre når du treffer riktig.</p>
+  </div>
+  <div class="conn" aria-label="Tilkoblinger">
+    <span class="pill" id="pillMic">Mikrofon av</span>
+    <span class="pill" id="pillMidi">MIDI av</span>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="panel" aria-label="Oppsett">
+    <section class="step">
+      <h2><span class="num">1</span>Hva vil du øve på?</h2>
+      <div class="seg" id="segSection" role="group" aria-label="Velg stykke"></div>
+    </section>
+
+    <section class="step">
+      <h2><span class="num">2</span>Hvordan skal siden høre deg?</h2>
+      <div class="row">
+        <button type="button" class="btn" id="btnMic">Bruk mikrofon</button>
+        <button type="button" class="btn" id="btnMidi">Koble til MIDI-keyboard</button>
+      </div>
+      <div class="meter" aria-hidden="true"><div class="meter-fill" id="meterFill"></div><div class="meter-gate" id="meterGate"></div></div>
+      <p class="status" id="inputStatus">Du kan også klikke på tangentene på skjermen.</p>
+      <label class="opt" for="optSens">Mikrofonfølsomhet
+        <select id="optSens">
+          <option value="lav">Lav (støyende rom)</option>
+          <option value="middels" selected>Middels</option>
+          <option value="hoy">Høy (svak lyd)</option>
+        </select>
+      </label>
+      <label class="opt" for="optOct"><input type="checkbox" id="optOct" checked> Godta riktig tone i alle oktaver</label>
+      <label class="opt" for="optLH"><input type="checkbox" id="optLH" checked> MIDI: ignorer venstre hånd (under midtre C)</label>
+    </section>
+
+    <section class="step">
+      <h2><span class="num">3</span>Velg modus</h2>
+      <div class="seg" id="segMode" role="group" aria-label="Velg modus">
+        <button type="button" data-mode="vent" aria-pressed="true">Vent på meg</button>
+        <button type="button" data-mode="takt" aria-pressed="false">Spill i takt</button>
+      </div>
+      <div class="tempo">
+        <label for="tempo">Tempo</label>
+        <input type="range" id="tempo" min="50" max="220" step="5" value="100">
+        <output id="tempoOut" for="tempo">100 BPM</output>
+      </div>
+      <label class="opt" for="optAcc"><input type="checkbox" id="optAcc" checked> Spill venstre hånd for meg</label>
+      <div class="row go">
+        <button type="button" class="btn primary" id="btnGo" hidden>Start i takt</button>
+        <button type="button" class="btn" id="btnDemo">Hør hvordan det går</button>
+        <button type="button" class="btn ghost" id="btnReset">Start på nytt</button>
+      </div>
+    </section>
+  </aside>
+
+  <main class="work">
+    <div class="stage">
+      <div class="side">
+        <div class="clue" id="clue">
+          <p class="clue-label" id="clueLabel">Neste tone</p>
+          <p class="clue-big" id="clueBig">A</p>
+          <p class="clue-sub" id="clueSub">A4 · finger 1</p>
+          <p class="clue-then" id="clueThen">deretter B</p>
+          <div class="clue-actions" id="clueActions"></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><span class="k" id="k1">Tone</span><span class="v" id="v1">0/26</span></div>
+          <div class="stat"><span class="k" id="k2">Bom</span><span class="v" id="v2">0</span></div>
+          <div class="stat"><span class="k" id="k3">Tid</span><span class="v" id="v3">0,0 s</span></div>
+          <div class="stat"><span class="k" id="k4">Rekord</span><span class="v" id="v4">–</span></div>
+        </div>
+        <div class="progress" aria-hidden="true"><div id="progFill"></div></div>
+        <p class="hint" id="hint" aria-live="polite"></p>
+      </div>
+      <div class="music">
+        <div class="music-bar">
+          <div class="seg" id="segView" role="group" aria-label="Visning">
+            <button type="button" data-view="noter" aria-pressed="true">Noter</button>
+            <button type="button" data-view="bokstaver" aria-pressed="false">Bokstaver</button>
+          </div>
+          <label class="opt" for="optLHStaff" id="optLHStaffLabel"><input type="checkbox" id="optLHStaff"> Vis venstre hånd</label>
+          <span class="music-tip">Klikk på en note for å starte derfra</span>
+        </div>
+        <div class="sheet" id="sheet" aria-label="Noteark for høyre hånd med fingersetting og tonenavn"></div>
+        <div class="strip" id="strip" aria-label="Takter med tonenavn og fingersetting" hidden></div>
+      </div>
+    </div>
+
+    <section class="kbd-wrap" aria-label="Tastatur">
+      <div class="kbd" id="kbd"></div>
+      <p class="heard"><span id="heard">Hører: –</span><span id="legend">Gull = neste tangent · tall = finger · stripe = deretter</span></p>
+    </section>
+  </main>
+</div>
+
+<section class="help" aria-label="Slik bruker du siden">
+  <h2>Slik bruker du siden</h2>
+  <div class="help-grid">
+    <div class="help-card">
+      <h3>Mikrofon</h3>
+      <p>Spill bare høyre hånd, og sett PC-en nær høyttaleren på keyboardet. Viser «Hører» feil tone, prøv en annen følsomhet. Mikrofonen virker når du åpner filen direkte i Chrome eller Edge.</p>
+    </div>
+    <div class="help-card">
+      <h3>MIDI-keyboard</h3>
+      <p>Har keyboardet USB, kobler du det til PC-en og trykker «Koble til MIDI-keyboard». Da ser siden nøyaktig hvilke tangenter du trykker, og du kan spille med begge hender.</p>
+    </div>
+    <div class="help-card">
+      <h3>Vent på meg</h3>
+      <p>Siden står stille til du treffer riktig tone. Fin for å lære rekkefølgen og fingrene. Tiden starter på første riktige tone.</p>
+    </div>
+    <div class="help-card">
+      <h3>Spill i takt</h3>
+      <p>Du får fire klikk, så går siden videre i tempoet du har valgt. Etterpå ser du hvor mange toner du traff i tide. Øk tempoet litt for hver runde, som i nedtellingen.</p>
+    </div>
+  </div>
+  <p class="help-note">Bokstavene og fingersettingen er de samme som i notearket. B heter H på norsk. Høyre hånd starter på A over midtre C.</p>
+</section>
+
+<noscript><p style="padding:16px">Siden trenger JavaScript for å virke.</p></noscript>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

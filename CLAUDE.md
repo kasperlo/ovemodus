@@ -4,21 +4,27 @@ Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, vise
 
 ## Status nå
 
-- `prototype/ovemodus.html` er en fungerende app i én fil (≈550 kB, abcjs 6.4.4 er lagt inn). Den er fasiten for oppførselen.
-- `tests/e2e/` har 9 Playwright-tester. To av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`. Alle er grønne mot prototypen.
+- Appen er Vite + TypeScript uten rammeverk (`index.html`, `src/`). abcjs 6.4.4 kommer fra npm.
+- `prototype/ovemodus.html` er den opprinnelige appen i én fil. Den er referansen for oppførselen og kan fortsatt testes (`npm run test:e2e:prototype`).
+- `tests/e2e/` har 9 Playwright-tester som kjører mot `vite preview`. To av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`.
+- `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon, `build`, `toAbc` og dømming.
 - `noter/` har LilyPond-kildene til notearket (PDF), lydfilene (MP3) og skriptet som lager dem.
 
-Neste steg er å bygge prototypen om til et ordentlig prosjekt. Se «Plan» nederst.
+Steg 1 i planen er gjort. Neste er steg 2.
 
 ## Kommandoer
 
 ```bash
 npm install
 npx playwright install chromium   # én gang
-npm run test:e2e                  # alle tester, ca. 1 minutt
+npm run dev                       # utviklingsserver
+npm run build                     # tsc + vite build til dist/
+npm test                          # Vitest, under ett sekund
+npm run test:e2e                  # bygger, starter vite preview (port 4173) og kjører Playwright, ca. 1 minutt
+npm run test:e2e:prototype        # samme tester mot prototypen
 ```
 
-Prototypen åpnes direkte i Chrome eller Edge (`open -a "Google Chrome" prototype/ovemodus.html`). Mikrofonen virker ikke i forhåndsvisninger som kjører i en sandkasse (for eksempel inne i Claude).
+Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpnes direkte i Chrome eller Edge (`open -a "Google Chrome" prototype/ovemodus.html`). Mikrofonen virker ikke i forhåndsvisninger som kjører i en sandkasse (for eksempel inne i Claude).
 
 ## Hva appen gjør
 
@@ -66,7 +72,18 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 
 ## Testkroken
 
-`window.ovemodus` (`input`, `setSection`, `setMode`, `setTempo`, `startRun`, `stopRun`, `state`) brukes av testene. Behold den med samme form når appen bygges om. Typene står i `tests/e2e/helpers.ts`.
+`window.ovemodus` (`input`, `setSection`, `setMode`, `setTempo`, `startRun`, `stopRun`, `state`) brukes av testene. Den settes i `src/testHook.ts`. Behold formen. Typene står i `tests/e2e/helpers.ts`.
+
+## Kodeoppdeling
+
+- `src/music/`: `theory.ts` (tonenavn, MIDI), `song.ts` (låtformat, `N`/`CH`/`R`, `build`)
+- `src/songs/`: én fil per låt, `index.ts` er registeret
+- `src/notation/`: `abc.ts` (`toAbc`, rent), `sheet.ts` (abcjs-tegning og markør)
+- `src/audio/synth.ts`: AudioContext, toner og metronomklikk
+- `src/input/`: `pitch.ts` (YIN + Goertzel, rent), `mic.ts`, `midi.ts`
+- `src/practice/`: `input.ts` (felles inngang for alle kilder), `wait.ts` (vent på meg), `takt.ts` (spill i takt og demo), `judge.ts` (rene regler), `progress.ts`, `session.ts` (del, modus, visning, hopp til note)
+- `src/ui/`: `dom.ts` (alle elementer), `view.ts` (`refresh` og alt som tegnes), `keyboard.ts`, `strip.ts`
+- `src/state.ts` (tilstand under øving), `src/storage.ts` (`localStorage`), `src/main.ts` (kobler alt sammen)
 
 ## Testoppsett
 
@@ -87,7 +104,7 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 
 Kjør testene grønne etter hvert steg.
 
-1. **Bygg om til Vite + TypeScript** (uten rammeverk), uten å endre oppførsel. Samme DOM-id-er og samme testkrok. abcjs fra npm (6.4.4). Foreslått oppdeling:
+1. ✅ **Bygg om til Vite + TypeScript** (uten rammeverk), uten å endre oppførsel. Samme DOM-id-er og samme testkrok. abcjs fra npm (6.4.4). Foreslått oppdeling:
    - `src/music/` (teori, låtformat, `build`)
    - `src/songs/` (én fil per låt + register)
    - `src/notation/` (`toAbc`, tegning og markør)

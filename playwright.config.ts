@@ -1,7 +1,9 @@
 import { defineConfig } from '@playwright/test';
 
-// Testene kjører mot prototypen (prototype/ovemodus.html) som standard.
-// Etter ombyggingen til Vite: sett APP_URL, eller legg inn webServer med `vite preview` her.
+// Testene kjører mot `vite preview` av siste build. Sett APP_URL for å teste noe annet,
+// for eksempel prototypen: `npm run test:e2e:prototype`.
+const PREVIEW_PORT = 4173;
+
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 60_000,
@@ -14,4 +16,12 @@ export default defineConfig({
     viewport: { width: 1366, height: 900 },
     launchOptions: { args: ['--autoplay-policy=no-user-gesture-required'] },
   },
+  webServer: process.env.APP_URL
+    ? undefined
+    : {
+        command: `npm run build && npx vite preview --port ${PREVIEW_PORT} --strictPort`,
+        url: `http://localhost:${PREVIEW_PORT}/`,
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+      },
 });

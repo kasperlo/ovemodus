@@ -1,5 +1,4 @@
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 
 /** Testkroken appen legger på window. Behold den uendret når appen bygges om. */
 export interface OvemodusHook {
@@ -33,9 +32,8 @@ declare global {
   }
 }
 
-/** Adressen testene åpner. Standard er prototypen som lokal fil. */
-export const appUrl = (): string =>
-  process.env.APP_URL ?? pathToFileURL(path.resolve(process.cwd(), 'prototype/ovemodus.html')).href;
+/** Adressen testene åpner. Standard er `vite preview` (se playwright.config.ts). */
+export const appUrl = (): string => process.env.APP_URL ?? 'http://localhost:4173/';
 
 export const fixture = (name: string): string => path.resolve(process.cwd(), 'tests/fixtures', name);
 

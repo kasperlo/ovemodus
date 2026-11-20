@@ -4,21 +4,28 @@
 
 ## Kom i gang
 
-Åpne `prototype/ovemodus.html` i Chrome eller Edge. Trykk «Bruk mikrofon» (spill bare høyre hånd) eller «Koble til MIDI-keyboard» hvis keyboardet har USB.
+```bash
+npm install
+npm run dev
+```
+
+Åpne adressen Vite skriver ut i Chrome eller Edge. Trykk «Bruk mikrofon» (spill bare høyre hånd) eller «Koble til MIDI-keyboard» hvis keyboardet har USB.
 
 ## Tester
 
 ```bash
 npm install
 npx playwright install chromium
-npm run test:e2e
+npm test           # Vitest
+npm run test:e2e   # Playwright mot vite preview
 ```
 
-Testene spiller pianoopptak inn i en falsk mikrofon og sjekker at appen kjenner igjen hver tone.
+Playwright-testene spiller pianoopptak inn i en falsk mikrofon og sjekker at appen kjenner igjen hver tone.
 
 ## Innhold
 
-- `prototype/`: dagens app i én fil
+- `src/`, `index.html`: appen (Vite + TypeScript)
+- `prototype/`: den opprinnelige appen i én fil, referanse for oppførselen
 - `tests/`: Playwright-tester og lydfilene de bruker
 - `noter/`: notearket (PDF og LilyPond-kilder) og lydfiler å lytte til
 - `CLAUDE.md`: hvordan appen virker, viktige beslutninger og planen videre
