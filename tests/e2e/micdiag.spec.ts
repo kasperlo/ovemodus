@@ -114,3 +114,28 @@ test('mikrofontest: svak lyd som på iPad (−17 dB) blir hørt med kalibrert f�
     await second.close();
   }
 });
+
+// Kunstig pianoopptak (tests/fixtures/make-synthetic.mjs): hjerteslaget i «Spenning» med venstre hånd, A2 A2 legato.
+// Den andre A2-en slås an mens den første klinger, så den telles bare hvis appen hører anslaget.
+for (const [wav, sens, calGate] of [['spenning-lh-legato.wav', 'middels', undefined], ['spenning-lh-legato-svak.wav', 'kalibrert', 0.0008]] as const) {
+  test(`mikrofon, venstre hånd: gjentatt tone høres som nytt anslag (${wav}, ${sens})`, async ({ playwright }) => {
+    const browser = await playwright.chromium.launch({ args: fakeMicArgs(wav) });
+    try {
+      const page = await newPage(browser);
+      await page.goto(appUrl());
+      await page.evaluate(([k, s, g]) => {
+        localStorage.clear();
+        localStorage.setItem(k as string, JSON.stringify({ settings: { sens: s, calGate: g, hand: 'lh', section: 'spenning' } }));
+      }, [STORE_KEY, sens, calGate ?? null] as const);
+      await page.reload();
+      await page.evaluate(() => window.ovemodus.setMode('vent'));
+      await page.click('#btnMic');
+      await expect.poll(() => page.evaluate(() => window.ovemodus.state.finished), { timeout: 20_000 }).toBe(true);
+      const st = await page.evaluate(() => window.ovemodus.state);
+      expect(st.cur).toBe(8);
+      expect(st.misses).toBe(0);
+    } finally {
+      await browser.close();
+    }
+  });
+}

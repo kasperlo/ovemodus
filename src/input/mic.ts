@@ -100,7 +100,10 @@ export function micFrame(now: number): void {
     return;
   }
   det.silent = 0;
-  if (rms > det.slow * ATTACK_RATIO + 0.001 && now - det.attackT > ATTACK_HOLDOFF_MS) {
+  // Et anslag må også være et absolutt hopp, så støy ikke gir falske anslag. 0,001 er for mye når lyden er svak
+  // (iPad-mikrofonen gir rundt −59 dB), så hoppet skaleres med grensen når den er lavere enn «Høy».
+  // For «Lav», «Middels» og «Høy» blir det 0,001 som før.
+  if (rms > det.slow * ATTACK_RATIO + Math.min(0.001, gate * 0.3) && now - det.attackT > ATTACK_HOLDOFF_MS) {
     det.attackT = now; det.afterAttack = true; det.cand = null; det.count = 0;
   }
   det.slow = det.slow * 0.85 + rms * 0.15;
