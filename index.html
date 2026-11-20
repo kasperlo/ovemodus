@@ -39,6 +39,7 @@
       <label class="opt pick" for="selSong">Låt <select id="selSong"></select></label>
       <div class="seg pick-row" id="segSection" role="group" aria-label="Velg del"></div>
       <p class="use" id="secUse"></p>
+      <p class="use casio" id="secCasio"></p>
       <div class="seg pick-row" id="segHand" role="group" aria-label="Velg hånd">
         <button type="button" data-hand="rh" aria-pressed="true">Høyre hånd</button>
         <button type="button" data-hand="lh" aria-pressed="false">Venstre hånd</button>
@@ -147,6 +148,21 @@
     </div>
   </div>
   <p class="help-note">Bokstavene og fingersettingen er de samme som i notearket. B heter H på norsk. Høyre hånd spiller fra midtre C og opp, venstre hånd under.</p>
+  <details class="kbd-setup" id="casioSetup">
+    <summary>Oppsett for Casio CT-S400</summary>
+    <p>Lagre hver lyd som en registrering, så bytter du lyd med to trykk under showet. Lydnumrene står i tonelisten bak i brukerveiledningen.</p>
+    <ol>
+      <li><strong>Lagre:</strong> velg lyd (TONE og hjulet), eventuelt LAYER eller SPLIT, reverb og oktav. Trykk REGISTRATION, så «&gt;» og STORE. Velg bank med hjulet, trykk 1–4 og YES.</li>
+      <li><strong>Hente:</strong> REGISTRATION, velg bank med hjulet, trykk 1–4.</li>
+      <li><strong>Raskere:</strong> MENU → HOME CSTM → legg «Registration Area 1–4» og «Reg Bank Next» på knappene under skjermen. Lagre i MY SETUP, ellers forsvinner det når keyboardet slås av.</li>
+      <li><strong>Før festen:</strong> slå av Auto Power Off (MENU → SETTING), ellers slår keyboardet seg av etter 30 minutter uten bruk. Til høyttaleranlegg: PHONES/OUTPUT (da blir de innebygde høyttalerne stille).</li>
+    </ol>
+    <div class="table-wrap"><table id="casioTable">
+      <thead><tr><th scope="col">Plass</th><th scope="col">Låt</th><th scope="col">Lyd</th><th scope="col">Tips</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <p><strong>Lydeffekter:</strong> lyd 599 SFX SET 1 legger en effekt på hver tangent: <span id="sfxKeys"></span>. Gong: lyd 598 CHINESE SET, tangent E5.</p>
+  </details>
 </section>
 
 <dialog class="diag" id="diag" aria-labelledby="diagTitle">

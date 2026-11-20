@@ -20,7 +20,8 @@ export const els = {
   diagLive: byId('diagLive'), diagStep: byId('diagStep'), btnCal: byId<HTMLButtonElement>('btnCal'), diagResult: byId('diagResult'),
   btnCopy: byId<HTMLButtonElement>('btnCopy'), diagCopied: byId('diagCopied'),
   panel: byId('panel'), btnSetup: byId<HTMLButtonElement>('btnSetup'), setupSum: byId('setupSum'),
-  selSong: byId<HTMLSelectElement>('selSong'), segHand: byId('segHand'), secUse: byId('secUse'),
+  selSong: byId<HTMLSelectElement>('selSong'), segHand: byId('segHand'), secUse: byId('secUse'), secCasio: byId('secCasio'),
+  casioTable: byId<HTMLTableElement>('casioTable'), sfxKeys: byId('sfxKeys'),
   songTitle: byId('songTitle'), subText: byId('subText'),
   optLHText: byId('optLHText'), optAccText: byId('optAccText'), optLHStaffText: byId('optLHStaffText'),
   segView: byId('segView'), sheet: byId('sheet'), optLHStaff: byId<HTMLInputElement>('optLHStaff'), optLHStaffLabel: byId('optLHStaffLabel')

@@ -1,18 +1,18 @@
 # Øvemodus – keyboardtrener
 
-Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, viser noter og neste tangent, og går videre når riktig tone spilles. Første låt er «I Dovregubbens hall» (Grieg, forenklet i a-moll), pluss to korte gameshow-effekter.
+Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, viser noter og neste tangent, og går videre når riktig tone spilles. Låtene er «I Dovregubbens hall» (Grieg, forenklet i a-moll) og korte gameshow-lyder til et julebord. Kasper spiller dem live på en Casio CT-S400 og øver med iPaden i notestativet.
 
 ## Status nå
 
 - Appen er Vite + TypeScript uten rammeverk (`index.html`, `src/`). abcjs 6.4.4 kommer fra npm.
 - `prototype/ovemodus.html` er den opprinnelige appen i én fil. Den er referansen for oppførselen og kan fortsatt testes (`npm run test:e2e:prototype`).
-- `tests/e2e/` har 20 Playwright-tester som kjører mot `vite preview`. Fire av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`. De 10 i `ipad.spec.ts` (layout, skjermlås, PWA), `sheet.spec.ts` (farger, timingmerker, spøkelsesnote) og `micdiag.spec.ts` (mikrofontest og kalibrering) hoppes over mot prototypen.
-- `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon, `build`, `toAbc` og dømming.
+- `tests/e2e/` har Playwright-tester som kjører mot `vite preview`. Seks av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`. Spec-ene for nye funksjoner (`ipad`, `sheet`, `micdiag`, `hands`) hoppes over mot prototypen.
+- `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon, `build`, `toAbc`, dømming, og `songs.test.ts` som validerer alle låtene (takter fyller taktarten, fingre 1–5 i riktig rekkefølge, høyre hånd fra midtre C og opp, venstre under, alt innenfor C2–C7, Casio-oppsett og standardtempo i steg på 5).
 - `noter/` har LilyPond-kildene til notearket (PDF), lydfilene (MP3) og skriptet som lager dem.
 
 Appen er publisert på https://kasperlo.github.io/ovemodus/ fra `main` via GitHub Actions (`.github/workflows/deploy.yml`): typesjekk, Vitest og Playwright må være grønne før den publiseres. Pull requests testes, men publiseres ikke.
 
-Steg 1 og 3 er gjort, og iPad-delen av steg 4 (layout for stående iPad og skjermlås). Steg 2 er ikke påbegynt.
+Steg 1, 2 og 3 er gjort, og iPad-delen av steg 4. Venstre hånd kan øves alene (trinn 1). Neste: klassiske gameshow-lyder, begge hender samtidig med MIDI (trinn 2) og med mikrofon (trinn 3), og import av egne noter som bare lagres på enheten.
 
 ## Kommandoer
 
@@ -31,8 +31,10 @@ Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpne
 
 ## Hva appen gjør
 
-- **Velg del:** Del A, Del B, Hele stykket (A A B A + sluttakkord), Riktig svar (fanfare), Feil svar (sad trombone).
-- **Input:** mikrofon (høyre hånd alene), Web MIDI (USB-keyboard; toner under midtre C ignoreres som venstre hånd), eller klikk på skjermtastaturet.
+- **Velg låt og del:** nedtrekksliste med «I Dovregubbens hall» (Del A, Del B, Hele stykket) og gameshow-lyder (intro, riktig svar, feil svar, joker, dobbel poeng, spenning, tiden er ute, vinner). Delvalget skjules når låten har én del.
+- **Velg hånd:** høyre eller venstre. Venstre hånd vises i bassnøkkel med fingersetting og tonenavn, skjermtastaturet viser C2–C4 (høyre: C4–C6), og «Spill … for meg» og «Vis …» gjelder den andre hånden. Rekorder lagres per hånd (`delA|lh|vent`). Begge hender samtidig er ikke laget ennå.
+- **Casio CT-S400:** hver låt har et forslag til lyd og registreringsplass (`casio` i låtfilen, `src/casio.ts`), vist under låtvalget og i «Oppsett for Casio CT-S400» nederst på siden.
+- **Input:** mikrofon (én hånd), Web MIDI (USB-keyboard; den andre hånden ignoreres, delt ved midtre C), eller klikk på skjermtastaturet.
 - **Vent på meg:** står stille til riktig tone kommer. Tid måles fra første riktige tone. Klikk på en note eller bokstavbrikke for å starte derfra (da lagres ikke rekord).
 - **Spill i takt:** én takt med innteller, metronom, valgfri venstre hånd. Hver tone dømmes treff/bom innenfor et tidsvindu. Resultat i prosent og gjennomsnittlig timing. Rekorden er høyeste tempo med minst 90 % treff.
 - **Hør hvordan det går:** appen spiller delen selv og viser tangentene.
@@ -47,12 +49,13 @@ Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpne
 Låtene er skrevet som takter i åttedeler (`s16=0.5, e=1, q=2, h=4, dh=6, w=8`):
 
 - `N('D#5', e, 4)`: tone, varighet, finger. Navnet styrer stavemåten (`D#` vises som D♯, `Bb` som B♭).
-- `CH(['A4','C5','E5','A5'], q, '1 2 3 5', 'A-moll', 'Am')`: akkord. Godtas når én av akkordtonene spilles.
-- `R(q)`: pause.
-- `LH`: mønstre for venstre hånd (bare til avspilling og noteark).
-- `SECTIONS`: hver del er grupper av takter (`[taktnøkkel, venstrehåndsnøkkel]`) med en etikett.
+- `CH(['A4','C5','E5','A5'], q, '1 2 3 5', 'A-moll', 'Am')`: akkord. Godtas når én av akkordtonene spilles. Fingrene står fra den dypeste tonen.
+- `DY('A2', 'E3', q)`: to toner i venstre hånd (fingre `5 1` som standard), vises som «A+E».
+- `R(q)`: pause. `qd` er punktert fjerdedel.
+- En låt (`Song`) har `key` (ABC, f.eks. `Am`, `F`, `Cm`), `meter` (`{ beats, unit }`), `bars` (høyre hånd), `lh` (venstre hånd, hele takter med pauser) og `sections`. Hver del er grupper av takter (`[høyrehåndsnøkkel, venstrehåndsnøkkel]`) med en etikett. Del-id-ene er unike på tvers av låter, fordi testkroken og lagringen bruker dem.
+- Låtene ligger i `src/songs/` og registreres i `src/songs/index.ts` med kategori (låt, egne, klassisk).
 
-`build(section)` gir `{ bars, items, steps, lh, total }`. `steps` er alle toner og akkorder i rekkefølge (uten pauser). Både dømming, tastatur, bokstavbrikker og noteark bygger på `steps`, så de kan aldri komme i utakt.
+`build(song, section, hand)` gir `{ bars, other, items, steps, acc, total, barLen }`. `steps` er alle toner og akkorder for hånden man øver på, i rekkefølge (uten pauser). `acc` er den andre hånden til avspilling. Både dømming, tastatur, bokstavbrikker og noteark bygger på `steps`, så de kan aldri komme i utakt. Taktarten styrer inntelling (minst fire slag), metronomslag (punktert fjerdedel i 6/8 og 3/8) og bjelker i notearket.
 
 ## Tonegjenkjenning (mikrofon) – beslutninger og feller
 
@@ -63,11 +66,11 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 3. **YIN** (terskel 0,15, ellers globalt minimum hvis det er under 0,3; krever konfidens ≥ 0,75), 75–1400 Hz.
 4. **Viktig:** YIN alene leser pianotoner **15–45 cent for høyt** (inharmoniske overtoner; målt mot FFT på opptakene). Det fikk enkelte toner avvist eller rundet feil. Derfor finjusteres grunntonen med en Goertzel-skanning rundt YIN-estimatet (±5 %, steg på 0,2 %, Hann-vindu, parabolsk interpolasjon i log-effekt). Resultatet ligger innenfor ±5 cent. Toner mer enn 42 cent fra nærmeste halvtone forkastes.
 5. **Hendelser:** samme MIDI-tone i 3 rammer på rad gir en `stable`-hendelse; 9 rammer gir `sustain`. Feil tone telles bare som bom på `sustain`, så anslag og overganger ikke gir falske bom.
-6. **Anslag:** RMS-hopp over 1,4 × glidende snitt (140 ms sperretid) markerer et nytt anslag. Uten anslag ignoreres en tone med samme tonenavn som forrige godkjente tone, fordi den bare klinger ut. Det trengs for å skille «C så C-dur-akkord» i fanfaren.
+6. **Anslag:** RMS-hopp over 1,4 × glidende snitt pluss `min(0,001, 0,3 × grensen)` (140 ms sperretid) markerer et nytt anslag. Uten anslag ignoreres en tone med samme tonenavn som forrige godkjente tone, fordi den bare klinger ut. Det trengs for å skille «C så C-dur-akkord» i fanfaren og for gjentatte toner (A2 A2). Det faste tillegget var 0,001, men det stoppet gjentatte toner på iPad-nivå. For «Lav», «Middels» og «Høy» er det fortsatt 0,001.
 7. **Ekko:** mikrofonen ignoreres i 450 ms etter et klikk på skjermtastaturet eller en MIDI-tone, og under demo.
 8. **Mikrofontest** (`src/ui/micDiag.ts`, «Mikrofontest» i oppsettet): viser hva nettleseren faktisk har slått på (`track.getSettings()`), nivå, grense og tonen den hører, live. Kalibreringen måler 2 s stillhet og 8 s spilling, og foreslår en grense (`analyzeCalibration` i `src/input/calibrate.ts`): over 3 × støyen og 0,4 × svake toner. «Bruk denne følsomheten» lagrer `calGate` og velger «Kalibrert». Mens testen er åpen, går ingen toner til øvingen. «Kopier rapport» gir en tekst som kan limes inn når noe er feil.
 9. **Oktaver:** «Godta riktig tone i alle oktaver» er på som standard. Det dekker keyboard med oktavskift og oktavfeil i deteksjonen.
-10. **Spill i takt med mikrofon:** 70 ms forsinkelse trekkes fra. Når appen spiller venstre hånd gjennom høyttaleren, ignoreres mikrofontoner under MIDI 55. Anbefal hodetelefoner.
+10. **Spill i takt med mikrofon:** 70 ms forsinkelse trekkes fra. Når appen spiller den andre hånden gjennom høyttaleren, ignoreres mikrofontoner i dens register (under MIDI 55 når man øver høyre, fra 60 og opp når man øver venstre). Anbefal hodetelefoner.
 11. **Tidsvindu i takt-modus:** `clamp(0,5 × min(varighet, kvartnote), 90 ms, 200 ms)`. Avspilling planlegges i `AudioContext`-tid med 0,3 s forsprang + `outputLatency`. MIDI bruker `event.timeStamp`.
 
 ## Noteark (abcjs) – feller
@@ -95,6 +98,8 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - `src/input/`: `pitch.ts` (YIN + Goertzel, rent), `mic.ts`, `midi.ts`
 - `src/practice/`: `input.ts` (felles inngang for alle kilder), `wait.ts` (vent på meg), `takt.ts` (spill i takt og demo), `judge.ts` (rene regler), `progress.ts`, `session.ts` (del, modus, visning, hopp til note)
 - `src/ui/`: `dom.ts` (alle elementer), `view.ts` (`refresh` og alt som tegnes), `keyboard.ts`, `strip.ts`
+- `src/songs/`: `dovregubben.ts`, `gameshow.ts` (egne lyder), `index.ts` (register og `findSection`)
+- `src/casio.ts`: lydforslag og registreringer for Casio CT-S400
 - `src/state.ts` (tilstand under øving), `src/storage.ts` (`localStorage`), `src/wakeLock.ts`, `src/main.ts` (kobler alt sammen)
 - `public/`: ikonene. `icon.svg` er kilden, PNG-ene lages med `scripts/make-icons.mjs`.
 
@@ -104,8 +109,21 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - `tests/fixtures/del-a-hoyre-hand.wav`: høyre hånd i del A, 100 BPM, staccato, 1,5 s stillhet først. Forventet: 26/26, 0 bom.
 - `tests/fixtures/del-a-oktav-ned-feil-tone.wav`: samme en oktav lavere, med en feil F4 (0,45 s) før tone 8. Forventet: 26/26, 1 bom.
 - `tests/fixtures/del-a-svak-ipad.wav`: `del-a-hoyre-hand.wav` dempet 17 dB (`ffmpeg -af volume=-17dB`). Det er samme nivå som iPad-mikrofonen målte i notestativet. Med «Høy» høres 1 av 26 toner, med kalibrert følsomhet alle 26 uten bom.
-- Lydfilene er laget fra `noter/lyd-ovetempo.ly` → MIDI → `noter/scripts/postprocess.py` → fluidsynth (FluidR3_GM, 48 kHz) → ffmpeg (mono, 16 bit, 3 s stillhet til slutt).
+- `tests/fixtures/spenning-lh-legato.wav` og `…-svak.wav`: kunstige pianotoner fra `node tests/fixtures/make-synthetic.mjs` (inharmoniske overtoner, to-trinns utklingning). Hjerteslaget i «Spenning» med venstre hånd, A2 A2 legato, på normalt nivå og 17 dB svakere. Forventet: 8/8, 0 bom (svak med kalibrert grense 0,0008).
+- `del-a-*.wav` er laget fra `noter/lyd-ovetempo.ly` → MIDI → `noter/scripts/postprocess.py` → fluidsynth (FluidR3_GM, 48 kHz) → ffmpeg (mono, 16 bit, 3 s stillhet til slutt). LilyPond og FluidSynth er ikke installert lokalt nå, så nye opptak lages med `make-synthetic.mjs`.
+- Node: prosjektet krever Node 20.19 eller nyere (`.nvmrc`). Standard i skallet kan være Node 18, og da feiler Vitest.
 - Testene kjører med én worker fordi takt-testene måler timing.
+
+## Casio CT-S400 (Kaspers keyboard)
+
+Kilde: Casios brukerveiledning (CTS400-E-2B) og MIDI Implementation for CT-S400/CT-S410/LK-S450. Fakta som betyr noe for appen:
+
+- 61 tangenter, C2–C7 (MIDI 36–96). Alle toner i låtene skal ligge der (testet).
+- USB-MIDI er class compliant (micro-B, «USB TO HOST»). Ingen USB-lyd. iPad har ikke Web MIDI i noen nettleser, så MIDI virker bare på Mac/PC med Chrome eller Edge.
+- MIDI-kanaler: hovedlyd (UPPER1) kanal 1, lag (UPPER2) kanal 2, split (LOWER, venstre for splittpunktet, standard F♯3) **kanal 3**. Metronom kanal 8, akkompagnement 9–16. Nyttig for trinn 2: med split på kan hendene skilles på kanal i stedet for tonehøyde.
+- Tonenumrene som sendes følger oktavforskyvning og transponering. Noen lyder legger på en oktav selv (TROMBONE −1, SOLO BASSOON −1, CELESTA/GLOCKENSPIEL +1). Om det også endrer MIDI-tonen, er ikke bekreftet. Test med en MIDI-monitor før trinn 2 stoler på tonehøyde.
+- Registrering: 8 banker × 4 plasser. Lyd, lag, split, oktav, reverb og tempo lagres. Planen for gameshowet står i `casio` i hver låtfil (bank 1–2 egne lyder, 3–4 klassiske, 5 resten).
+- Lydeffekter: 599 SFX SET 1 (C5 buzzer, E5 klokketikk, F♯3 applaus, G♯3 hjerteslag, B3 latter). 592 ORCHESTRA SET har pauker F2–F3 i halvtoner.
 
 ## Git og GitHub
 

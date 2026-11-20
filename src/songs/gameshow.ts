@@ -10,6 +10,7 @@ export const riktigSvar = egne({
   id: 'riktig-svar',
   title: 'Riktig svar',
   key: 'C',
+  casio: { reg: [1, 2], tone: 224, layer: 205 },
   bars: { FAN: [N('C4', s16, 1), N('E4', s16, 2), N('G4', s16, 3), N('C5', s16, 5), CH(['C4', 'E4', 'G4', 'C5'], dh, '1 2 3 5', 'C-dur', 'C')] },
   lh: { FAN: [R(q), DY('C2', 'C3', dh)] },
   sections: [{ id: 'riktig', title: 'Riktig svar', tempo: 120, use: 'Når noen svarer riktig.', groups: [{ label: 'Riktig svar – fanfare', bars: [['FAN', 'FAN']] }] }]
@@ -19,6 +20,7 @@ export const feilSvar = egne({
   id: 'feil-svar',
   title: 'Feil svar',
   key: 'C',
+  casio: { reg: [1, 3], tone: 228, tip: 'Trekk pitch bend-hjulet sakte ned på siste tone for en ekte «wah».' },
   bars: {
     FE1: [R(q), N('G4', q, 4), N('F#4', q, 3), N('F4', q, 2)],
     FE2: [N('E4', w, 1)]
@@ -28,7 +30,7 @@ export const feilSvar = egne({
     FE1: [R(q), N('G3', q, 1), N('F#3', q, 2), N('F3', q, 3)],
     FE2: [N('E3', w, 4)]
   },
-  sections: [{ id: 'feil', title: 'Feil svar', tempo: 76, use: 'Når noen svarer feil.', groups: [{ label: 'Feil svar – sad trombone', bars: [['FE1', 'FE1'], ['FE2', 'FE2']] }] }]
+  sections: [{ id: 'feil', title: 'Feil svar', tempo: 75, use: 'Når noen svarer feil.', groups: [{ label: 'Feil svar – sad trombone', bars: [['FE1', 'FE1'], ['FE2', 'FE2']] }] }]
 });
 
 // C-lydisk skala (med F♯) gir et magisk, svevende preg, og Cmaj7 til slutt skiller jokeren fra «riktig svar».
@@ -41,6 +43,7 @@ export const joker = egne({
   id: 'joker',
   title: 'Joker',
   key: 'C',
+  casio: { reg: [1, 4], tone: 49, layer: 202, tip: 'Spill lett og raskt.' },
   bars: {
     J1: [...RUN_C, ...SPARKLE, R(q)],
     J2: [CMAJ7(dh), R(q)]
@@ -56,6 +59,7 @@ export const bonus = egne({
   id: 'dobbel-poeng',
   title: 'Dobbel poeng',
   key: 'C',
+  casio: { reg: [2, 1], tone: 50, layer: 202 },
   bars: {
     B1: [...RUN_G, ...RUN_C],
     B2: [...SPARKLE, CMAJ7(dh)]
@@ -76,6 +80,7 @@ export const spenning = egne({
   id: 'spenning',
   title: 'Spenning',
   key: 'Am',
+  casio: { reg: [2, 2], tone: 192, lower: 592, tip: 'Med split blir A2 i venstre hånd en pauke. Splittpunktet skal stå på F♯3.' },
   bars: {
     S1: tick('E5', 'D#5', 3, 2),
     S2: tick('F5', 'E5', 4, 3),
@@ -83,7 +88,7 @@ export const spenning = egne({
     S4: tick('G5', 'F#5', 5, 4)
   },
   lh: { HB: HEARTBEAT },
-  sections: [{ id: 'spenning', title: 'Spenning', tempo: 104, use: 'Mens deltakerne tenker. Gjenta så lenge det trengs.', groups: [{ label: 'Spenning – tenketid', bars: [['S1', 'HB'], ['S2', 'HB'], ['S3', 'HB'], ['S4', 'HB']] }] }]
+  sections: [{ id: 'spenning', title: 'Spenning', tempo: 105, use: 'Mens deltakerne tenker. Gjenta så lenge det trengs.', groups: [{ label: 'Spenning – tenketid', bars: [['S1', 'HB'], ['S2', 'HB'], ['S3', 'HB'], ['S4', 'HB']] }] }]
 });
 
 const BUZZ = (d: number) => CH(['B4', 'F5'], d, '1 4', 'B+F');
@@ -93,6 +98,7 @@ export const tidenErUte = egne({
   id: 'tiden-er-ute',
   title: 'Tiden er ute',
   key: 'C',
+  casio: { reg: [2, 3], tone: 213, tip: 'Ekte buzzer: velg 599 SFX SET 1 og trykk C5.' },
   bars: { T1: [BUZZ(e), R(e), BUZZ(e), R(e), BUZZ(q), R(q)] },
   lh: { T1: [BUZZ_LH(e), R(e), BUZZ_LH(e), R(e), BUZZ_LH(q), R(q)] },
   sections: [{ id: 'tidute', title: 'Tiden er ute', tempo: 120, use: 'Når tiden er ute. Spill hardt.', groups: [{ label: 'Tiden er ute', bars: [['T1', 'T1']] }] }]
@@ -102,6 +108,7 @@ export const intro = egne({
   id: 'intro',
   title: 'Intro',
   key: 'F',
+  casio: { reg: [1, 1], tone: 205, tip: 'Sett reverb til Hall (MENU → SYS FX) før du lagrer registreringen.' },
   bars: {
     I1: [N('C5', e, 1), N('C5', e, 1), N('F5', q, 4), N('E5', e, 3), N('F5', e, 4), N('G5', q, 5)],
     I2: [N('G5', e, 5), N('F5', e, 4), N('E5', e, 3), N('F5', e, 4), N('D5', q, 2), N('C5', q, 1)],
@@ -119,6 +126,7 @@ export const vinner = egne({
   id: 'vinner',
   title: 'Vinner',
   key: 'C',
+  casio: { reg: [2, 4], tone: 205, layer: 183, tip: 'Reverb Hall gir mer pomp.' },
   bars: {
     V1: [N('C5', q, 2), N('G4', e, 1), N('C5', e, 2), N('E5', q, 3), N('C5', q, 2)],
     V2: [N('G5', qd, 5), N('F5', e, 4), N('E5', e, 3), N('D5', e, 2), N('E5', q, 3)],
@@ -129,7 +137,7 @@ export const vinner = egne({
     V2: [DY('G2', 'D3', h), DY('G2', 'D3', h)],
     V3: [R(h), DY('C2', 'C3', h)]
   },
-  sections: [{ id: 'vinner', title: 'Vinner', tempo: 112, use: 'Når vinneren kåres. En lengre fanfare.', groups: [{ label: 'Vinner – finale', bars: [['V1', 'V1'], ['V2', 'V2'], ['V3', 'V3']] }] }]
+  sections: [{ id: 'vinner', title: 'Vinner', tempo: 110, use: 'Når vinneren kåres. En lengre fanfare.', groups: [{ label: 'Vinner – finale', bars: [['V1', 'V1'], ['V2', 'V2'], ['V3', 'V3']] }] }]
 });
 
 export const gameshow: Song[] = [intro, riktigSvar, feilSvar, joker, bonus, spenning, tidenErUte, vinner];

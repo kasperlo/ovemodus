@@ -7,6 +7,7 @@ import { resetProgress, setTempo } from './practice/progress';
 import { drawSheet, setHand, setMode, setSection, setView } from './practice/session';
 import { runFrame, startRun, stopRun } from './practice/takt';
 import { CATEGORY_LABEL, songs } from './songs';
+import { SFX_KEYS, casioText } from './casio';
 import { elapsed, mic, run, spell, state } from './state';
 import { save, store, type Mode, type Sensitivity } from './storage';
 import { installTestHook } from './testHook';
@@ -60,6 +61,20 @@ function renderSongSelect(): void {
     els.selSong.append(group);
   });
 }
+/** Tabellen over registreringer i «Oppsett for Casio CT-S400». */
+function renderCasioTable(): void {
+  const body = els.casioTable.tBodies[0];
+  body.innerHTML = '';
+  songs.filter(s => s.casio).sort((a, b) => a.casio!.reg[0] - b.casio!.reg[0] || a.casio!.reg[1] - b.casio!.reg[1]).forEach(s => {
+    const c = s.casio!;
+    const tr = body.insertRow();
+    [`${c.reg[0]}-${c.reg[1]}`, s.title, casioText(c).replace(/^Registrering \d+-\d+: /, ''), c.tip ?? ''].forEach(text => {
+      tr.insertCell().textContent = text;
+    });
+  });
+  els.sfxKeys.textContent = SFX_KEYS.map(([k, what]) => `${k} ${what}`).join(', ');
+}
+
 els.selSong.addEventListener('change', () => {
   const song = songs.find(s => s.id === els.selSong.value);
   if (song) setSection(song.sections[0].id);
@@ -128,6 +143,7 @@ function frame(now: number): void {
 
 /* ---------- Start ---------- */
 renderSongSelect();
+renderCasioTable();
 state.hand = store.settings.hand === 'lh' ? 'lh' : 'rh';
 state.mode = store.settings.mode === 'takt' ? 'takt' : 'vent';
 setSection(store.settings.section);

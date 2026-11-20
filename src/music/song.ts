@@ -1,3 +1,4 @@
+import type { CasioSetup } from '../casio';
 import { parsePitch, pc } from './theory';
 
 /** Varigheter i åttedeler. `qd` er punktert fjerdedel. */
@@ -105,6 +106,8 @@ export interface Song {
   bars: Record<string, BarEvent[]>;
   lh: Record<string, BarEvent[]>;
   sections: Section[];
+  /** Forslag til lyd på Casio CT-S400. */
+  casio?: CasioSetup;
 }
 
 export type StepStatus = 'done' | 'hit' | 'stumbled' | 'missed';

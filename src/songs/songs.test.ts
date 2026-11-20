@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { barLength, type BarEvent } from '../music/song';
 import { isKnownKey } from '../notation/abc';
 import { songs } from '.';
+import { CT_S400_TONES } from '../casio';
 
 // Validering av alle låtene, så feil i notene oppdages før de havner i appen.
 
@@ -12,6 +13,10 @@ describe.each(songs.map(s => [s.id, s] as const))('%s', (_id, song) => {
   const len = barLength(song.meter);
   const used = new Set<string>(), usedLh = new Set<string>();
   song.sections.forEach(sec => sec.groups.forEach(g => g.bars.forEach(([rh, lh]) => { used.add(rh); if (lh) usedLh.add(lh); })));
+
+  it('standardtempo kan stilles inn med glidebryteren (50–220, steg på 5)', () => {
+    song.sections.forEach(sec => { expect(sec.tempo % 5, sec.id).toBe(0); expect(sec.tempo).toBeGreaterThanOrEqual(50); expect(sec.tempo).toBeLessThanOrEqual(220); });
+  });
 
   it('har kjent toneart og taktart', () => {
     expect(isKnownKey(song.key), song.key).toBe(true);
@@ -52,6 +57,22 @@ describe.each(songs.map(s => [s.id, s] as const))('%s', (_id, song) => {
     usedLh.forEach(k => song.lh[k].flatMap(pitches).forEach(m => expect(m, `venstre ${k}`).toBeLessThan(60)));
   });
 
+  it('alle toner finnes på Casio CT-S400 (C2–C7)', () => {
+    [...used].forEach(k => song.bars[k].flatMap(pitches).forEach(m => { expect(m, k).toBeGreaterThanOrEqual(36); expect(m, k).toBeLessThanOrEqual(96); }));
+    [...usedLh].forEach(k => song.lh[k].flatMap(pitches).forEach(m => { expect(m, k).toBeGreaterThanOrEqual(36); expect(m, k).toBeLessThanOrEqual(96); }));
+  });
+
+  it('Casio-forslaget bruker kjente lyder, og split passer med splittpunktet F♯3', () => {
+    const c = song.casio;
+    if (!c) return;
+    [c.tone, c.layer, c.lower].filter((n): n is number => n != null).forEach(n => expect(CT_S400_TONES[n], `lyd ${n}`).toBeDefined());
+    expect(c.reg[0]).toBeGreaterThanOrEqual(1); expect(c.reg[0]).toBeLessThanOrEqual(8);
+    expect(c.reg[1]).toBeGreaterThanOrEqual(1); expect(c.reg[1]).toBeLessThanOrEqual(4);
+    if (!c.lower) return;
+    usedLh.forEach(k => song.lh[k].flatMap(pitches).forEach(m => expect(m, `venstre ${k} under F♯3`).toBeLessThan(54)));
+    used.forEach(k => song.bars[k].flatMap(pitches).forEach(m => expect(m, `høyre ${k} fra F♯3`).toBeGreaterThanOrEqual(54)));
+  });
+
   it('hver del har toner i begge hender', () => {
     song.sections.forEach(sec => {
       const rh = sec.groups.flatMap(g => g.bars.flatMap(([k]) => song.bars[k].flatMap(pitches)));
@@ -60,6 +81,11 @@ describe.each(songs.map(s => [s.id, s] as const))('%s', (_id, song) => {
       expect(lh.length, sec.id).toBeGreaterThan(0);
     });
   });
+});
+
+it('hver låt har sin egen registreringsplass på keyboardet', () => {
+  const regs = songs.filter(s => s.casio).map(s => s.casio!.reg.join('-'));
+  expect(new Set(regs).size).toBe(regs.length);
 });
 
 it('id-ene til delene er unike på tvers av låter', () => {

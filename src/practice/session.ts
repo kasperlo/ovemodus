@@ -1,3 +1,4 @@
+import { casioText } from '../casio';
 import { build, type Hand } from '../music/song';
 import { renderSheet, sheet } from '../notation/sheet';
 import { findSection } from '../songs';
@@ -50,6 +51,7 @@ export function setSection(id: string): void {
   els.selSong.value = song.id;
   els.songTitle.textContent = song.title;
   els.secUse.textContent = [sec.use, song.by !== 'Egen' ? song.by : ''].filter(Boolean).join(' ');
+  els.secCasio.textContent = song.casio ? `Casio CT-S400 – ${casioText(song.casio)}.${song.casio.tip ? ' ' + song.casio.tip : ''}` : '';
   store.settings.section = sec.id;
   setTempo(store.settings.tempo[sec.id] || sec.tempo, true);
   save();
