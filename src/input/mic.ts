@@ -2,13 +2,14 @@
 import { audio, audioCtx } from '../audio/synth';
 import { emitInput } from '../practice/input';
 import { mic, run, spell, state } from '../state';
-import type { Sensitivity } from '../storage';
+import { store } from '../storage';
 import { els } from '../ui/dom';
 import { setPill, setStatus, updateButtons } from '../ui/view';
 import { keepAwake } from '../wakeLock';
-import { estimatePitch } from './pitch';
+import type { Frame } from './calibrate';
+import { estimatePitch, type PitchEstimate } from './pitch';
 
-const GATES: Record<Sensitivity, number> = { lav: 0.02, middels: 0.008, hoy: 0.0035 };
+export const GATES: Record<string, number> = { lav: 0.02, middels: 0.008, hoy: 0.0035 };
 /** Trekkes fra tidspunktet i «Spill i takt». */
 const MIC_LATENCY = 70;
 const STABLE_FRAMES = 3;
@@ -29,7 +30,25 @@ const det = {
   shown: null as string | null
 };
 
-const gateFor = (sens: string): number => GATES[sens as Sensitivity] || GATES.middels;
+const gateFor = (sens: string): number =>
+  (sens === 'kalibrert' ? store.settings.calGate : GATES[sens]) || GATES.middels;
+
+/**
+ * Mikrofontesten leser målingene her. Mens den er åpen (`live` eller `sample`) går ingen toner til øvingen.
+ * I `sample` lagres hver ramme til kalibreringen.
+ */
+export const diag = {
+  mode: 'off' as 'off' | 'live' | 'sample',
+  rms: 0,
+  gate: 0,
+  pitch: null as PitchEstimate | null,
+  frames: [] as Frame[]
+};
+
+export function setDiagMode(mode: typeof diag.mode): void {
+  diag.mode = mode;
+  det.cand = null; det.count = 0; det.emitted = null;
+}
 
 function meter(rms: number, gate: number): void {
   const lv = (x: number) => Math.max(0, Math.min(1, (20 * Math.log10(x + 1e-9) + 60) / 60));
@@ -63,6 +82,13 @@ export function micFrame(now: number): void {
   det.floor = Math.max(det.floor, 0.0003);
   const gate = Math.max(det.floor * 3, gateFor(els.optSens.value));
   meter(rms, gate);
+  diag.rms = rms; diag.gate = gate;
+  if (diag.mode !== 'off') {
+    const p = rms >= gate || diag.mode === 'sample' ? estimatePitch(buf, audioCtx().sampleRate) : null;
+    diag.pitch = p;
+    if (diag.mode === 'sample') diag.frames.push({ rms, pitched: !!p });
+    return;
+  }
   if (now < state.suppressMicUntil || (run.active && run.kind === 'demo')) {
     det.cand = null; det.count = 0; det.slow = det.slow * 0.85 + rms * 0.15;
     return;

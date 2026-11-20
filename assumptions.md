@@ -52,3 +52,11 @@
 - **Timingmerker:** vises fra 30 ms avvik, samme grense som «Timingen sitter.». De står under tonenavnet, fordi de kolliderte med nabonoter da de stod ved siden av.
 - **Spøkelsesnote:** bare i «Vent på meg». I takt-modus ville den blinket forbi for fort til å være nyttig. Når alle oktaver godtas, vises den i oktaven nærmest tonen man skulle spille. Ellers vises den der den ble spilt.
 - **Lagdeling:** `notation/sheet.ts` bruker `timingClass` fra `practice/judge.ts`. Det er en ren funksjon, så avhengigheten er akseptert i stedet for å duplisere grensen.
+
+## 2026-11-20 – Mikrofontest og kalibrering
+
+- **Kontekst:** Kasper opplever at iPaden hører dårligere enn Macen. Det er ikke kjent om det skyldes nivå, at Safari slår på talebehandling, eller plasseringen.
+- **Beslutning:** Bygge en diagnose som viser fakta (innstillingene nettleseren rapporterer, nivåer i dB, gjenkjenning) og en rapport som kan kopieres, før vi endrer tonegjenkjenningen.
+- **Kalibrert grense:** maks av 3 × støy (median i 2 s stillhet) og 0,4 × svake toner (25. persentil av rammer med sikker tone), mellom 0,0008 og 0,03. På opptaket av del A blir grensen −53 dB, lavere enn «Høy» (−49 dB). Alle 26 tonene gjenkjennes uten bom (micdiag.spec.ts). Det dynamiske støygulvet (× 3) i mic.ts gjelder fortsatt, så grensen kan ikke havne under støyen i rommet.
+- **Råd:** svake toner under −48 dB (0,004), støy over halvparten av svake toner, eller under 50 % gjenkjenning gir råd i klartekst.
+- **Ikke verifisert:** hva Safari på iPad rapporterer og gjør. Det er hele poenget med testen. Kasper kjører den på iPaden og limer inn rapporten.

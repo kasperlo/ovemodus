@@ -1,6 +1,6 @@
 export type Mode = 'vent' | 'takt';
 export type View = 'noter' | 'bokstaver';
-export type Sensitivity = 'lav' | 'middels' | 'hoy';
+export type Sensitivity = 'lav' | 'middels' | 'hoy' | 'kalibrert';
 
 export interface Settings {
   section: string;
@@ -15,6 +15,8 @@ export interface Settings {
   lhStaff: boolean;
   /** Oppsettet er åpent på smal skjerm. */
   setupOpen: boolean;
+  /** Grensen fra mikrofontesten, brukt når følsomheten er «kalibrert». */
+  calGate?: number;
 }
 
 export interface WaitRecord { time: number; misses: number }

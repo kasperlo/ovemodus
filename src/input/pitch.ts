@@ -70,13 +70,22 @@ export function refineF(buf: Float32Array, sr: number, f0: number): number {
   return lo + (bi + p) * step;
 }
 
+export interface PitchEstimate {
+  midi: number;
+  f: number;
+  /** YIN-sikkerhet, 0–1. */
+  conf: number;
+  /** Avstand fra nærmeste halvtone. */
+  cents: number;
+}
+
 /** YIN + Goertzel-finjustering. Gir nærmeste MIDI-tone, eller null hvis tonen er usikker eller for langt fra en halvtone. */
-export function estimatePitch(buf: Float32Array, sr: number): { midi: number; f: number } | null {
+export function estimatePitch(buf: Float32Array, sr: number): PitchEstimate | null {
   const r = yin(buf, sr);
   if (!r || r.conf < MIN_CONFIDENCE) return null;
   const f = refineF(buf, sr, r.f);
   const mf = 69 + 12 * Math.log2(f / 440);
   const midi = Math.round(mf);
   if (Math.abs(mf - midi) > MAX_SEMITONE_OFFSET) return null;
-  return { midi, f };
+  return { midi, f, conf: r.conf, cents: Math.round((mf - midi) * 100) };
 }

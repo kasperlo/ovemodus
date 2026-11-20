@@ -12,6 +12,7 @@ import { save, store, type Mode, type Sensitivity } from './storage';
 import { installTestHook } from './testHook';
 import { els } from './ui/dom';
 import { renderKeyboard } from './ui/keyboard';
+import { initMicDiag } from './ui/micDiag';
 import { fmtSec, refresh, renderSegments, setSetupOpen } from './ui/view';
 
 /* ---------- Skjermtastatur ---------- */
@@ -85,6 +86,7 @@ els.tempo.addEventListener('input', () => setTempo(Number(els.tempo.value)));
   els[id].checked = store.settings[key] !== false;
   els[id].addEventListener('change', () => { store.settings[key] = els[id].checked; save(); });
 });
+initMicDiag();
 els.optSens.value = store.settings.sens || 'middels';
 els.optSens.addEventListener('change', () => { store.settings.sens = els.optSens.value as Sensitivity; save(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && run.active) stopRun(false); });

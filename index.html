@@ -44,6 +44,7 @@
       <div class="row">
         <button type="button" class="btn" id="btnMic">Bruk mikrofon</button>
         <button type="button" class="btn" id="btnMidi">Koble til MIDI-keyboard</button>
+        <button type="button" class="btn ghost" id="btnDiag">Mikrofontest</button>
       </div>
       <div class="meter" aria-hidden="true"><div class="meter-fill" id="meterFill"></div><div class="meter-gate" id="meterGate"></div></div>
       <p class="status" id="inputStatus">Du kan også klikke på tangentene på skjermen.</p>
@@ -142,6 +143,29 @@
   <p class="help-note">Bokstavene og fingersettingen er de samme som i notearket. B heter H på norsk. Høyre hånd starter på A over midtre C.</p>
 </section>
 
+<dialog class="diag" id="diag" aria-labelledby="diagTitle">
+  <h2 id="diagTitle">Mikrofontest</h2>
+  <p class="diag-intro">Sjekk hva nettleseren gjør med lyden, og finn riktig følsomhet for dette rommet og denne enheten. Toner du spiller nå, teller ikke i øvingen.</p>
+  <section>
+    <h3>Hva nettleseren har slått på</h3>
+    <dl class="diag-list" id="diagSettings"></dl>
+  </section>
+  <section>
+    <h3>Akkurat nå</h3>
+    <p class="diag-live" id="diagLive" aria-live="off">–</p>
+  </section>
+  <section>
+    <h3>Kalibrering</h3>
+    <p id="diagStep">Tar ti sekunder: to sekunder stille, så åtte sekunder der du spiller noen toner som vanlig.</p>
+    <div class="row"><button type="button" class="btn primary" id="btnCal">Start kalibrering</button></div>
+    <div class="diag-result" id="diagResult" aria-live="polite"></div>
+  </section>
+  <form method="dialog" class="row diag-actions">
+    <button type="button" class="btn" id="btnCopy">Kopier rapport</button>
+    <span class="diag-copied" id="diagCopied" aria-live="polite"></span>
+    <button class="btn ghost" id="btnDiagClose">Lukk</button>
+  </form>
+</dialog>
 <noscript><p style="padding:16px">Siden trenger JavaScript for å virke.</p></noscript>
 <script type="module" src="/src/main.ts"></script>
 </body>

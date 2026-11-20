@@ -6,7 +6,7 @@ Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, vise
 
 - Appen er Vite + TypeScript uten rammeverk (`index.html`, `src/`). abcjs 6.4.4 kommer fra npm.
 - `prototype/ovemodus.html` er den opprinnelige appen i én fil. Den er referansen for oppførselen og kan fortsatt testes (`npm run test:e2e:prototype`).
-- `tests/e2e/` har 18 Playwright-tester som kjører mot `vite preview`. To av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`. De 8 i `ipad.spec.ts` (layout, skjermlås, PWA) og `sheet.spec.ts` (farger, timingmerker, spøkelsesnote) hoppes over mot prototypen.
+- `tests/e2e/` har 19 Playwright-tester som kjører mot `vite preview`. Tre av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`. De 9 i `ipad.spec.ts` (layout, skjermlås, PWA), `sheet.spec.ts` (farger, timingmerker, spøkelsesnote) og `micdiag.spec.ts` (mikrofontest og kalibrering) hoppes over mot prototypen.
 - `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon, `build`, `toAbc` og dømming.
 - `noter/` har LilyPond-kildene til notearket (PDF), lydfilene (MP3) og skriptet som lager dem.
 
@@ -65,9 +65,10 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 5. **Hendelser:** samme MIDI-tone i 3 rammer på rad gir en `stable`-hendelse; 9 rammer gir `sustain`. Feil tone telles bare som bom på `sustain`, så anslag og overganger ikke gir falske bom.
 6. **Anslag:** RMS-hopp over 1,4 × glidende snitt (140 ms sperretid) markerer et nytt anslag. Uten anslag ignoreres en tone med samme tonenavn som forrige godkjente tone, fordi den bare klinger ut. Det trengs for å skille «C så C-dur-akkord» i fanfaren.
 7. **Ekko:** mikrofonen ignoreres i 450 ms etter et klikk på skjermtastaturet eller en MIDI-tone, og under demo.
-8. **Oktaver:** «Godta riktig tone i alle oktaver» er på som standard. Det dekker keyboard med oktavskift og oktavfeil i deteksjonen.
-9. **Spill i takt med mikrofon:** 70 ms forsinkelse trekkes fra. Når appen spiller venstre hånd gjennom høyttaleren, ignoreres mikrofontoner under MIDI 55. Anbefal hodetelefoner.
-10. **Tidsvindu i takt-modus:** `clamp(0,5 × min(varighet, kvartnote), 90 ms, 200 ms)`. Avspilling planlegges i `AudioContext`-tid med 0,3 s forsprang + `outputLatency`. MIDI bruker `event.timeStamp`.
+8. **Mikrofontest** (`src/ui/micDiag.ts`, «Mikrofontest» i oppsettet): viser hva nettleseren faktisk har slått på (`track.getSettings()`), nivå, grense og tonen den hører, live. Kalibreringen måler 2 s stillhet og 8 s spilling, og foreslår en grense (`analyzeCalibration` i `src/input/calibrate.ts`): over 3 × støyen og 0,4 × svake toner. «Bruk denne følsomheten» lagrer `calGate` og velger «Kalibrert». Mens testen er åpen, går ingen toner til øvingen. «Kopier rapport» gir en tekst som kan limes inn når noe er feil.
+9. **Oktaver:** «Godta riktig tone i alle oktaver» er på som standard. Det dekker keyboard med oktavskift og oktavfeil i deteksjonen.
+10. **Spill i takt med mikrofon:** 70 ms forsinkelse trekkes fra. Når appen spiller venstre hånd gjennom høyttaleren, ignoreres mikrofontoner under MIDI 55. Anbefal hodetelefoner.
+11. **Tidsvindu i takt-modus:** `clamp(0,5 × min(varighet, kvartnote), 90 ms, 200 ms)`. Avspilling planlegges i `AudioContext`-tid med 0,3 s forsprang + `outputLatency`. MIDI bruker `event.timeStamp`.
 
 ## Noteark (abcjs) – feller
 
