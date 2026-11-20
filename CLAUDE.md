@@ -6,13 +6,13 @@ Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, vise
 
 - Appen er Vite + TypeScript uten rammeverk (`index.html`, `src/`). abcjs 6.4.4 kommer fra npm.
 - `prototype/ovemodus.html` er den opprinnelige appen i én fil. Den er referansen for oppførselen og kan fortsatt testes (`npm run test:e2e:prototype`).
-- `tests/e2e/` har 10 Playwright-tester som kjører mot `vite preview`. To av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`.
+- `tests/e2e/` har 16 Playwright-tester som kjører mot `vite preview`. To av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`. De 6 i `ipad.spec.ts` (layout, skjermlås, PWA) hoppes over mot prototypen.
 - `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon, `build`, `toAbc` og dømming.
 - `noter/` har LilyPond-kildene til notearket (PDF), lydfilene (MP3) og skriptet som lager dem.
 
 Appen er publisert på https://kasperlo.github.io/ovemodus/ fra `main` via GitHub Actions (`.github/workflows/deploy.yml`): typesjekk, Vitest og Playwright må være grønne før den publiseres. Pull requests testes, men publiseres ikke.
 
-Steg 1 er gjort. Av steg 3 er GitHub Pages gjort, PWA gjenstår. Steg 2 er ikke påbegynt.
+Steg 1 og 3 er gjort, og iPad-delen av steg 4 (layout for stående iPad og skjermlås). Steg 2 er ikke påbegynt.
 
 ## Kommandoer
 
@@ -24,6 +24,7 @@ npm run build                     # tsc + vite build til dist/
 npm test                          # Vitest, under ett sekund
 npm run test:e2e                  # bygger, starter vite preview (port 4173) og kjører Playwright, ca. 1 minutt
 npm run test:e2e:prototype        # samme tester mot prototypen
+node scripts/make-icons.mjs       # lager PNG-ikonene i public/ fra public/icon.svg
 ```
 
 Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpnes direkte i Chrome eller Edge (`open -a "Google Chrome" prototype/ovemodus.html`). Mikrofonen virker ikke i innebygde forhåndsvisninger som kjører i en sandkasse.
@@ -37,6 +38,9 @@ Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpne
 - **Hør hvordan det går:** appen spiller delen selv og viser tangentene.
 - **Visning:** noteark (abcjs) med fingersetting over og tonenavn under, eller bokstavbrikker. Gul markør = neste tone, grønn = riktig, rød = bom.
 - Innstillinger og rekorder lagres i `localStorage` under nøkkelen `dovregubben-ovemodus-v1`.
+- **iPad på notestativet:** under 1040 px kan oppsettet felles sammen til én linje (`#btnSetup`, huskes i `setupOpen`). Fra 740 px står neste tone og noter side om side. Over 1040 px er layouten som før, og oppsettet vises alltid.
+- **Skjermlås:** `src/wakeLock.ts` holder skjermen våken mens mikrofonen er på, MIDI er koblet til eller en runde spilles.
+- **PWA:** `vite-plugin-pwa` med `autoUpdate`. Alt i builden forhåndslagres. Google Fonts lagres ved første besøk, så appen virker uten nett etter det. En ny versjon tas i bruk neste gang appen åpnes, ikke midt i en økt.
 
 ## Datamodellen
 
@@ -85,7 +89,8 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - `src/input/`: `pitch.ts` (YIN + Goertzel, rent), `mic.ts`, `midi.ts`
 - `src/practice/`: `input.ts` (felles inngang for alle kilder), `wait.ts` (vent på meg), `takt.ts` (spill i takt og demo), `judge.ts` (rene regler), `progress.ts`, `session.ts` (del, modus, visning, hopp til note)
 - `src/ui/`: `dom.ts` (alle elementer), `view.ts` (`refresh` og alt som tegnes), `keyboard.ts`, `strip.ts`
-- `src/state.ts` (tilstand under øving), `src/storage.ts` (`localStorage`), `src/main.ts` (kobler alt sammen)
+- `src/state.ts` (tilstand under øving), `src/storage.ts` (`localStorage`), `src/wakeLock.ts`, `src/main.ts` (kobler alt sammen)
+- `public/`: ikonene. `icon.svg` er kilden, PNG-ene lages med `scripts/make-icons.mjs`.
 
 ## Testoppsett
 
@@ -126,5 +131,5 @@ Kjør testene grønne etter hvert steg.
 
    Legg `webServer` med `vite preview` i `playwright.config.ts`, og Vitest for rene funksjoner: tonedeteksjon på syntetiske toner med inharmoniske overtoner, `toAbc`, `build` og dømming.
 2. **Flere låter:** låtvelger + delvelger, skill Dovregubben og gameshow-effektene. Valideringstest: hver takt fyller taktarten, fingre er 1–5, venstre hånd holder seg innenfor takten.
-3. **PWA og GitHub Pages:** ✅ GitHub Actions som tester og publiserer (`base: './'`). Gjenstår: `vite-plugin-pwa` (offline, kan installeres). Med HTTPS virker mikrofonen også på iPad og mobil. Web MIDI finnes ikke i Safari, så på iPad er det bare mikrofon og skjermtastatur.
-4. **Ideer videre:** nedtellingsmodus som blir raskere for hver runde (som `noter/lyd/dovregubben-nedtelling.mp3`), loop av én takt, venstre hånd via MIDI, import av ABC eller MusicXML fra MuseScore, kalibrering av forsinkelse, statistikk over tid, bedre layout på iPad.
+3. ✅ **PWA og GitHub Pages:** GitHub Actions som tester og publiserer (`base: './'`), `vite-plugin-pwa` (offline, kan installeres). Med HTTPS virker mikrofonen også på iPad og mobil. Web MIDI finnes ikke i Safari, så på iPad er det bare mikrofon og skjermtastatur.
+4. **Ideer videre:** nedtellingsmodus som blir raskere for hver runde (som `noter/lyd/dovregubben-nedtelling.mp3`), loop av én takt, venstre hånd via MIDI, import av ABC eller MusicXML fra MuseScore, kalibrering av forsinkelse, statistikk over tid. ✅ Layout for stående iPad og skjermlås. Neste for iPad: la notearket bruke ledig høyde på store iPader (12,9″), og liggende iPad.

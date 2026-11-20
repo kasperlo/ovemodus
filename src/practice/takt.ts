@@ -5,6 +5,7 @@ import { setTaktRecord, taktRecord } from '../storage';
 import { els } from '../ui/dom';
 import { flashKey } from '../ui/keyboard';
 import { celebrate, markStep, refresh, setHint } from '../ui/view';
+import { keepAwake } from '../wakeLock';
 import type { InputEvent } from './input';
 import { RECORD_MIN_PCT, hitWindow, matches, timingText } from './judge';
 import { TEMPO_MAX, TEMPO_MIN, resetProgress, setTempo } from './progress';
@@ -24,6 +25,7 @@ export function startRun(kind: RunKind): void {
   const outLat = (ac.outputLatency || ac.baseLatency || 0);
   const at = ac.currentTime + lead;
   run.t0 = performance.now() + (lead + outLat) * 1000;
+  keepAwake('run', true);
   Object.assign(run, { active: true, kind, e8, countIn, tempo, cursor: -1, lastCursor: -2, lastBeat: -1, offsets: [] });
   const bus = ac.createGain();
   bus.connect(masterBus());
@@ -52,6 +54,7 @@ export function startRun(kind: RunKind): void {
 export function stopRun(quiet?: boolean): void {
   if (!run.active) return;
   run.active = false;
+  keepAwake('run', false);
   const bus = run.bus;
   try { bus!.gain.setTargetAtTime(0, audioCtx().currentTime, 0.02); } catch { /* ignorer */ }
   setTimeout(() => { try { bus!.disconnect(); } catch { /* ignorer */ } }, 250);
@@ -116,6 +119,7 @@ export function judgeTakt(m: number, t: number, ev: InputEvent): void {
 function finishRun(): void {
   const kind = run.kind;
   run.active = false;
+  keepAwake('run', false);
   const bus = run.bus;
   setTimeout(() => { try { bus!.disconnect(); } catch { /* ignorer */ } }, 1500);
   if (kind === 'takt') {

@@ -13,6 +13,8 @@ export interface Settings {
   tempo: Record<string, number>;
   view: View;
   lhStaff: boolean;
+  /** Oppsettet er åpent på smal skjerm. */
+  setupOpen: boolean;
 }
 
 export interface WaitRecord { time: number; misses: number }
@@ -27,7 +29,7 @@ export interface Store {
 const STORE_KEY = 'dovregubben-ovemodus-v1';
 
 export const store: Store = {
-  settings: { section: 'delA', mode: 'vent', oct: true, lh: true, acc: true, sens: 'middels', tempo: {}, view: 'noter', lhStaff: false },
+  settings: { section: 'delA', mode: 'vent', oct: true, lh: true, acc: true, sens: 'middels', tempo: {}, view: 'noter', lhStaff: false, setupOpen: true },
   rec: {}
 };
 

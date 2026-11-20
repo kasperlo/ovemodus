@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dovregubben-øving</title>
+<meta name="theme-color" content="#060d45">
+<meta name="apple-mobile-web-app-title" content="Øvemodus">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,7 +27,13 @@
 </header>
 
 <div class="layout">
-  <aside class="panel" aria-label="Oppsett">
+  <aside class="panel" id="panel" aria-label="Oppsett">
+    <button type="button" class="setup-toggle" id="btnSetup" aria-expanded="true" aria-controls="setupBody">
+      <span class="setup-title">Oppsett</span>
+      <span class="setup-sum" id="setupSum"></span>
+      <span class="setup-act" aria-hidden="true"></span>
+    </button>
+    <div class="setup-body" id="setupBody">
     <section class="step">
       <h2><span class="num">1</span>Hva vil du øve på?</h2>
       <div class="seg" id="segSection" role="group" aria-label="Velg stykke"></div>
@@ -66,6 +76,7 @@
         <button type="button" class="btn ghost" id="btnReset">Start på nytt</button>
       </div>
     </section>
+    </div>
   </aside>
 
   <main class="work">

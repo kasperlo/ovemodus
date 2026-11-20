@@ -5,6 +5,7 @@ import { mic, run, spell, state } from '../state';
 import type { Sensitivity } from '../storage';
 import { els } from '../ui/dom';
 import { setPill, setStatus, updateButtons } from '../ui/view';
+import { keepAwake } from '../wakeLock';
 import { estimatePitch } from './pitch';
 
 const GATES: Record<Sensitivity, number> = { lav: 0.02, middels: 0.008, hoy: 0.0035 };
@@ -97,6 +98,7 @@ export async function toggleMic(): Promise<void> {
   if (mic.on) {
     mic.stream?.getTracks().forEach(t => t.stop());
     mic.on = false;
+    keepAwake('mic', false);
     setPill(els.pillMic, 'Mikrofon av');
     setStatus('Mikrofonen er slått av.');
     meter(0, gateFor(els.optSens.value));
@@ -119,6 +121,7 @@ export async function toggleMic(): Promise<void> {
     src.connect(an);
     Object.assign(mic, { on: true, stream, analyser: an, buf: new Float32Array(an.fftSize) });
     det.floor = 0.002; det.emitted = null;
+    keepAwake('mic', true);
     setPill(els.pillMic, 'Mikrofon på', 'on');
     setStatus('Mikrofonen lytter. Spill høyre hånd.', 'ok');
   } catch (err) {

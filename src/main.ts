@@ -12,7 +12,7 @@ import { save, store, type Mode, type Sensitivity } from './storage';
 import { installTestHook } from './testHook';
 import { els } from './ui/dom';
 import { renderKeyboard } from './ui/keyboard';
-import { fmtSec, refresh, renderSegments } from './ui/view';
+import { fmtSec, refresh, renderSegments, setSetupOpen } from './ui/view';
 
 /* ---------- Skjermtastatur ---------- */
 function pressKey(k: HTMLElement): void {
@@ -67,6 +67,12 @@ window.addEventListener('resize', () => {
   }, 250);
 });
 els.btnMidi.addEventListener('click', connectMidi);
+setSetupOpen(store.settings.setupOpen !== false);
+els.btnSetup.addEventListener('click', () => {
+  store.settings.setupOpen = els.btnSetup.getAttribute('aria-expanded') !== 'true';
+  save();
+  setSetupOpen(store.settings.setupOpen);
+});
 els.btnGo.addEventListener('click', () => {
   if (run.active && run.kind === 'takt') stopRun(false); else startRun('takt');
 });

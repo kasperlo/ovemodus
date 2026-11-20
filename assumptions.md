@@ -23,3 +23,24 @@
 
 ### Bundle-størrelse
 - Vite advarer om en chunk over 500 kB (abcjs er ca. 480 kB av den). Prototypen var like stor. Ikke håndtert nå. Vurderes når PWA-en lages i steg 3.
+
+## 2026-11-20 – iPad-pakken
+
+### Layout
+- **Kontekst:** På stående iPad (744–1024 px) lå oppsettet øverst, og tastaturet havnet under skjermkanten.
+- **Beslutning:** Under 1040 px kan oppsettet felles sammen til én linje med sammendrag. Fra 740 px står neste tone (260 px) og noter side om side, og statistikken legges i 2×2. Over 1040 px er alt som før (pikselidentisk med steg 1, sjekket).
+- **Antakelse:** Oppsettet er åpent første gang, så man finner «Bruk mikrofon». Etter det huskes valget per enhet.
+- **Målt med oppsettet skjult:** tastaturet slutter på 904 px (768×1024), 914 px (820×1180) og 903 px (1024×1366). I Safari med verktøylinje er 768×1024 tett, men det får plass. Som installert app er det god margin.
+- **Ikke gjort:** notearket har fortsatt maks 318 px høyde, så store iPader har ledig plass nederst. Liggende iPad er ikke tilpasset.
+
+### Skjermlås
+- **Beslutning:** Skjermen holdes våken mens mikrofonen er på, MIDI er koblet til eller en runde spilles. Ellers kan den låse seg som normalt.
+- **Begrensning:** Wake Lock krever Safari 16.4 eller nyere. Er den ikke støttet, gjør appen ingenting.
+
+### PWA
+- **Beslutning:** `vite-plugin-pwa` 2.0.0 med `autoUpdate`. Google Fonts mellomlagres ved første besøk, i stedet for å legge skriftene i repoet. Det gir én avhengighet mindre, men første besøk må skje med nett.
+- **Ikon:** tegnet som SVG i appens farger og gjort om til PNG med Playwright (`scripts/make-icons.mjs`), så det ikke trengs et eget bildeverktøy.
+- **Avhengigheter:** `npm audit` viser 4 moderate funn i `glob`/`minimatch` via `workbox-build`. De brukes bare under build. Produksjonsavhengighetene har ingen funn.
+
+### Ikke testet
+- Ekte iPad: mikrofon i Safari, skjermlås og «Legg til på Hjem-skjerm». Testene bruker Chromium med iPad-størrelser.

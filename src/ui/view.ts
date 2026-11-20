@@ -166,6 +166,12 @@ export function updateButtons(): void {
   segButtons(els.segSection).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sec === state.sec.id)));
   segButtons(els.segMode).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === state.mode)));
   els.btnMic.textContent = mic.on ? 'Slå av mikrofon' : 'Bruk mikrofon';
+  els.setupSum.textContent = [state.sec.title, state.mode === 'vent' ? 'Vent på meg' : 'Spill i takt', `${state.tempo} BPM`].join(' · ');
+}
+
+export function setSetupOpen(open: boolean): void {
+  els.panel.classList.toggle('collapsed', !open);
+  els.btnSetup.setAttribute('aria-expanded', String(open));
 }
 
 export function celebrate(): void {

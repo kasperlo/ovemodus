@@ -4,6 +4,7 @@ import { spell } from '../state';
 import { els } from '../ui/dom';
 import { inRange, keyEls } from '../ui/keyboard';
 import { setHint, setPill, setStatus } from '../ui/view';
+import { keepAwake } from '../wakeLock';
 
 /** Toner under midtre C regnes som venstre hånd og ignoreres når valget er på. */
 const MIDDLE_C = 60;
@@ -27,6 +28,7 @@ export async function connectMidi(): Promise<void> {
   const bind = () => {
     const names: string[] = [];
     access.inputs.forEach(inp => { inp.onmidimessage = onMidi; names.push(inp.name ?? ''); });
+    keepAwake('midi', names.length > 0);
     if (names.length) {
       setPill(els.pillMidi, 'MIDI på', 'on');
       setStatus('MIDI koblet til: ' + names.join(', ') + '.', 'ok');

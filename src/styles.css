@@ -101,6 +101,8 @@ h1 {
 }
 .btn.ghost { background: transparent; }
 .btn[hidden] { display: none; }
+/* Fjerner forsinkelsen og dobbelttrykk-zoom på berøringsskjerm. */
+button, .chip { touch-action: manipulation; }
 button:focus-visible, select:focus-visible, input:focus-visible {
   outline: 3px solid #fff; outline-offset: 2px;
 }
@@ -123,10 +125,29 @@ button:focus-visible, select:focus-visible, input:focus-visible {
 .tempo output { font-family: var(--display); font-weight: 700; font-size: 1.15rem; min-width: 4.6em; text-align: right; font-variant-numeric: tabular-nums; }
 .row.go { margin-top: 12px; }
 
+/* ---------- Oppsett som kan felles sammen (smal skjerm) ---------- */
+.setup-body { display: grid; gap: 18px; }
+.setup-toggle { display: none; }
+@media (max-width: 1039px) {
+  .setup-toggle {
+    display: flex; align-items: center; gap: 10px; width: 100%; padding: 2px 0;
+    font: inherit; color: var(--ink); background: none; border: 0; cursor: pointer; text-align: left;
+  }
+  .setup-title { font-family: var(--display); font-weight: 700; font-size: 1.05rem; letter-spacing: 0.05em; text-transform: uppercase; }
+  .setup-sum { flex: 1; min-width: 0; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .setup-act { font-family: var(--display); font-weight: 700; color: var(--gold); white-space: nowrap; }
+  .setup-act::after { content: "Skjul ▴"; }
+  .setup-toggle[aria-expanded="false"] .setup-act::after { content: "Vis ▾"; }
+  .panel.collapsed { padding-top: 10px; padding-bottom: 10px; }
+  .panel.collapsed .setup-body { display: none; }
+}
+
 /* ---------- Scene ---------- */
 .work { display: grid; gap: 14px; min-width: 0; }
 .stage { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 780px) { .stage { grid-template-columns: 300px minmax(0, 1fr); } }
+/* Stående iPad (744–1024 px): neste tone og noter side om side, så alt får plass uten å scrolle. */
+@media (min-width: 740px) { .stage { grid-template-columns: 260px minmax(0, 1fr); } }
+@media (min-width: 1040px) { .stage { grid-template-columns: 300px minmax(0, 1fr); } }
 .side { display: grid; gap: 10px; align-content: start; }
 .clue {
   display: grid; align-content: center; justify-items: center; text-align: center;
@@ -153,6 +174,7 @@ button:focus-visible, select:focus-visible, input:focus-visible {
   font-family: var(--display); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
 }
 .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+@media (min-width: 740px) and (max-width: 1039px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .stat { padding: 6px 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; min-width: 0; }
 .stat .k { display: block; font-family: var(--display); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .stat .v { display: block; font-family: var(--display); font-weight: 700; font-size: 1.2rem; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

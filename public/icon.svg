@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0c1c9c"/>
+  <g fill="#ffcc33">
+    <ellipse cx="196" cy="262" rx="44" ry="33" transform="rotate(-20 196 262)"/>
+    <ellipse cx="324" cy="234" rx="44" ry="33" transform="rotate(-20 324 234)"/>
+    <rect x="228" y="118" width="14" height="146"/>
+    <rect x="356" y="90" width="14" height="146"/>
+    <path d="M228 118 L370 90 L370 128 L228 156 Z"/>
+  </g>
+  <g>
+    <rect x="96" y="318" width="320" height="104" rx="10" fill="#f6f3ea"/>
+    <rect x="160" y="318" width="64" height="104" fill="#ffcc33"/>
+    <g stroke="#03082c" stroke-width="4">
+      <line x1="160" y1="318" x2="160" y2="422"/><line x1="224" y1="318" x2="224" y2="422"/>
+      <line x1="288" y1="318" x2="288" y2="422"/><line x1="352" y1="318" x2="352" y2="422"/>
+    </g>
+    <g fill="#0e0f14">
+      <rect x="142" y="318" width="34" height="62" rx="4"/>
+      <rect x="270" y="318" width="34" height="62" rx="4"/>
+      <rect x="334" y="318" width="34" height="62" rx="4"/>
+    </g>
+  </g>
+</svg>

@@ -16,6 +16,7 @@ export const els = {
   k1: byId('k1'), k2: byId('k2'), k3: byId('k3'), k4: byId('k4'), v1: byId('v1'), v2: byId('v2'), v3: byId('v3'), v4: byId('v4'),
   progFill: byId('progFill'), hint: byId('hint'), strip: byId('strip'), kbd: byId('kbd'), heard: byId('heard'),
   pillMic: byId('pillMic'), pillMidi: byId('pillMidi'),
+  panel: byId('panel'), btnSetup: byId<HTMLButtonElement>('btnSetup'), setupSum: byId('setupSum'),
   segView: byId('segView'), sheet: byId('sheet'), optLHStaff: byId<HTMLInputElement>('optLHStaff'), optLHStaffLabel: byId('optLHStaffLabel')
 };
 
