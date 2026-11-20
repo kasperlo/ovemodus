@@ -10,7 +10,9 @@ Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, vise
 - `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon, `build`, `toAbc` og dømming.
 - `noter/` har LilyPond-kildene til notearket (PDF), lydfilene (MP3) og skriptet som lager dem.
 
-Steg 1 i planen er gjort. Neste er steg 2.
+Appen er publisert på https://kasperlo.github.io/ovemodus/ fra `main` via GitHub Actions (`.github/workflows/deploy.yml`): typesjekk, Vitest og Playwright må være grønne før den publiseres. Pull requests testes, men publiseres ikke.
+
+Steg 1 er gjort. Av steg 3 er GitHub Pages gjort, PWA gjenstår. Steg 2 er ikke påbegynt.
 
 ## Kommandoer
 
@@ -98,6 +100,8 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - Alt i dette repoet skal stå på `kasperlo <kasper.oftebro@gmail.com>`: forfatter, committer og GitHub-konto. Aldri EasyPlay- eller Computas-identiteten.
 - Identiteten er satt lokalt i `.git/config`. Den globale git-configen har EasyPlay-identiteten, så sjekk med `git config user.email` etter en ny klone.
 - `gh` har flere kontoer, og den aktive er ikke nødvendigvis `kasperlo`. Kjør GitHub-kommandoer med `GH_TOKEN=$(gh auth token --user kasperlo) gh …`, så endres ikke den globale innloggingen. Remote og GitHub Pages hører hjemme under `kasperlo`.
+- `git push` bruker `kasperlo` via en credential helper i `.git/config` (`gh auth token --user kasperlo`), uansett hvilken `gh`-konto som er aktiv. Den følger ikke med ved ny klone.
+- Tokenet til `kasperlo` trenger `workflow`-tilgang for å pushe endringer i `.github/workflows/`. `gh auth refresh` må kjøres i Terminal.app, ikke i et innebygd terminalpanel, fordi slike paneler ikke alltid sender tastetrykk til spørsmålene til `gh`.
 - Commit-meldinger skrives på norsk.
 
 ## Konvensjoner
@@ -122,5 +126,5 @@ Kjør testene grønne etter hvert steg.
 
    Legg `webServer` med `vite preview` i `playwright.config.ts`, og Vitest for rene funksjoner: tonedeteksjon på syntetiske toner med inharmoniske overtoner, `toAbc`, `build` og dømming.
 2. **Flere låter:** låtvelger + delvelger, skill Dovregubben og gameshow-effektene. Valideringstest: hver takt fyller taktarten, fingre er 1–5, venstre hånd holder seg innenfor takten.
-3. **PWA og GitHub Pages:** `vite-plugin-pwa` (offline, kan installeres), GitHub Actions som tester og publiserer (`base: './'`). Med HTTPS virker mikrofonen også på iPad og mobil.
+3. **PWA og GitHub Pages:** ✅ GitHub Actions som tester og publiserer (`base: './'`). Gjenstår: `vite-plugin-pwa` (offline, kan installeres). Med HTTPS virker mikrofonen også på iPad og mobil. Web MIDI finnes ikke i Safari, så på iPad er det bare mikrofon og skjermtastatur.
 4. **Ideer videre:** nedtellingsmodus som blir raskere for hver runde (som `noter/lyd/dovregubben-nedtelling.mp3`), loop av én takt, venstre hånd via MIDI, import av ABC eller MusicXML fra MuseScore, kalibrering av forsinkelse, statistikk over tid, bedre layout på iPad.

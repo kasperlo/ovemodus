@@ -4,6 +4,10 @@
 
 ## Kom i gang
 
+Appen ligger på **https://kasperlo.github.io/ovemodus/**. Siden den ligger på HTTPS, kan mikrofonen også brukes i Safari på iPad. Safari støtter ikke MIDI, så der er det mikrofon eller skjermtastatur.
+
+Lokalt:
+
 ```bash
 npm install
 npm run dev
