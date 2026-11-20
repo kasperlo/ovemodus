@@ -6,7 +6,9 @@ export default defineConfig({
   base: './',
   plugins: [
     VitePWA({
-      registerType: 'autoUpdate',
+      // Ny versjon tas i bruk når brukeren trykker «Oppdater» (src/ui/update.ts), ikke midt i en økt.
+      registerType: 'prompt',
+      injectRegister: false,
       manifest: {
         name: 'Øvemodus for keyboard',
         short_name: 'Øvemodus',

@@ -13,6 +13,7 @@ import { save, store, type Mode, type Sensitivity } from './storage';
 import { installTestHook } from './testHook';
 import { els } from './ui/dom';
 import { initMicDiag } from './ui/micDiag';
+import { initUpdates } from './ui/update';
 import { fmtSec, refresh, setSetupOpen } from './ui/view';
 
 /* ---------- Skjermtastatur ---------- */
@@ -153,3 +154,4 @@ if (document.fonts && document.fonts.ready) void document.fonts.ready.then(() =>
 requestAnimationFrame(frame);
 
 installTestHook({ setSection, setMode, setTempo, startRun, stopRun });
+initUpdates();

@@ -42,7 +42,7 @@ Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpne
 - Innstillinger og rekorder lagres i `localStorage` under nøkkelen `dovregubben-ovemodus-v1`.
 - **iPad på notestativet:** under 1040 px kan oppsettet felles sammen til én linje (`#btnSetup`, huskes i `setupOpen`). Fra 740 px står neste tone og noter side om side. Over 1040 px er layouten som før, og oppsettet vises alltid.
 - **Skjermlås:** `src/wakeLock.ts` holder skjermen våken mens mikrofonen er på, MIDI er koblet til eller en runde spilles.
-- **PWA:** `vite-plugin-pwa` med `autoUpdate`. Alt i builden forhåndslagres. Google Fonts lagres ved første besøk, så appen virker uten nett etter det. En ny versjon tas i bruk neste gang appen åpnes, ikke midt i en økt.
+- **PWA:** `vite-plugin-pwa` med `registerType: 'prompt'`. Alt i builden forhåndslagres. Google Fonts lagres ved første besøk, så appen virker uten nett etter det. `src/ui/update.ts` ser etter ny versjon ved oppstart, hver gang appen hentes fram igjen (`visibilitychange`, viktig på iPad som holder appen i minnet) og hver halvtime. Finnes det en, vises «Oppdater» nederst. Appen laster aldri på nytt av seg selv midt i en økt.
 
 ## Datamodellen
 

@@ -19,6 +19,7 @@ export const els = {
   diag: byId<HTMLDialogElement>('diag'), btnDiag: byId<HTMLButtonElement>('btnDiag'), diagSettings: byId('diagSettings'),
   diagLive: byId('diagLive'), diagStep: byId('diagStep'), btnCal: byId<HTMLButtonElement>('btnCal'), diagResult: byId('diagResult'),
   btnCopy: byId<HTMLButtonElement>('btnCopy'), diagCopied: byId('diagCopied'),
+  updateBar: byId('updateBar'), btnUpdate: byId<HTMLButtonElement>('btnUpdate'),
   panel: byId('panel'), btnSetup: byId<HTMLButtonElement>('btnSetup'), setupSum: byId('setupSum'),
   selSong: byId<HTMLSelectElement>('selSong'), segHand: byId('segHand'), secUse: byId('secUse'), secCasio: byId('secCasio'),
   casioTable: byId<HTMLTableElement>('casioTable'), sfxKeys: byId('sfxKeys'),

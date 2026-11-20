@@ -307,6 +307,15 @@ button:focus-visible, select:focus-visible, input:focus-visible {
 .kbd-setup th { font-family: var(--display); letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink); }
 .kbd-setup td:first-child { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--gold); }
 
+/* ---------- Ny versjon ---------- */
+.update-bar {
+  position: fixed; left: 50%; bottom: 16px; z-index: 50; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 12px; width: max-content; max-width: calc(100vw - 32px);
+  padding: 10px 12px 10px 16px; background: var(--tile); border: 2px solid var(--gold); border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); font-weight: 600;
+}
+.update-bar[hidden] { display: none; }
+
 /* ---------- Mikrofontest ---------- */
 .diag {
   width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 18px 20px 16px;
