@@ -1,8 +1,8 @@
 import type { CasioSetup } from '../casio';
 import { parsePitch, pc } from './theory';
 
-/** Varigheter i åttedeler. `qd` er punktert fjerdedel. */
-export const s16 = 0.5, e = 1, q = 2, qd = 3, h = 4, dh = 6, w = 8;
+/** Varigheter i åttedeler. `ed` er punktert åttendedel, `qd` punktert fjerdedel. */
+export const s16 = 0.5, e = 1, ed = 1.5, q = 2, qd = 3, h = 4, dh = 6, w = 8;
 
 export interface NoteEvent {
   type: 'note';
@@ -12,6 +12,8 @@ export interface NoteEvent {
   d: number;
   /** Finger, 1–5. */
   f: string;
+  /** Fermat: hold tonen litt lenger. Vises bare i notearket. */
+  fermata?: boolean;
 }
 
 export interface ChordEvent {
@@ -35,7 +37,8 @@ export interface RestEvent {
 
 export type BarEvent = NoteEvent | ChordEvent | RestEvent;
 
-export const N = (s: string, d: number, f: number): NoteEvent => ({ type: 'note', ...parsePitch(s), d, f: String(f) });
+export const N = (s: string, d: number, f: number, opts: { fermata?: boolean } = {}): NoteEvent =>
+  ({ type: 'note', ...parsePitch(s), d, f: String(f), ...(opts.fermata ? { fermata: true } : {}) });
 
 /** Akkord eller flere toner samtidig. Godtas når én av tonene spilles. */
 export const CH = (notes: string[], d: number, f: string, name: string, short: string = name): ChordEvent => {
@@ -71,8 +74,8 @@ const compound = (m: Meter): boolean => m.unit === 8 && m.beats % 3 === 0;
 /** Lengden på ett metronomslag i åttedeler. */
 export const clickLength = (m: Meter): number => compound(m) ? 3 : 8 / m.unit;
 
-/** Hvor mange åttedeler som bjelkes sammen. */
-export const beamGroup = (m: Meter): number => compound(m) ? 3 : m.unit === 4 && m.beats === 3 ? 2 : 4;
+/** Hvor mange åttedeler som bjelkes sammen: per slag i 2/4 og 3/4 (tydelig galopprytme), per halve takt i 4/4. */
+export const beamGroup = (m: Meter): number => compound(m) ? 3 : m.unit === 4 && m.beats !== 4 ? 2 : 4;
 
 /** Inntelling: hele takter, minst fire slag. */
 export const countInBars = (m: Meter): number => Math.ceil(4 / (barLength(m) / clickLength(m)));

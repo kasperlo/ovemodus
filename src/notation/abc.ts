@@ -11,8 +11,16 @@ export function abcNote(midi: number, name: string): { s: string; alt: number; k
   return { s, alt, key: letter + oct };
 }
 
-/** Varighet i åttedeler til ABC med L:1/8. */
-export const abcDur = (d: number): string => d === 1 ? '' : d === 0.5 ? '/' : String(d);
+/** Varighet i åttedeler til ABC med L:1/8, for eksempel 1,5 → «3/2» (punktert åttendedel) og 0,5 → «/». */
+export function abcDur(d: number): string {
+  if (d === 1) return '';
+  if (Number.isInteger(d)) return String(d);
+  for (const den of [2, 4]) {
+    const num = d * den;
+    if (Number.isInteger(num)) return num === 1 ? '/'.repeat(den / 2) : `${num}/${den}`;
+  }
+  throw new Error(`Varighet som ikke kan skrives i ABC: ${d}`);
+}
 
 /** Antall faste fortegn: positivt for ♯, negativt for ♭. */
 const KEY_SIG: Record<string, number> = {
@@ -64,6 +72,7 @@ function barAbc(bar: Bar, sig: Record<string, number>, meter: Meter, voice: Voic
       if (voice.annotate) lyr.push(it.short || it.name);
     } else {
       if (voice.annotate) t += `!${it.f}!`;
+      if (it.fermata) t += '!fermata!';
       t += note(it.midi, it.name) + abcDur(it.d);
       if (voice.annotate) lyr.push(it.name);
     }

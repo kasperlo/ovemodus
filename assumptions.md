@@ -69,3 +69,28 @@
 - **Beslutning:** ikke senke minimumsgrensene i mic.ts (støygulv ≥ 0,0003, kalibrert grense ≥ 0,0008) eller endre anslagsgjenkjenningen. Målingene viser at det ikke trengs for del A, og tonegjenkjenningen er den mest følsomme delen av appen.
 - **Oppfølging:** hvis fanfaren («C så C-dur», som trenger anslagsgjenkjenning) bommer på iPaden, er det faste hoppet på 0,001 (−60 dB) i anslagsgjenkjenningen neste mistenkte. Det bør gjøres relativt til grensen.
 - **Rettet:** «Start kalibrering» gjorde ingenting hvis man trykket før mikrofonen var klar. Nå venter den.
+
+## 2026-11-21 – Klassiske gameshow-lyder
+
+- **Kilder:** melodiene er kontrollert mot partiturer uten opphavsrett, ikke skrevet etter hukommelsen.
+  - Rossini: Boosey vokalpartitur (archive.org, guglielmotellwil00ross_0).
+  - Offenbach: Bote & Bock vokalpartitur (archive.org, imslp-aux-enfers-offenbach-jacques).
+  - Saint-Saëns: Durand 1922 (archive.org, 31761052133014).
+  - Dukas: Durand partitur (Wikimedia Commons) og Dukas' egen versjon for to klaverer (archive.org, imslp-sorcier-dukas-paul).
+  - Beethoven: Mutopia og Wikipedia.
+  - Chopin: Breitkopf & Härtel og Meynne (archive.org).
+  - Elgar: Boosey 1902 (archive.org, RAM10263-2001).
+  - Händel: Novello 1902 (archive.org, messiahsacredora00hand_0) og Mutopia.
+- **Usikkert i kildene:** andre halvdel av Rossinis tema (takt 9–16) er bare kontrollert for formen. Den er derfor ikke tatt med. «Trolldoms»-figuren i Dukas' takt 2 er ikke lest av sikkert, så Trolldom bruker klarinettmotivet i takt 3–4 i stedet.
+- **Forenklet:**
+  - Melodien i høyre hånd, enkle akkorder eller bass i venstre.
+  - Bindinger over taktstrek finnes ikke i appen. De er erstattet med pauser (Wilhelm Tell takt 8, Beethoven takt 4–5, Elgar takt 7–8 og 15–16).
+  - Akvariet har akkorder i stedet for de bølgende løpene.
+  - Wilhelm Tell, Trollmannens læregutt, Pomp and Circumstance og Halleluja er kortet ned til en lengde som passer som lyd i et gameshow.
+  - Egne slutter: Wilhelm Tell, Trollmannens læregutt og Pomp and Circumstance slutter på grunntonen eller grunnakkorden der temaet ellers går videre.
+- **Flyttet toneart:** for at høyre hånd skal ligge fra midtre C og opp, og for færre fortegn.
+  - Wilhelm Tell: E-dur → C-dur.
+  - Sørgemarsj: b-moll → a-moll. Venstre hånd i originalen går ned til B♭1, som ikke finnes på CT-S400.
+  - Pomp and Circumstance: G-dur → C-dur.
+  - Trollmannens læregutt og Trolldom: en oktav opp (fagottlyden på keyboardet klinger en oktav ned igjen).
+- **Ny i notearket:** punktert åttendedel og fermat. 2/4 og 3/4 bjelkes per slag.

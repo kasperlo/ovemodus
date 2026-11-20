@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { build, type Hand } from '../music/song';
 import { findSection } from '../songs';
-import { abcNote, keyAccidentals, toAbc } from './abc';
+import { abcDur, abcNote, keyAccidentals, toAbc } from './abc';
 
 const model = (id: string, hand: Hand = 'rh') => { const { song, sec } = findSection(id); return build(song, sec, hand); };
 
@@ -17,6 +17,12 @@ describe('abcNote', () => {
   it('regner oktaven fra tonen uten fortegn, så B♯/C♭-grenser blir riktige', () => {
     expect(abcNote(70, 'B♭')).toEqual({ s: 'B', alt: -1, key: 'B4' });
     expect(abcNote(75, 'D♯')).toEqual({ s: 'd', alt: 1, key: 'D5' });
+  });
+});
+
+describe('abcDur', () => {
+  it('skriver varigheter i åttedeler som ABC-lengder', () => {
+    expect([1, 0.5, 0.25, 1.5, 2, 3, 2.5, 6].map(abcDur)).toEqual(['', '/', '//', '3/2', '2', '3', '5/2', '6']);
   });
 });
 

@@ -1,8 +1,9 @@
 import type { Section, Song, SongCategory } from '../music/song';
 import { dovregubben } from './dovregubben';
 import { gameshow } from './gameshow';
+import { classical } from './klassisk';
 
-export const songs: Song[] = [dovregubben, ...gameshow];
+export const songs: Song[] = [dovregubben, ...gameshow, ...classical];
 
 export const CATEGORY_LABEL: Record<SongCategory, string> = {
   'låt': 'Låter',

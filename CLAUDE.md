@@ -12,7 +12,7 @@ Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, vise
 
 Appen er publisert på https://kasperlo.github.io/ovemodus/ fra `main` via GitHub Actions (`.github/workflows/deploy.yml`): typesjekk, Vitest og Playwright må være grønne før den publiseres. Pull requests testes, men publiseres ikke.
 
-Steg 1, 2 og 3 er gjort, og iPad-delen av steg 4. Venstre hånd kan øves alene (trinn 1). Neste: klassiske gameshow-lyder, begge hender samtidig med MIDI (trinn 2) og med mikrofon (trinn 3), og import av egne noter som bare lagres på enheten.
+Steg 1, 2 og 3 er gjort, og iPad-delen av steg 4. Venstre hånd kan øves alene (trinn 1). Neste: begge hender samtidig med MIDI (trinn 2) og med mikrofon (trinn 3), og import av egne noter som bare lagres på enheten.
 
 ## Kommandoer
 
@@ -31,7 +31,7 @@ Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpne
 
 ## Hva appen gjør
 
-- **Velg låt og del:** nedtrekksliste med «I Dovregubbens hall» (Del A, Del B, Hele stykket) og gameshow-lyder (intro, riktig svar, feil svar, joker, dobbel poeng, spenning, tiden er ute, vinner). Delvalget skjules når låten har én del.
+- **Velg låt og del:** nedtrekksliste med «I Dovregubbens hall» (Del A, Del B, Hele stykket) egne gameshow-lyder (intro, riktig svar, feil svar, joker, dobbel poeng, spenning, tiden er ute, vinner) og klassiske (Wilhelm Tell, Can-can, Trollmannens læregutt, Trolldom, Skjebnesymfonien, Akvariet, Sørgemarsj, Pomp and Circumstance, Halleluja). Delvalget skjules når låten har én del.
 - **Velg hånd:** høyre eller venstre. Venstre hånd vises i bassnøkkel med fingersetting og tonenavn, skjermtastaturet viser C2–C4 (høyre: C4–C6), og «Spill … for meg» og «Vis …» gjelder den andre hånden. Rekorder lagres per hånd (`delA|lh|vent`). Begge hender samtidig er ikke laget ennå.
 - **Casio CT-S400:** hver låt har et forslag til lyd og registreringsplass (`casio` i låtfilen, `src/casio.ts`), vist under låtvalget og i «Oppsett for Casio CT-S400» nederst på siden.
 - **Input:** mikrofon (én hånd), Web MIDI (USB-keyboard; den andre hånden ignoreres, delt ved midtre C), eller klikk på skjermtastaturet.
@@ -51,7 +51,7 @@ Låtene er skrevet som takter i åttedeler (`s16=0.5, e=1, q=2, h=4, dh=6, w=8`)
 - `N('D#5', e, 4)`: tone, varighet, finger. Navnet styrer stavemåten (`D#` vises som D♯, `Bb` som B♭).
 - `CH(['A4','C5','E5','A5'], q, '1 2 3 5', 'A-moll', 'Am')`: akkord. Godtas når én av akkordtonene spilles. Fingrene står fra den dypeste tonen.
 - `DY('A2', 'E3', q)`: to toner i venstre hånd (fingre `5 1` som standard), vises som «A+E».
-- `R(q)`: pause. `qd` er punktert fjerdedel.
+- `R(q)`: pause. `ed` er punktert åttendedel, `qd` punktert fjerdedel. `N('D4', h, 1, { fermata: true })` gir fermat. Bindinger over taktstrek finnes ikke.
 - En låt (`Song`) har `key` (ABC, f.eks. `Am`, `F`, `Cm`), `meter` (`{ beats, unit }`), `bars` (høyre hånd), `lh` (venstre hånd, hele takter med pauser) og `sections`. Hver del er grupper av takter (`[høyrehåndsnøkkel, venstrehåndsnøkkel]`) med en etikett. Del-id-ene er unike på tvers av låter, fordi testkroken og lagringen bruker dem.
 - Låtene ligger i `src/songs/` og registreres i `src/songs/index.ts` med kategori (låt, egne, klassisk).
 
@@ -98,7 +98,7 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - `src/input/`: `pitch.ts` (YIN + Goertzel, rent), `mic.ts`, `midi.ts`
 - `src/practice/`: `input.ts` (felles inngang for alle kilder), `wait.ts` (vent på meg), `takt.ts` (spill i takt og demo), `judge.ts` (rene regler), `progress.ts`, `session.ts` (del, modus, visning, hopp til note)
 - `src/ui/`: `dom.ts` (alle elementer), `view.ts` (`refresh` og alt som tegnes), `keyboard.ts`, `strip.ts`
-- `src/songs/`: `dovregubben.ts`, `gameshow.ts` (egne lyder), `index.ts` (register og `findSection`)
+- `src/songs/`: `dovregubben.ts`, `gameshow.ts` (egne lyder), `klassisk.ts` (klassiske temaer, kilder i assumptions.md), `index.ts` (register og `findSection`)
 - `src/casio.ts`: lydforslag og registreringer for Casio CT-S400
 - `src/state.ts` (tilstand under øving), `src/storage.ts` (`localStorage`), `src/wakeLock.ts`, `src/main.ts` (kobler alt sammen)
 - `public/`: ikonene. `icon.svg` er kilden, PNG-ene lages med `scripts/make-icons.mjs`.

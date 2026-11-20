@@ -22,7 +22,7 @@ describe('parsePitch', () => {
 describe('taktart', () => {
   it('taktlengde, metronomslag, bjelker og inntelling', () => {
     expect([barLength({ beats: 4, unit: 4 }), clickLength({ beats: 4, unit: 4 }), beamGroup({ beats: 4, unit: 4 }), countInBars({ beats: 4, unit: 4 })]).toEqual([8, 2, 4, 1]);
-    expect([barLength({ beats: 2, unit: 4 }), clickLength({ beats: 2, unit: 4 }), beamGroup({ beats: 2, unit: 4 }), countInBars({ beats: 2, unit: 4 })]).toEqual([4, 2, 4, 2]);
+    expect([barLength({ beats: 2, unit: 4 }), clickLength({ beats: 2, unit: 4 }), beamGroup({ beats: 2, unit: 4 }), countInBars({ beats: 2, unit: 4 })]).toEqual([4, 2, 2, 2]);
     expect([barLength({ beats: 3, unit: 4 }), beamGroup({ beats: 3, unit: 4 }), countInBars({ beats: 3, unit: 4 })]).toEqual([6, 2, 2]);
     expect([barLength({ beats: 3, unit: 8 }), clickLength({ beats: 3, unit: 8 }), beamGroup({ beats: 3, unit: 8 }), countInBars({ beats: 3, unit: 8 })]).toEqual([3, 3, 3, 4]);
     expect([barLength({ beats: 6, unit: 8 }), clickLength({ beats: 6, unit: 8 }), countInBars({ beats: 6, unit: 8 })]).toEqual([6, 3, 2]);
