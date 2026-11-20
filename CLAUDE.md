@@ -93,6 +93,13 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - Lydfilene er laget fra `noter/lyd-ovetempo.ly` → MIDI → `noter/scripts/postprocess.py` → fluidsynth (FluidR3_GM, 48 kHz) → ffmpeg (mono, 16 bit, 3 s stillhet til slutt).
 - Testene kjører med én worker fordi takt-testene måler timing.
 
+## Git og GitHub
+
+- Alt i dette repoet skal stå på `kasperlo <kasper.oftebro@gmail.com>`: forfatter, committer og GitHub-konto. Aldri EasyPlay- eller Computas-identiteten.
+- Identiteten er satt lokalt i `.git/config`. Den globale git-configen har EasyPlay-identiteten, så sjekk med `git config user.email` etter en ny klone.
+- `gh` har flere kontoer, og den aktive er ikke nødvendigvis `kasperlo`. Kjør GitHub-kommandoer med `GH_TOKEN=$(gh auth token --user kasperlo) gh …`, så endres ikke den globale innloggingen. Remote og GitHub Pages hører hjemme under `kasperlo`.
+- Commit-meldinger skrives på norsk.
+
 ## Konvensjoner
 
 - All tekst i appen er på norsk bokmål. Kode og identifikatorer på engelsk, kommentarer gjerne på norsk.
