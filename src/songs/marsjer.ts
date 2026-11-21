@@ -1,5 +1,5 @@
-import { CH, DY, N, R, e, h, q, qd, w, type Song } from '../music/song';
-import { klassisk } from './klassisk';
+import { CH, DY, N, R, e, ed, h, q, qd, s16, w, type Song } from '../music/song';
+import { M44, klassisk } from './klassisk';
 
 // Marsjer. Melodiene er kontrollert mot partiturer uten opphavsrett (se assumptions.md, 2026-11-21).
 
@@ -107,4 +107,39 @@ export const libertyBell = klassisk({
   }]
 });
 
-export const marsjer: Song[] = [starsAndStripes, libertyBell];
+// ---------- Mendelssohn: Bryllupsmarsj (En midtsommernattsdrøm) ----------
+
+const WEDDING_E = [DY('E2', 'E3', h), DY('B2', 'A3', qd, '5 1'), DY('B2', 'A3', e, '5 1')];
+const WEDDING_C = [DY('C2', 'C3', h), DY('B2', 'F3', q, '5 1'), DY('B2', 'F3', q, '5 1')];
+const WEDDING_G = [DY('G2', 'E3', h, '5 1'), DY('G2', 'F3', h, '5 1')];
+
+export const bryllupsmarsj = klassisk({
+  id: 'bryllupsmarsj',
+  title: 'Bryllupsmarsj',
+  by: 'Felix Mendelssohn, En midtsommernattsdrøm. Temaet etter trompetsignalet, uten triller. Venstre hånd har bare bassen.',
+  key: 'C',
+  meter: M44,
+  casio: { reg: [7, 3], tone: 205, layer: 75, tip: 'Bredt og festlig.' },
+  bars: {
+    W1: [CH(['C5', 'C6'], h, '1 5', 'C'), N('B5', qd, 4), N('F#5', e, 1)],
+    W2: [N('A5', q, 4), N('G5', q, 3), N('F5', q, 2), N('D5', q, 1)],
+    W3: [N('C5', h, 2), N('D5', q, 3), N('G4', ed, 1), N('D5', s16, 4)],
+    W4: [N('E5', q, 3), N('C4', e, 1), N('E4', e, 2), N('G4', e, 3), N('C5', e, 1), N('E5', e, 2), N('G5', e, 3)],
+    W5: [N('C6', h, 5), N('B5', qd, 4), N('F#5', e, 1)],
+    W7: [N('C5', h, 1), N('E5', q, 3), N('D5', ed, 2), N('E5', s16, 3)],
+    W8: [N('D5', h, 2), N('C5', q, 1), R(q)]
+  },
+  lh: {
+    E: WEDDING_E,
+    C: WEDDING_C,
+    G: WEDDING_G,
+    W4: [DY('C2', 'C3', h), DY('C3', 'G3', h)],
+    END: [DY('G2', 'F3', h, '5 1'), DY('C2', 'C3', q), R(q)]
+  },
+  sections: [{
+    id: 'bryllupsmarsj', title: 'Bryllupsmarsj', tempo: 100, use: 'Når vinneren kåres, eller når to lag slår seg sammen.',
+    groups: [{ label: 'Bryllupsmarsj', bars: [['W1', 'E'], ['W2', 'C'], ['W3', 'G'], ['W4', 'W4'], ['W5', 'E'], ['W2', 'C'], ['W7', 'G'], ['W8', 'END']] }]
+  }]
+});
+
+export const marsjer: Song[] = [starsAndStripes, libertyBell, bryllupsmarsj];

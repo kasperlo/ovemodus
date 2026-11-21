@@ -146,3 +146,12 @@
   - Stars and Stripes: de siste 16 taktene av trioen, flyttet fra A♭-dur til C-dur. Marsjen står i 2/2 som i originalen.
   - The Liberty Bell: første del (16 takter), øverste tone i akkordene. Den slutter på dominanten, som i originalen.
   - Akkordtoner i venstre hånd over midtre C er flyttet en oktav ned eller sløyfet.
+- **Kilder, bolk 2:**
+  - «Orchesterwerke Romantik Themen» (Wikimedia Commons, skann, offentlig eiendom): Grieg, Morgenstemning (s. 287), Mendelssohn, Bryllupsmarsj (s. 452), Strauss, Also sprach Zarathustra (s. 860), Saint-Saëns, Danse macabre (s. 684). Temaboka viser bare melodien.
+  - Mendelssohn, Bryllupsmarsj: bassen er lest av fra klaverutgaven til Carl Wilhelm Kern, Shattinger 1906 (archive.org, b89774188).
+  - Strauss, Also sprach Zarathustra: motivet C–G–C er også kontrollert mot notesnutten i Wikipedia-artikkelen.
+- **Forenklet, bolk 2:**
+  - Morgenstemning: flyttet fra E-dur til C-dur. Da ligger hele melodien under fem fingre (C, D, E, G, A). Forslagsnotene er sløyfet. Venstre hånd holder C og G, som orgelpunktet i originalen.
+  - Bryllupsmarsj: temaet uten trompetsignalet foran, fordi signalet er trioler. Trillene er sløyfet. Venstre hånd har bare bassen. Den første akkorden er en dissonans over E i originalen, og her blir den bare E i bassen.
+  - Also sprach Zarathustra: C–G–C, C-dur til c-moll, paukene og en egen slutt på C-durakkorden. Den korte E-en (sekstendel) før c-mollakkorden er en kort C-durakkord. Paukene spiller trioler i originalen og åttendedeler her.
+  - Danse macabre: valsetemaet, med egen slutt på G. Temaboka viser bare melodien, så venstre hånd er en enkel vals med vanlig harmonisering av den kromatiske linjen (g-moll, F, C/E, c/E♭, g/D, D7, A, D).
