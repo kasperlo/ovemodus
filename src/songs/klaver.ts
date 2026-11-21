@@ -1,4 +1,4 @@
-import { CH, DY, N, R, e, ed, h, q, s16, w, type Song } from '../music/song';
+import { CH, DY, N, R, dh, e, ed, h, q, s16, w, type Song } from '../music/song';
 import { M24, M44, klassisk } from './klassisk';
 
 // Klassiske verk skrevet for klaver og orgel. Melodiene er kontrollert mot partiturer uten opphavsrett
@@ -142,4 +142,32 @@ export const toccata = klassisk({
   }]
 });
 
-export const klaver: Song[] = [furElise, rondoAllaTurca, entertainer, toccata];
+// ---------- Satie: Gymnopédie nr. 1 ----------
+
+export const gymnopedie = klassisk({
+  id: 'gymnopedie',
+  title: 'Gymnopédie nr. 1',
+  by: 'Erik Satie. To takter innledning og den første frasen, med egen slutt på F♯.',
+  key: 'D',
+  meter: { beats: 3, unit: 4 },
+  casio: { tone: 1, tip: 'Langsomt og stille.' },
+  bars: {
+    REST: [R(dh)],
+    G5: [R(q), N('F#5', q, 3), N('A5', q, 5)],
+    G6: [N('G5', q, 4), N('F#5', q, 3), N('C#5', q, 1)],
+    G7: [N('B4', q, 1), N('C#5', q, 2), N('D5', q, 3)],
+    G8: [N('A4', dh, 1)],
+    G9: [N('F#4', dh, 1)]
+  },
+  // Akkordene står i diskanten i originalen. Her spiller venstre hånd dem en oktav lavere.
+  lh: {
+    G: [N('G2', q, 5), DY('D3', 'F#3', h, '2 1')],
+    D: [N('D2', q, 5), DY('C#3', 'F#3', h, '2 1')]
+  },
+  sections: [{
+    id: 'gymnopedie', title: 'Gymnopédie nr. 1', tempo: 70, use: 'Rolig pause, eller når noen tenker veldig lenge.',
+    groups: [{ label: 'Gymnopédie', bars: [['REST', 'G'], ['REST', 'D'], ['G5', 'G'], ['G6', 'D'], ['G7', 'G'], ['G8', 'D'], ['G9', 'G']] }]
+  }]
+});
+
+export const klaver: Song[] = [furElise, rondoAllaTurca, entertainer, toccata, gymnopedie];

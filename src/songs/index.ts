@@ -4,12 +4,13 @@ import { gameshow } from './gameshow';
 import { classical } from './klassisk';
 import { klaver } from './klaver';
 import { marsjer } from './marsjer';
+import { opera } from './opera';
 import { orkester } from './orkester';
 
 const byTitle = (a: Song, b: Song): number => a.title.localeCompare(b.title, 'nb');
 
 /** Innebygde låter først, så låter importert på denne enheten (`addSong`). De klassiske står alfabetisk. */
-export const songs: Song[] = [dovregubben, ...gameshow, ...[...classical, ...klaver, ...marsjer, ...orkester].sort(byTitle)];
+export const songs: Song[] = [dovregubben, ...gameshow, ...[...classical, ...klaver, ...marsjer, ...opera, ...orkester].sort(byTitle)];
 
 export function addSong(song: Song): void {
   songs.push(song);

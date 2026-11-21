@@ -155,3 +155,19 @@
   - Bryllupsmarsj: temaet uten trompetsignalet foran, fordi signalet er trioler. Trillene er sløyfet. Venstre hånd har bare bassen. Den første akkorden er en dissonans over E i originalen, og her blir den bare E i bassen.
   - Also sprach Zarathustra: C–G–C, C-dur til c-moll, paukene og en egen slutt på C-durakkorden. Den korte E-en (sekstendel) før c-mollakkorden er en kort C-durakkord. Paukene spiller trioler i originalen og åttendedeler her.
   - Danse macabre: valsetemaet, med egen slutt på G. Temaboka viser bare melodien, så venstre hånd er en enkel vals med vanlig harmonisering av den kromatiske linjen (g-moll, F, C/E, c/E♭, g/D, D7, A, D).
+- **Kilder, bolk 3:**
+  - Charpentier, Te Deum (forspillet): notesnutten i Wikipedia-artikkelen, med både melodi og bass.
+  - Beethoven, Ode til gleden: notesnutten i Wikipedia-artikkelen (G-dur), og Mutopia (ode) som kontroll.
+  - Haydn, Symfoni nr. 94: notesnutten i Wikipedia-artikkelen.
+  - Bizet, Toreador: Carmen-forspillet, Schirmer 1895 (Mutopia, prelude). Refrenget står i forspillet med bass.
+  - Strauss d.y., Den blå Donau: førsteutgaven, Spina 1867 (Wikimedia Commons, Donauwalzer Spina 03 og 04), og Mutopia (blue_danube, et arrangement i C-dur) for akkordene.
+  - Satie, Gymnopédie nr. 1: Mutopia (gymnopedie_1, Dover) og notesnutten i Wikipedia-artikkelen.
+  - Brahms, Wiegenlied: notesnutten i Wikipedia-artikkelen.
+- **Forenklet, bolk 3:**
+  - Te Deum: trillene er sløyfet. Opptakten står i en egen takt.
+  - Ode til gleden: flyttet fra D-dur (originalen) til C-dur, i registeret G4–G5. Bindingen i takt 12–13 er en pause. Venstre hånd er en enkel harmonisering med C og G.
+  - Paukeslaget: melodien en oktav opp, så høyre hånd ligger over midtre C. Overraskelsesakkorden er lagt lavere enn i originalen, så den kan tas med én hånd. Venstre hånd er enkle akkorder.
+  - Toreador: takt 1–8 av refrenget og en egen slutt på F-durakkorden. Forslagsnotene er sløyfet. Akkordene i venstre hånd er en oktav lavere enn i forspillet.
+  - Den blå Donau: de første 16 taktene i D-dur, som originalen. Førsteutgaven har ingen opptakt, så det har ikke appen heller. Den holdte melodinoten under «pom-pom»-akkordene er en halvnote.
+  - Gymnopédie: to av de fire innledningstaktene, den første frasen og en egen slutt på F♯. Akkordene står i diskanten i originalen og spilles en oktav lavere av venstre hånd.
+  - Brahms' vuggevise: flyttet fra Ess-dur til C-dur. Forslagsnotene er sløyfet. Venstre hånd er enkle akkorder.
