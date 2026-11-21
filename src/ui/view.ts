@@ -96,9 +96,10 @@ function setClue(label: string, big: string, sub: string, then: string, opts: Cl
   });
 }
 
+const fingerText = (s: Step): string => s.f ? ` · ${s.type === 'chord' ? 'fingre' : 'finger'} ${s.f}` : '';
+
 function stepSub(s: Step): string {
-  if (s.type === 'chord') return `${s.sci} · fingre ${s.f}`;
-  return `${s.sci} · finger ${s.f}`;
+  return s.sci + fingerText(s);
 }
 
 function renderClue(ci: number): void {
@@ -122,7 +123,7 @@ function renderClue(ci: number): void {
     return;
   }
   if (state.mode === 'takt') {
-    setClue('Spill i takt', `${state.tempo} BPM`, `Trykk «Start i takt». Du får ${countInText()} før første tone.`, 'Første tone: ' + steps[0].name + ' · finger ' + steps[0].f, { small: true });
+    setClue('Spill i takt', `${state.tempo} BPM`, `Trykk «Start i takt». Du får ${countInText()} før første tone.`, 'Første tone: ' + steps[0].name + fingerText(steps[0]), { small: true });
     return;
   }
   const s = steps[state.cur];

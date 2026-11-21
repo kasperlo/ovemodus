@@ -293,6 +293,12 @@ button:focus-visible, select:focus-visible, input:focus-visible {
 .music .strip { max-height: 318px; padding: 0; background: transparent; border: 0; border-radius: 0; }
 .chip:not(.rest) { cursor: pointer; }
 
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.file-btn { display: inline-block; }
+.file-btn:has(+ input:focus-visible) { outline: 3px solid #fff; outline-offset: 2px; }
+.status:empty { display: none; }
+.kbd-setup code { color: var(--ink); }
+
 /* ---------- Oppsett for keyboardet ---------- */
 .use.casio { color: var(--ink); }
 .kbd-setup { margin-top: 16px; padding: 12px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; color: var(--muted); }

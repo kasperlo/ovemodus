@@ -37,7 +37,8 @@ export interface RestEvent {
 
 export type BarEvent = NoteEvent | ChordEvent | RestEvent;
 
-export const N = (s: string, d: number, f: number, opts: { fermata?: boolean } = {}): NoteEvent =>
+/** Finger kan være tom («») for importerte noter uten fingersetting. */
+export const N = (s: string, d: number, f: number | string, opts: { fermata?: boolean } = {}): NoteEvent =>
   ({ type: 'note', ...parsePitch(s), d, f: String(f), ...(opts.fermata ? { fermata: true } : {}) });
 
 /** Akkord eller flere toner samtidig. Godtas når én av tonene spilles. */
@@ -95,7 +96,7 @@ export interface Section {
   use?: string;
 }
 
-export type SongCategory = 'låt' | 'egne' | 'klassisk';
+export type SongCategory = 'låt' | 'egne' | 'klassisk' | 'mine';
 
 export interface Song {
   id: string;
@@ -165,6 +166,11 @@ export interface Model {
   /** Den andre hånden, til avspilling. */
   acc: AccEvent[];
   total: number;
+  /**
+   * Tonen som skiller hendene: høyre hånd fra og med denne, venstre under. Midtre C (60) når det går,
+   * ellers laveste tone i høyre hånd. `null` når hendene overlapper, og da ignoreres ingen toner.
+   */
+  split: number | null;
 }
 
 function place(events: BarEvent[], start: number, label: string | null, out: Item[]): Bar {
@@ -197,5 +203,16 @@ export function build(song: Song, sec: Section, hand: Hand = 'rh'): Model {
   steps.forEach((s, i) => { s.si = i; });
   const acc = otherItems.filter((it): it is Step => it.type !== 'rest')
     .map(it => ({ pos: it.pos, d: it.d, midis: it.type === 'chord' ? it.midis : [it.midi] }));
-  return { song, hand, barLen: len, bars, other, items, steps, acc, total: pos };
+  return { song, hand, barLen: len, bars, other, items, steps, acc, total: pos, split: splitPoint(song, sec) };
+}
+
+const pitchesOf = (events: BarEvent[]): number[] => events.flatMap(ev => ev.type === 'rest' ? [] : ev.type === 'chord' ? ev.midis : [ev.midi]);
+
+function splitPoint(song: Song, sec: Section): number | null {
+  const rh = sec.groups.flatMap(g => g.bars.flatMap(([k]) => pitchesOf(song.bars[k])));
+  const lh = sec.groups.flatMap(g => g.bars.flatMap(([, k]) => k ? pitchesOf(song.lh[k]) : []));
+  if (!rh.length || !lh.length) return lh.length ? Math.max(...lh) + 1 : rh.length ? Math.min(...rh) : null;
+  const lo = Math.max(...lh), hi = Math.min(...rh);
+  if (lo >= hi) return null;
+  return lo < 60 && hi >= 60 ? 60 : hi;
 }

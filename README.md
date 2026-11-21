@@ -6,6 +6,8 @@
 
 Appen ligger på **https://kasperlo.github.io/ovemodus/**. Siden den ligger på HTTPS, kan mikrofonen også brukes i Safari på iPad. Safari støtter ikke MIDI, så der er det mikrofon eller skjermtastatur.
 
+Egne noter: trykk «Importer noter» og velg en MusicXML-fil (eksporter fra MuseScore). Låten lagres bare på enheten og publiseres aldri.
+
 På iPad: åpne adressen i Safari, trykk Del-knappen og velg «Legg til på Hjem-skjerm». Da åpnes appen i fullskjerm og virker uten nett. Trykk «Skjul» på oppsettet når du har valgt del og mikrofon, så får neste tone, noter og tastatur plass på skjermen.
 
 Lokalt:

@@ -1,11 +1,12 @@
 import { casioText } from '../casio';
 import { build, type Hand } from '../music/song';
+import { sciName } from '../music/theory';
 import { renderSheet, sheet } from '../notation/sheet';
 import { findSection } from '../songs';
 import { run, state } from '../state';
 import { save, store, type Mode, type View } from '../storage';
 import { els, segButtons } from '../ui/dom';
-import { KB_RANGE, renderKeyboard } from '../ui/keyboard';
+import { KB_RANGE, keyboardRange, renderKeyboard } from '../ui/keyboard';
 import { renderStrip } from '../ui/strip';
 import { refresh, renderSegments, setHint } from '../ui/view';
 import { resetProgress, setTempo } from './progress';
@@ -24,7 +25,11 @@ const HAND_TEXT: Record<Hand, { name: string; other: string }> = {
 function handTexts(): void {
   const t = HAND_TEXT[state.hand];
   els.subText.textContent = `Spill ${t.name}. Siden lytter, viser neste tangent og går videre når du treffer riktig.`;
-  els.optLHText.textContent = state.hand === 'rh' ? 'MIDI: ignorer venstre hånd (under midtre C)' : 'MIDI: ignorer høyre hånd (fra midtre C og opp)';
+  const split = state.model.split;
+  const at = split === 60 ? 'midtre C' : split != null ? sciName(split) : '';
+  els.optLHText.textContent = split == null ? 'MIDI: hendene overlapper i denne låten, så ingen toner ignoreres'
+    : state.hand === 'rh' ? `MIDI: ignorer venstre hånd (under ${at})` : `MIDI: ignorer høyre hånd (fra ${at} og opp)`;
+  els.optLH.disabled = split == null;
   els.optAccText.textContent = `Spill ${t.other} for meg`;
   els.optLHStaffText.textContent = `Vis ${t.other}`;
   segButtons(els.segHand).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.hand === state.hand)));
@@ -34,7 +39,19 @@ function handTexts(): void {
 function load(): void {
   stopRun(true);
   state.model = build(state.song, state.sec, state.hand);
-  renderKeyboard(KB_RANGE[state.hand]);
+  // Importerte noter kan mangle én hånd. Da øves den andre.
+  if (!state.model.steps.length) {
+    const other: Hand = state.hand === 'rh' ? 'lh' : 'rh';
+    const alt = build(state.song, state.sec, other);
+    if (alt.steps.length) {
+      state.hand = other;
+      state.model = alt;
+      setHint(`Denne delen har bare ${other === 'rh' ? 'høyre' : 'venstre'} hånd.`, '');
+    }
+  }
+  const hasLh = build(state.song, state.sec, 'lh').steps.length > 0;
+  els.segHand.querySelector<HTMLButtonElement>('button[data-hand="lh"]')!.disabled = !hasLh;
+  renderKeyboard(keyboardRange(state.model.steps, KB_RANGE[state.hand]));
   renderStrip(state.model, jumpTo);
   handTexts();
   sheet.dirty = true;
@@ -51,6 +68,7 @@ export function setSection(id: string): void {
   els.selSong.value = song.id;
   els.songTitle.textContent = song.title;
   els.secUse.textContent = [sec.use, song.by !== 'Egen' ? song.by : ''].filter(Boolean).join(' ');
+  els.btnDeleteSong.hidden = song.category !== 'mine';
   els.secCasio.textContent = song.casio ? `Casio CT-S400 – ${casioText(song.casio)}.${song.casio.tip ? ' ' + song.casio.tip : ''}` : '';
   store.settings.section = sec.id;
   setTempo(store.settings.tempo[sec.id] || sec.tempo, true);

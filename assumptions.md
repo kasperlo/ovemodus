@@ -94,3 +94,15 @@
   - Pomp and Circumstance: G-dur → C-dur.
   - Trollmannens læregutt og Trolldom: en oktav opp (fagottlyden på keyboardet klinger en oktav ned igjen).
 - **Ny i notearket:** punktert åttendedel og fermat. 2/4 og 3/4 bjelkes per slag.
+
+## 2026-11-21 – Import av egne noter
+
+- **Kontekst:** Kasper vil øve på noter han har kjøpt. Repoet og siden er offentlige, så slike noter kan ikke ligge i appen.
+- **Beslutning:** import på enheten. Filen leses i nettleseren, og resultatet lagres i `localStorage` (`ovemodus-mine-noter-v1`). Ingenting sendes til noen server.
+- **Format:** bare MusicXML i første omgang (`.musicxml`, `.xml`, `.mxl`). MuseScore (gratis) gjør om MIDI og PDF til MusicXML. Å lese MIDI eller PDF direkte i appen ville gitt dårligere noter (kvantisering, gjetting av hender, notegjenkjenning fra bilde).
+- **Forenklinger:** bindinger blir pauser (samme valg som i de innebygde låtene). Bare hovedstemmen i hvert notesystem tas med. Pyntenoter hoppes over. Opptakt fylles med pauser.
+- **Ikke støttet ennå:** trioler og andre notegrupper, og taktartskifte midt i stykket. Begge gir en feilmelding med taktnummer i stedet for feil noter.
+- **Fingersetting:** tas med når filen har den. Ellers vises ingen fingre, og appen fungerer som før uten dem.
+- **Skillet mellom hendene:** innebygde låter bruker midtre C som før. Importerte noter kan ha høyre hånd under midtre C. Skillet regnes derfor ut per del (laveste tone i høyre hånd), og når hendene overlapper, ignorerer MIDI ingen toner.
+- **Skjermtastaturet:** samme område som før når tonene får plass der, ellers to (opptil tre) oktaver rundt tonene.
+- **Avhengighet:** jsdom (bare utvikling) for å teste MusicXML-leseren i Vitest. Nettleseren har sin egen XML-leser, så jsdom følger ikke med i appen.

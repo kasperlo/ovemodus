@@ -24,8 +24,8 @@ export function abcDur(d: number): string {
 
 /** Antall faste fortegn: positivt for ♯, negativt for ♭. */
 const KEY_SIG: Record<string, number> = {
-  C: 0, Am: 0, G: 1, Em: 1, D: 2, Bm: 2, A: 3, 'F#m': 3, E: 4, 'C#m': 4,
-  F: -1, Dm: -1, Bb: -2, Gm: -2, Eb: -3, Cm: -3, Ab: -4, Fm: -4, Db: -5, Bbm: -5
+  C: 0, Am: 0, G: 1, Em: 1, D: 2, Bm: 2, A: 3, 'F#m': 3, E: 4, 'C#m': 4, B: 5, 'G#m': 5, 'F#': 6, 'D#m': 6, 'C#': 7, 'A#m': 7,
+  F: -1, Dm: -1, Bb: -2, Gm: -2, Eb: -3, Cm: -3, Ab: -4, Fm: -4, Db: -5, Bbm: -5, Gb: -6, Ebm: -6, Cb: -7, Abm: -7
 };
 
 export const isKnownKey = (key: string): boolean => key in KEY_SIG;
@@ -67,11 +67,11 @@ function barAbc(bar: Bar, sig: Record<string, number>, meter: Meter, voice: Voic
       t += 'z' + abcDur(it.d);
     } else if (it.type === 'chord') {
       // abcjs stabler fingersettingen nedenfra, så fingeren til den dypeste tonen står nærmest akkorden
-      if (voice.annotate) t += it.f.split(' ').map(f => `!${f}!`).join('');
+      if (voice.annotate && it.f) t += it.f.split(' ').map(f => `!${f}!`).join('');
       t += '[' + it.midis.map((m, i) => note(m, it.names[i])).join('') + ']' + abcDur(it.d);
       if (voice.annotate) lyr.push(it.short || it.name);
     } else {
-      if (voice.annotate) t += `!${it.f}!`;
+      if (voice.annotate && it.f) t += `!${it.f}!`;
       if (it.fermata) t += '!fermata!';
       t += note(it.midi, it.name) + abcDur(it.d);
       if (voice.annotate) lyr.push(it.name);

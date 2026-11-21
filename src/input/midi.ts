@@ -6,9 +6,6 @@ import { inRange, keyEls } from '../ui/keyboard';
 import { setHint, setPill, setStatus } from '../ui/view';
 import { keepAwake } from '../wakeLock';
 
-/** Når valget er på, regnes toner under midtre C som venstre hånd og resten som høyre, og hånden man ikke øver på ignoreres. */
-const MIDDLE_C = 60;
-
 let midiAccess: MIDIAccess | null = null;
 
 export async function connectMidi(): Promise<void> {
@@ -46,7 +43,8 @@ function onMidi(e: MIDIMessageEvent): void {
   const [st, d1, d2] = e.data;
   const cmd = st & 0xf0;
   if (cmd === 0x90 && d2 > 0) {
-    const otherHand = state.hand === 'rh' ? d1 < MIDDLE_C : d1 >= MIDDLE_C;
+    const split = state.model.split;
+    const otherHand = split != null && (state.hand === 'rh' ? d1 < split : d1 >= split);
     if (els.optLH.checked && otherHand) {
       setHint(`Ignorerte ${sciName(d1)} (${state.hand === 'rh' ? 'venstre' : 'høyre'} hånd).`, '');
       return;

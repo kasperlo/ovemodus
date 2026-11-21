@@ -5,6 +5,19 @@ import { els } from './dom';
 /** Tangentene skjermtastaturet viser: to oktaver fra C4 for høyre hånd, fra C2 for venstre. */
 export const KB_RANGE = { rh: [60, 84], lh: [36, 60] } as const;
 let lo = 60, hi = 84;
+
+/**
+ * Tangentene som vises: standardområdet for hånden når alle tonene får plass der (gjelder de innebygde låtene),
+ * ellers to oktaver fra C under den dypeste tonen, utvidet til tre om det trengs.
+ */
+export function keyboardRange(steps: Step[], fallback: readonly [number, number]): [number, number] {
+  const ms = steps.flatMap(s => s.type === 'chord' ? s.midis : [s.midi]);
+  if (!ms.length) return [fallback[0], fallback[1]];
+  const min = Math.min(...ms), max = Math.max(...ms);
+  if (min >= fallback[0] && max <= fallback[1]) return [fallback[0], fallback[1]];
+  const from = Math.floor(min / 12) * 12;
+  return [from, Math.min(from + 36, Math.max(from + 24, Math.ceil(max / 12) * 12))];
+}
 export let keyEls: Record<number, HTMLButtonElement> = {};
 const flashTimers = new WeakMap<HTMLElement, number>();
 

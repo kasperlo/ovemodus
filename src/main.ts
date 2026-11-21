@@ -6,13 +6,15 @@ import { emitInput } from './practice/input';
 import { resetProgress, setTempo } from './practice/progress';
 import { drawSheet, setHand, setMode, setSection, setView } from './practice/session';
 import { runFrame, startRun, stopRun } from './practice/takt';
-import { CATEGORY_LABEL, songs } from './songs';
+import { songs } from './songs';
 import { SFX_KEYS, casioText } from './casio';
 import { elapsed, mic, run, spell, state } from './state';
 import { save, store, type Mode, type Sensitivity } from './storage';
 import { installTestHook } from './testHook';
 import { els } from './ui/dom';
+import { initImport, loadImported } from './ui/importer';
 import { initMicDiag } from './ui/micDiag';
+import { renderSongSelect } from './ui/songSelect';
 import { initUpdates } from './ui/update';
 import { fmtSec, refresh, setSetupOpen } from './ui/view';
 
@@ -47,21 +49,6 @@ els.kbd.addEventListener('click', e => {
 });
 
 /* ---------- Kontroller ---------- */
-function renderSongSelect(): void {
-  els.selSong.innerHTML = '';
-  (Object.keys(CATEGORY_LABEL) as (keyof typeof CATEGORY_LABEL)[]).forEach(cat => {
-    const list = songs.filter(s => s.category === cat);
-    if (!list.length) return;
-    const group = document.createElement('optgroup');
-    group.label = CATEGORY_LABEL[cat];
-    list.forEach(s => {
-      const o = document.createElement('option');
-      o.value = s.id; o.textContent = s.title;
-      group.append(o);
-    });
-    els.selSong.append(group);
-  });
-}
 /** Tabellen over registreringer i «Oppsett for Casio CT-S400». */
 function renderCasioTable(): void {
   const body = els.casioTable.tBodies[0];
@@ -143,8 +130,10 @@ function frame(now: number): void {
 }
 
 /* ---------- Start ---------- */
+loadImported();
 renderSongSelect();
 renderCasioTable();
+initImport();
 state.hand = store.settings.hand === 'lh' ? 'lh' : 'rh';
 state.mode = store.settings.mode === 'takt' ? 'takt' : 'vent';
 setSection(store.settings.section);

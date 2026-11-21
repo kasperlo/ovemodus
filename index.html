@@ -37,6 +37,12 @@
     <section class="step">
       <h2><span class="num">1</span>Hva vil du øve på?</h2>
       <label class="opt pick" for="selSong">Låt <select id="selSong"></select></label>
+      <div class="row pick-row">
+        <label class="btn ghost file-btn" for="fileImport">Importer noter</label>
+        <input type="file" id="fileImport" class="visually-hidden">
+        <button type="button" class="btn ghost" id="btnDeleteSong" hidden>Slett fra denne enheten</button>
+      </div>
+      <p class="status" id="importStatus" aria-live="polite"></p>
       <div class="seg pick-row" id="segSection" role="group" aria-label="Velg del"></div>
       <p class="use" id="secUse"></p>
       <p class="use casio" id="secCasio"></p>
@@ -148,6 +154,16 @@
     </div>
   </div>
   <p class="help-note">Bokstavene og fingersettingen er de samme som i notearket. B heter H på norsk. Høyre hånd spiller fra midtre C og opp, venstre hånd under.</p>
+  <details class="kbd-setup" id="importHelp">
+    <summary>Importere egne noter</summary>
+    <p>Appen leser MusicXML (<code>.musicxml</code>, <code>.mxl</code> eller <code>.xml</code>). Filen leses i nettleseren og lagres bare på denne enheten. Den lastes ikke opp noe sted.</p>
+    <ol>
+      <li><strong>Har du MusicXML:</strong> trykk «Importer noter» og velg filen.</li>
+      <li><strong>Har du MIDI eller noter i MuseScore:</strong> åpne i MuseScore (gratis), og velg Fil → Eksporter → MusicXML.</li>
+      <li><strong>Har du PDF:</strong> åpne PDF-en i MuseScore (Fil → Importer PDF), rett opp feil, og eksporter som MusicXML. Noter fra et bilde blir sjelden helt riktige uten å rettes.</li>
+    </ol>
+    <p>Høyre hånd hentes fra øverste notesystem og venstre fra nederste. Fingersetting tas med hvis den står i filen. Trioler og taktartskifte midt i stykket støttes ikke ennå. Da sier appen fra hvilken takt det gjelder.</p>
+  </details>
   <details class="kbd-setup" id="casioSetup">
     <summary>Oppsett for Casio CT-S400</summary>
     <p>Lagre hver lyd som en registrering, så bytter du lyd med to trykk under showet. Lydnumrene står i tonelisten bak i brukerveiledningen.</p>

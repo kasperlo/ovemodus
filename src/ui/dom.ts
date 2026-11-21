@@ -21,6 +21,7 @@ export const els = {
   btnCopy: byId<HTMLButtonElement>('btnCopy'), diagCopied: byId('diagCopied'),
   updateBar: byId('updateBar'), btnUpdate: byId<HTMLButtonElement>('btnUpdate'),
   panel: byId('panel'), btnSetup: byId<HTMLButtonElement>('btnSetup'), setupSum: byId('setupSum'),
+  fileImport: byId<HTMLInputElement>('fileImport'), btnDeleteSong: byId<HTMLButtonElement>('btnDeleteSong'), importStatus: byId('importStatus'),
   selSong: byId<HTMLSelectElement>('selSong'), segHand: byId('segHand'), secUse: byId('secUse'), secCasio: byId('secCasio'),
   casioTable: byId<HTMLTableElement>('casioTable'), sfxKeys: byId('sfxKeys'),
   songTitle: byId('songTitle'), subText: byId('subText'),

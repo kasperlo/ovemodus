@@ -12,7 +12,7 @@ Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, vise
 
 Appen er publisert på https://kasperlo.github.io/ovemodus/ fra `main` via GitHub Actions (`.github/workflows/deploy.yml`): typesjekk, Vitest og Playwright må være grønne før den publiseres. Pull requests testes, men publiseres ikke.
 
-Steg 1, 2 og 3 er gjort, og iPad-delen av steg 4. Venstre hånd kan øves alene (trinn 1). Neste: begge hender samtidig med MIDI (trinn 2) og med mikrofon (trinn 3), og import av egne noter som bare lagres på enheten.
+Steg 1, 2 og 3 er gjort, og iPad-delen av steg 4. Venstre hånd kan øves alene (trinn 1). Import av egne noter (MusicXML) er laget. Neste: begge hender samtidig med MIDI (trinn 2) og med mikrofon (trinn 3).
 
 ## Kommandoer
 
@@ -33,6 +33,8 @@ Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpne
 
 - **Velg låt og del:** nedtrekksliste med «I Dovregubbens hall» (Del A, Del B, Hele stykket) egne gameshow-lyder (intro, riktig svar, feil svar, joker, dobbel poeng, spenning, tiden er ute, vinner) og klassiske (Wilhelm Tell, Can-can, Trollmannens læregutt, Trolldom, Skjebnesymfonien, Akvariet, Sørgemarsj, Pomp and Circumstance, Halleluja). Delvalget skjules når låten har én del.
 - **Velg hånd:** høyre eller venstre. Venstre hånd vises i bassnøkkel med fingersetting og tonenavn, skjermtastaturet viser C2–C4 (høyre: C4–C6), og «Spill … for meg» og «Vis …» gjelder den andre hånden. Rekorder lagres per hånd (`delA|lh|vent`). Begge hender samtidig er ikke laget ennå.
+- **Importer noter:** «Importer noter» leser MusicXML (`.musicxml`, `.xml`, komprimert `.mxl`) i nettleseren (`src/importer/`). Låten lagres bare på enheten i `localStorage` under `ovemodus-mine-noter-v1` og vises under «Mine noter». Den publiseres aldri (repoet og siden er offentlige, så beskyttet musikk skal bare inn denne veien). Høyre hånd er øverste notesystem, venstre nederste. Fingersetting tas med fra filen, ellers vises ingen fingre. Bindinger blir pauser, opptakt fylles med pauser foran, pyntenoter og andre stemmer hoppes over. Trioler og taktartskifte gir en feilmelding med taktnummer. Lange stykker deles i deler på 16 takter. MIDI og PDF må gjøres om til MusicXML i MuseScore.
+- **Skillet mellom hendene** (`model.split`) er midtre C for de innebygde låtene. For importerte noter er det laveste tone i høyre hånd, eller ingen når hendene overlapper. MIDI-filteret og mikrofonfilteret i takt-modus bruker det.
 - **Casio CT-S400:** hver låt har et forslag til lyd og registreringsplass (`casio` i låtfilen, `src/casio.ts`), vist under låtvalget og i «Oppsett for Casio CT-S400» nederst på siden.
 - **Input:** mikrofon (én hånd), Web MIDI (USB-keyboard; den andre hånden ignoreres, delt ved midtre C), eller klikk på skjermtastaturet.
 - **Vent på meg:** står stille til riktig tone kommer. Tid måles fra første riktige tone. Klikk på en note eller bokstavbrikke for å starte derfra (da lagres ikke rekord).
@@ -100,6 +102,8 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - `src/ui/`: `dom.ts` (alle elementer), `view.ts` (`refresh` og alt som tegnes), `keyboard.ts`, `strip.ts`
 - `src/songs/`: `dovregubben.ts`, `gameshow.ts` (egne lyder), `klassisk.ts` (klassiske temaer, kilder i assumptions.md), `index.ts` (register og `findSection`)
 - `src/casio.ts`: lydforslag og registreringer for Casio CT-S400
+- `src/importer/`: `musicxml.ts` (leser MusicXML til et lagringsformat), `zip.ts` (pakker ut `.mxl`), `library.ts` (lagring på enheten og `toSong`). `src/ui/importer.ts` er knappen og meldingene.
+- Testene for MusicXML kjører i jsdom (`// @vitest-environment jsdom`). jsdom er bare en utviklingsavhengighet.
 - `src/state.ts` (tilstand under øving), `src/storage.ts` (`localStorage`), `src/wakeLock.ts`, `src/main.ts` (kobler alt sammen)
 - `public/`: ikonene. `icon.svg` er kilden, PNG-ene lages med `scripts/make-icons.mjs`.
 

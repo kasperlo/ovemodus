@@ -13,9 +13,11 @@ import { TEMPO_MAX, TEMPO_MIN, resetProgress, setTempo } from './progress';
 
 /**
  * Når appen spiller den andre hånden gjennom høyttaleren, hører mikrofonen den også.
- * Øver man høyre hånd, er toner under MIDI 55 appens venstre hånd. Øver man venstre, er toner fra midtre C og opp appens høyre hånd.
+ * Øver man høyre hånd, er toner mer enn en kvart under skillet appens venstre hånd (under MIDI 55 når skillet er midtre C).
+ * Øver man venstre, er toner fra skillet og opp appens høyre hånd.
  */
-const isAccompaniment = (m: number, hand: Hand): boolean => hand === 'rh' ? m < 55 : m >= 60;
+const isAccompaniment = (m: number, hand: Hand, split: number | null): boolean =>
+  split != null && (hand === 'rh' ? m < split - 5 : m >= split);
 
 /** Starter «Spill i takt» (innteller + metronom) eller demo (appen spiller selv). */
 export function startRun(kind: RunKind): void {
@@ -97,7 +99,7 @@ export function runFrame(now: number): void {
 
 export function judgeTakt(m: number, t: number, ev: InputEvent): void {
   if (ev.src === 'mic' && ev.phase === 'sustain') return;
-  if (ev.src === 'mic' && els.optAcc.checked && isAccompaniment(m, state.hand)) return;
+  if (ev.src === 'mic' && els.optAcc.checked && isAccompaniment(m, state.hand, state.model.split)) return;
   const tt = (t - run.t0) / 1000;
   if (tt < run.countIn - 0.3) return;
   let best = null, bd = 1e9;
