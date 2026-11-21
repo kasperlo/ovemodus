@@ -122,3 +122,27 @@
 - **Kontekst:** CT-S400 har 32 registreringsplasser (8 banker × 4), og det blir flere lyder enn plasser.
 - **Beslutning:** `reg` i `casio` er valgfri. Lyder uten plass vises som «Lyd: …» og med «–» i tabellen, sist og i samme rekkefølge som i låtvelgeren. De viktigste lydene får plass.
 - **Ikke gjort:** nye lydnumre er ikke lagt til. Casios brukerveiledning kunne ikke lastes ned i denne økten, og lydene som allerede står i `CT_S400_TONES`, dekker behovet.
+
+## 2026-11-21 – Flere klassiske temaer
+
+- **Utvalg:** bare verk der komponisten døde før 1956. De mest gjenkjennelige temaene først.
+- **Metode:** Mutopia lager MIDI fra LilyPond-kilden sin, så MIDI-filen er nøyaktig det samme som noten. Den er lest tone for tone med et lite skript (opptakt, takter, varigheter), og LilyPond-kilden er brukt der noe var uklart. Skannede noter (temabok på Wikimedia Commons, archive.org) er lest av fra bildene.
+- **Filer:** de nye temaene ligger i `src/songs/klaver.ts` (klaver og orgel), `marsjer.ts` og `orkester.ts`. De klassiske står alfabetisk i låtvelgeren.
+- **Kilder, bolk 1 (alle fra Mutopia):**
+  - Beethoven, Für Elise: Breitkopf & Härtel 1888 (fur_Elise_WoO59).
+  - Mozart, Rondo alla turca: utgave fra IMSLP (KV331_3_RondoAllaTurca).
+  - Mozart, Eine kleine Nachtmusik: Breitkopf & Härtel 1883 (MozartWA-KV525).
+  - Joplin, The Entertainer: gjengivelse av originalutgaven fra 1902 (entertainer).
+  - Bach, Toccata i d-moll BWV 565: Bach-Gesellschaft 1867 (ToccataFugue).
+  - Sousa, The Stars and Stripes Forever: John Church Company 1897 (TheStarsAndStripesForever). Oktavspranget opp til G i takt 60 står slik i kilden.
+  - Sousa, The Liberty Bell: John Church Company (TheLibertyBell).
+- **Forenklet, bolk 1:**
+  - Opptakt står i en egen takt med pauser foran (Für Elise, Rondo alla turca, The Entertainer, Stars and Stripes).
+  - Bindinger over taktstrek er pauser (The Entertainer takt 5–6, Stars and Stripes takt 57–58 og 65–66).
+  - Rondo alla turca bruker temaet slik det slutter første gang (takt 16–24), fordi det ender på grunntonen. Trillen og tretiandedelene i takt 23 er to fjerdedeler. Venstre hånd i takt 17–21 er en oktav lavere, så den holder seg under midtre C.
+  - Eine kleine Nachtmusik: takt 1–4 og G-durakkorden fra takt 5. Strykerne spiller unisont, så venstre hånd spiller melodien tre oktaver lavere.
+  - The Entertainer: opptakten og takt 5–8. Melodien ligger i oktaver i originalen, og appen bruker den nederste.
+  - Toccata: de tre første taktene og akkordene. Mordentene er skrevet ut, og 32- og 64-delene er sekstendeler.
+  - Stars and Stripes: de siste 16 taktene av trioen, flyttet fra A♭-dur til C-dur. Marsjen står i 2/2 som i originalen.
+  - The Liberty Bell: første del (16 takter), øverste tone i akkordene. Den slutter på dominanten, som i originalen.
+  - Akkordtoner i venstre hånd over midtre C er flyttet en oktav ned eller sløyfet.

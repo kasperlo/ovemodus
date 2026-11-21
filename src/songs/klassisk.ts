@@ -3,8 +3,8 @@ import { CH, DY, N, R, dh, e, ed, h, q, qd, s16, w, type Song } from '../music/s
 // Klassiske temaer der komponisten døde for mer enn 70 år siden. Forenklet: melodien i høyre hånd og enkle
 // akkorder i venstre. Melodiene er kontrollert mot partiturer uten opphavsrett (se assumptions.md, 2026-11-21).
 
-const klassisk = (s: Omit<Song, 'category'>): Song => ({ category: 'klassisk', ...s });
-const M24 = { beats: 2, unit: 4 }, M44 = { beats: 4, unit: 4 };
+export const klassisk = (s: Omit<Song, 'category'>): Song => ({ category: 'klassisk', ...s });
+export const M24 = { beats: 2, unit: 4 }, M44 = { beats: 4, unit: 4 };
 
 // ---------- Rossini: Wilhelm Tell, finalen i ouverturen (E-dur i originalen, her C-dur) ----------
 
