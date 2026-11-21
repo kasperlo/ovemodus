@@ -164,7 +164,8 @@ function judgeTaktBoth(m: number, tt: number, ev: InputEvent): void {
     p.judged = 'hit';
     p.offset = tt - best.s.t!;
     state.hits++;
-    state.lastAcc = m;
+    // Som i «Vent på meg»: bare høyre hånds tone kan klinge videre uten nytt anslag i mikrofonen
+    if (best.h === 'rh') state.lastAcc = m;
     run.offsets.push(p.offset);
     markTiming(best.s.si, p.offset, best.h);
     flashKey(m, 'hit');

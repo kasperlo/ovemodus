@@ -182,3 +182,14 @@
   - Mars (Holst): 5/4 og trioler, som appen ikke støtter.
   - Griegs klaverkonsert: åpningen står i temaboka, men akkordene er for tette til å lese sikkert.
   - Bryllupsdag på Troldhaugen: hovedtemaet har trioler.
+
+## 2026-11-21 – Begge hender med mikrofon (trinn 3)
+
+- **Kontekst:** på iPad finnes ikke Web MIDI, så begge hender samtidig må gå via mikrofonen. Én mikrofon gir ett signal med begge hender i, og YIN finner bare én tone.
+- **Beslutning:** appen vet hva som skal spilles, og sjekker det i stedet for å gjette fritt. Venstre hånd sjekkes i bassen (under skillet), høyre hånd med YIN etter at venstre hånds toner er trukket fra med kamfiltre. Én hånd bruker samme kode som før.
+- **Forkastet:** YIN på hele signalet eller på lavpassfiltrert signal. Prøvd på kunstige toner: begge feilet for kvinter og akkorder i bassen.
+- **Kjent svakhet:** toner i høyre hånd som ligger på en overtone av venstre hånd (A4, E5 og A5 over A2, B4 over E3, og G5 nær 7. deltone av A2) kan ikke høres for seg med én mikrofon. De godtas når venstre hånd er riktig, eller ved et anslag som ikke er i bassen. I del A av Dovregubben gjelder det 14 av 26 toner i høyre hånd. Feil tone i høyre hånd på et slikt steg blir godtatt.
+- **Antakelse:** grensene er satt fra kunstige opptak (inharmoniske overtoner, to-trinns utklingning) og ett ekte pianoopptak (FluidSynth) av bare høyre hånd. Høyttalerne på CT-S400 og iPad-mikrofonen gjengir lite under 100 Hz. Grunntonen til A2 (110 Hz) kan derfor bli svak, mens andre deltone (220 Hz) er med i lavpasset. Dette er ikke målt.
+- **Forsinkelse:** venstre hånd godtas 117 ms etter anslaget. I «Vent på meg» går markøren videre så mye senere. I «Spill i takt» dømmes tonen etter anslaget.
+- **Oppfølging:** test på iPad i notestativet med CT-S400 og del A med begge hender. Lim inn rapporten fra «Mikrofontest» hvis venstre hånd ikke blir hørt. Mulige justeringer er grensen 0,25 for bassandelen og ventetiden på 7 rammer.
+

@@ -1,21 +1,19 @@
 // Mikrofon: støyport, anslag og stabile tonehendelser. Ikke endre uten å kjøre mikrofontestene (se CLAUDE.md).
 import { audio, audioCtx } from '../audio/synth';
 import { emitInput } from '../practice/input';
-import { mic, run, spell, state } from '../state';
+import { expectedStep, mic, run, spell, state } from '../state';
+import type { Hand } from '../music/song';
 import { store } from '../storage';
 import { els } from '../ui/dom';
 import { micListeningText, setPill, setStatus, updateButtons } from '../ui/view';
 import { keepAwake } from '../wakeLock';
 import type { Frame } from './calibrate';
-import { estimatePitch, type PitchEstimate } from './pitch';
+import { ATTACK_HOLDOFF_MS, ATTACK_RATIO, STABLE_FRAMES, SUSTAIN_FRAMES, estimatePitch, type PitchEstimate } from './pitch';
+import { TwoHandDetector, ringingAt } from './twohands';
 
 export const GATES: Record<string, number> = { lav: 0.02, middels: 0.008, hoy: 0.0035 };
 /** Trekkes fra tidspunktet i «Spill i takt». */
 const MIC_LATENCY = 70;
-const STABLE_FRAMES = 3;
-const SUSTAIN_FRAMES = 9;
-const ATTACK_RATIO = 1.4;
-const ATTACK_HOLDOFF_MS = 140;
 
 const det = {
   cand: null as number | null,
@@ -93,6 +91,7 @@ export function micFrame(now: number): void {
     det.cand = null; det.count = 0; det.slow = det.slow * 0.85 + rms * 0.15;
     return;
   }
+  if (state.hand === 'both') { bothFrame(now, buf, rms, gate); return; }
   if (rms < gate) {
     det.cand = null; det.count = 0; det.silent++;
     if (det.silent > 5) { det.emitted = null; showHeard(null); }
@@ -123,6 +122,27 @@ export function micFrame(now: number): void {
   }
 }
 
+const two = new TwoHandDetector();
+
+/** Begge hender (se twohands.ts). Detektoren får vite hva hver hånd skal spille i steget appen venter på. */
+function bothFrame(now: number, frame: Float32Array, rms: number, gate: number): void {
+  const step = expectedStep();
+  // «Vent på meg» merker en hånd som spilt med `got`, takt-modus med `judged` på delen
+  const pending = (h: Hand) => {
+    const p = step?.parts?.[h];
+    return p && !step!.got?.[h] && !p.judged ? p.midis : undefined;
+  };
+  const events = two.frame({
+    now, frame, rms, gate, sr: audioCtx().sampleRate,
+    long: () => { mic.longAnalyser?.getFloatTimeDomainData(mic.long); return mic.long; },
+    split: state.model.split ?? 60, anyOct: els.optOct.checked,
+    target: { lh: pending('lh'), rh: pending('rh'), ringing: step ? ringingAt(state.model.steps, step.si) : [] }
+  });
+  if (two.heard) showHeard(two.heard.midi, two.heard.f);
+  else if (rms < gate) showHeard(null);
+  for (const e of events) emitInput(e.midi, 'mic', e.phase === 'sustain' ? now : (e.at ?? now) - MIC_LATENCY, { attack: e.attack, phase: e.phase });
+}
+
 export async function toggleMic(): Promise<void> {
   if (mic.on) {
     mic.stream?.getTracks().forEach(t => t.stop());
@@ -148,11 +168,15 @@ export async function toggleMic(): Promise<void> {
     const an = ctx.createAnalyser();
     an.fftSize = 2048;
     src.connect(an);
-    Object.assign(mic, { on: true, stream, analyser: an, buf: new Float32Array(an.fftSize) });
+    // Et ekstra, lengre vindu til bassen med begge hender. Det vanlige vinduet er uendret.
+    const long = ctx.createAnalyser();
+    long.fftSize = 8192;
+    src.connect(long);
+    Object.assign(mic, { on: true, stream, analyser: an, buf: new Float32Array(an.fftSize), longAnalyser: long, long: new Float32Array(long.fftSize) });
     det.floor = 0.002; det.emitted = null;
     keepAwake('mic', true);
     setPill(els.pillMic, 'Mikrofon på', 'on');
-    setStatus(micListeningText(), state.hand === 'both' ? 'warn' : 'ok');
+    setStatus(micListeningText(), 'ok');
   } catch (err) {
     const name = (err as { name?: string } | null)?.name || '';
     setPill(els.pillMic, 'Mikrofon blokkert', 'bad');

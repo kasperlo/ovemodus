@@ -38,7 +38,7 @@ function handTexts(): void {
   els.optLHStaff.disabled = both;
   els.optLHStaff.checked = both || !!store.settings.lhStaff;
   segButtons(els.segHand).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.hand === state.hand)));
-  if (mic.on) setStatus(micListeningText(), both ? 'warn' : 'ok');
+  if (mic.on) setStatus(micListeningText(), 'ok');
 }
 
 /** Bygger modellen på nytt for valgt del og hånd, og tegner alt som avhenger av den. */

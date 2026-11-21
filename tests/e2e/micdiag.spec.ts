@@ -139,3 +139,27 @@ for (const [wav, sens, calGate] of [['spenning-lh-legato.wav', 'middels', undefi
     }
   });
 }
+
+// Kunstig pianoopptak av del A med begge hender (make-synthetic.mjs): høyre hånd staccato, A2 + E3 på hvert slag.
+for (const [wav, sens, calGate] of [['del-a-begge-hender.wav', 'middels', undefined], ['del-a-begge-hender-svak.wav', 'kalibrert', 0.0008]] as const) {
+  test(`mikrofon, begge hender: del A gjenkjennes uten bom (${wav}, ${sens})`, async ({ playwright }) => {
+    const browser = await playwright.chromium.launch({ args: fakeMicArgs(wav) });
+    try {
+      const page = await newPage(browser);
+      await page.goto(appUrl());
+      await page.evaluate(([k, s, g]) => {
+        localStorage.clear();
+        localStorage.setItem(k as string, JSON.stringify({ settings: { sens: s, calGate: g, hand: 'both', section: 'delA' } }));
+      }, [STORE_KEY, sens, calGate ?? null] as const);
+      await page.reload();
+      await page.evaluate(() => window.ovemodus.setMode('vent'));
+      await page.click('#btnMic');
+      await expect.poll(() => page.evaluate(() => window.ovemodus.state.finished), { timeout: 25_000 }).toBe(true);
+      const st = await page.evaluate(() => window.ovemodus.state);
+      expect(st.cur).toBe(27);
+      expect(st.misses).toBe(0);
+    } finally {
+      await browser.close();
+    }
+  });
+}

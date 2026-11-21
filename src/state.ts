@@ -1,4 +1,4 @@
-import { build, type Model, type PracticeHand, type Section, type Song } from './music/song';
+import { build, type Model, type PracticeHand, type Section, type Song, type Step } from './music/song';
 import { sciName, octOf, pc } from './music/theory';
 import { songs } from './songs';
 import type { Mode } from './storage';
@@ -67,8 +67,20 @@ export const mic = {
   on: false,
   stream: null as MediaStream | null,
   analyser: null as AnalyserNode | null,
-  buf: new Float32Array(0)
+  buf: new Float32Array(0),
+  /** Lengre vindu (8192 prøver) for bassen når man øver begge hender. */
+  longAnalyser: null as AnalyserNode | null,
+  long: new Float32Array(0)
 };
+
+/** Steget appen venter på nå: neste i «Vent på meg», eller nærmeste udømte steg i en takt-runde. */
+export function expectedStep(): Step | undefined {
+  const steps = state.model.steps;
+  if (state.mode === 'vent') return state.finished ? undefined : steps[state.cur];
+  if (!run.active || run.kind !== 'takt') return undefined;
+  const tt = (performance.now() - run.t0) / 1000;
+  return steps.find(s => !s.judged && tt <= (s.t ?? 0) + (s.win ?? 0));
+}
 
 export function currentIndex(): number {
   if (run.active) return run.cursor;

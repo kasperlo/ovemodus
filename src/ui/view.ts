@@ -218,7 +218,7 @@ export function setStatus(text: string, kind: Tone = ''): void {
 /** Statusteksten når mikrofonen er på, avhengig av hånd. */
 export function micListeningText(): string {
   return state.hand === 'both'
-    ? 'Mikrofonen lytter, men hører foreløpig bare én tone om gangen. Med begge hender virker MIDI og skjermtastaturet best.'
+    ? 'Mikrofonen lytter etter begge hender. Noen toner i høyre hånd kan ikke skilles fra bassen (A4 over A2), og de godtas når venstre hånd er riktig.'
     : `Mikrofonen lytter. Spill ${state.hand === 'lh' ? 'venstre' : 'høyre'} hånd.`;
 }
 

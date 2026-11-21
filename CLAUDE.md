@@ -6,13 +6,13 @@ Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, vise
 
 - Appen er Vite + TypeScript uten rammeverk (`index.html`, `src/`). abcjs 6.4.4 kommer fra npm.
 - `prototype/ovemodus.html` er den opprinnelige appen i én fil. Den er referansen for oppførselen og kan fortsatt testes (`npm run test:e2e:prototype`).
-- `tests/e2e/` har Playwright-tester som kjører mot `vite preview`. Seks av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`. Spec-ene for nye funksjoner (`ipad`, `sheet`, `micdiag`, `hands`) hoppes over mot prototypen.
-- `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon, `build`, `toAbc`, dømming, og `songs.test.ts` som validerer alle låtene (takter fyller taktarten, fingre 1–5 i riktig rekkefølge, høyre hånd fra midtre C og opp, venstre under, alt innenfor C2–C7, Casio-oppsett og standardtempo i steg på 5).
+- `tests/e2e/` har Playwright-tester som kjører mot `vite preview`. Åtte av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`. Spec-ene for nye funksjoner (`ipad`, `sheet`, `micdiag`, `hands`) hoppes over mot prototypen.
+- `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon (også begge hender, der `twohands.wav.test.ts` kjører opptakene gjennom detektoren), `build`, `toAbc`, dømming, og `songs.test.ts` som validerer alle låtene (takter fyller taktarten, fingre 1–5 i riktig rekkefølge, høyre hånd fra midtre C og opp, venstre under, alt innenfor C2–C7, Casio-oppsett og standardtempo i steg på 5).
 - `noter/` har LilyPond-kildene til notearket (PDF), lydfilene (MP3) og skriptet som lager dem.
 
 Appen er publisert på https://kasperlo.github.io/ovemodus/ fra `main` via GitHub Actions (`.github/workflows/deploy.yml`): typesjekk, Vitest og Playwright må være grønne før den publiseres. Pull requests testes, men publiseres ikke.
 
-Steg 1, 2 og 3 er gjort, og iPad-delen av steg 4. Venstre hånd kan øves alene (trinn 1). Import av egne noter (MusicXML) er laget. Neste: begge hender samtidig med MIDI (trinn 2) og med mikrofon (trinn 3).
+Steg 1, 2 og 3 er gjort, og iPad-delen av steg 4. Venstre hånd kan øves alene (trinn 1). Import av egne noter (MusicXML) er laget. Begge hender samtidig virker med MIDI og skjermtastatur (trinn 2) og med mikrofon (trinn 3). Mikrofonen med begge hender er bare testet på kunstige opptak, ikke på iPad med ekte keyboard.
 
 ## Kommandoer
 
@@ -21,7 +21,7 @@ npm install
 npx playwright install chromium   # én gang
 npm run dev                       # utviklingsserver
 npm run build                     # tsc + vite build til dist/
-npm test                          # Vitest, under ett sekund
+npm test                          # Vitest, et par sekunder
 npm run test:e2e                  # bygger, starter vite preview (port 4173) og kjører Playwright, ca. 1 minutt
 npm run test:e2e:prototype        # samme tester mot prototypen
 node scripts/make-icons.mjs       # lager PNG-ikonene i public/ fra public/icon.svg
@@ -32,12 +32,12 @@ Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpne
 ## Hva appen gjør
 
 - **Velg låt og del:** nedtrekksliste med «I Dovregubbens hall» (Del A, Del B, Hele stykket) egne gameshow-lyder (intro, riktig svar, feil svar, joker, dobbel poeng, spenning, nedtelling, tiden er ute, vinner, med tre eller fire varianter hver som deler) og klassiske temaer, alfabetisk (blant annet Wilhelm Tell, Can-can, Für Elise, Morgenstemning, Toccata, Te Deum/Eurovision, Also sprach Zarathustra, Ode til gleden, Toreador, Den blå Donau). Delvalget skjules når låten har én del.
-- **Begge hender:** hvert steg er alt som slås an samtidig, med en del per hånd (`step.parts`). Vent på meg venter til hver hånd har spilt sin del (`step.got`, hake i kortet, tastaturet viser det som gjenstår). Spill i takt dømmer hver hånd for seg, og prosenten regnes av alle delene. Tonen tilordnes en hånd med `handOf`: MIDI-kanal 3 er venstre hånd når Casio-keyboardet er splittet, ellers skillet `model.split`. Notearket viser alltid begge systemer med fingre og tonenavn, og venstre hånds fingre bare når de endrer seg. Mikrofonen hører foreløpig bare én tone om gangen (trinn 3 gjenstår).
-- **Velg hånd:** høyre eller venstre. Venstre hånd vises i bassnøkkel med fingersetting og tonenavn, skjermtastaturet viser C2–C4 (høyre: C4–C6), og «Spill … for meg» og «Vis …» gjelder den andre hånden. Rekorder lagres per hånd (`delA|lh|vent`). Begge hender samtidig er ikke laget ennå.
+- **Begge hender:** hvert steg er alt som slås an samtidig, med en del per hånd (`step.parts`). Vent på meg venter til hver hånd har spilt sin del (`step.got`, hake i kortet, tastaturet viser det som gjenstår). Spill i takt dømmer hver hånd for seg, og prosenten regnes av alle delene. Tonen tilordnes en hånd med `handOf`: MIDI-kanal 3 er venstre hånd når Casio-keyboardet er splittet, ellers skillet `model.split`. Notearket viser alltid begge systemer med fingre og tonenavn, og venstre hånds fingre bare når de endrer seg. Mikrofonen hører begge hender med en egen detektor (punkt 12 under Tonegjenkjenning).
+- **Velg hånd:** høyre, venstre eller begge. Venstre hånd vises i bassnøkkel med fingersetting og tonenavn, skjermtastaturet viser C2–C4 (høyre: C4–C6), og «Spill … for meg» og «Vis …» gjelder den andre hånden. Rekorder lagres per hånd (`delA|lh|vent`, `delA|both|vent`).
 - **Importer noter:** «Importer noter» leser MusicXML (`.musicxml`, `.xml`, komprimert `.mxl`) i nettleseren (`src/importer/`). Låten lagres bare på enheten i `localStorage` under `ovemodus-mine-noter-v1` og vises under «Mine noter». Den publiseres aldri (repoet og siden er offentlige, så beskyttet musikk skal bare inn denne veien). Høyre hånd er øverste notesystem, venstre nederste. Fingersetting tas med fra filen, ellers vises ingen fingre. Bindinger blir pauser, opptakt fylles med pauser foran, pyntenoter og andre stemmer hoppes over. Trioler og taktartskifte gir en feilmelding med taktnummer. Lange stykker deles i deler på 16 takter. MIDI og PDF må gjøres om til MusicXML i MuseScore.
 - **Skillet mellom hendene** (`model.split`) er midtre C for de innebygde låtene. For importerte noter er det laveste tone i høyre hånd, eller ingen når hendene overlapper. MIDI-filteret og mikrofonfilteret i takt-modus bruker det.
 - **Casio CT-S400:** hver låt har et forslag til lyd og registreringsplass (`casio` i låtfilen, `src/casio.ts`), vist under låtvalget og i «Oppsett for Casio CT-S400» nederst på siden. Registreringsplassen (`reg`) er valgfri, fordi det finnes 32 og flere låter enn det.
-- **Input:** mikrofon (én hånd), Web MIDI (USB-keyboard; den andre hånden ignoreres, delt ved midtre C), eller klikk på skjermtastaturet.
+- **Input:** mikrofon (én hånd eller begge), Web MIDI (USB-keyboard; den andre hånden ignoreres, delt ved midtre C), eller klikk på skjermtastaturet.
 - **Vent på meg:** står stille til riktig tone kommer. Tid måles fra første riktige tone. Klikk på en note eller bokstavbrikke for å starte derfra (da lagres ikke rekord).
 - **Spill i takt:** én takt med innteller, metronom, valgfri venstre hånd. Hver tone dømmes treff/bom innenfor et tidsvindu. Resultat i prosent og gjennomsnittlig timing. Rekorden er høyeste tempo med minst 90 % treff.
 - **Hør hvordan det går:** appen spiller delen selv og viser tangentene.
@@ -75,6 +75,12 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 9. **Oktaver:** «Godta riktig tone i alle oktaver» er på som standard. Det dekker keyboard med oktavskift og oktavfeil i deteksjonen.
 10. **Spill i takt med mikrofon:** 70 ms forsinkelse trekkes fra. Når appen spiller den andre hånden gjennom høyttaleren, ignoreres mikrofontoner i dens register (under MIDI 55 når man øver høyre, fra 60 og opp når man øver venstre). Anbefal hodetelefoner.
 11. **Tidsvindu i takt-modus:** `clamp(0,5 × min(varighet, kvartnote), 90 ms, 200 ms)`. Avspilling planlegges i `AudioContext`-tid med 0,3 s forsprang + `outputLatency`. MIDI bruker `event.timeStamp`.
+12. **Begge hender** (`TwoHandDetector` i `src/input/twohands.ts`, egen vei i `micFrame`, én hånd er uendret). Appen vet hva hver hånd skal spille, og sjekker det:
+    - **Venstre hånd:** et anslag i bassen (RMS under skillet, lavpass 4. orden) må være minst 0,25 av all RMS. 117 ms (7 rammer) etter anslaget rangeres bassnotene i et langt vindu (egen `AnalyserNode` med 8192 prøver) etter hvor mye de har blitt styrket siden anslaget, og bare toner som er sterkere enn nabotonene teller. En ventet tone må være blant de tre øverste, og bassen må fortsatt være 0,25 av lyden. Feller som er funnet: før 117 ms er det nye anslaget bare en kort bit i enden av vinduet, og spekteret får falske topper to halvtoner unna (G2 ved A2). Hammerdunket fra et anslag i høyre hånd ser ut som bass i starten, men dør ut (0,08–0,14 av lyden etter 117 ms på pianoopptaket, mot 0,38–0,66 med begge hender). Tidspunktet i takt-modus er anslaget, ikke sjekken.
+    - **Høyre hånd:** venstre hånds toner som kan klinge (i steget og siste steg med venstre hånd) trekkes fra med kamfiltre, så YIN finner tonen som er igjen. Ellers som én hånd (3 rammer, 9 rammer).
+    - **Anslag:** måles mot laveste RMS i de siste 4 rammene, ikke mot glidende snitt. Med venstre hånd som klinger faller ikke nivået mellom tonene, og snittet hang etter, så anslag i høyre hånd ble borte.
+    - **Kan ikke skilles:** toner i høyre hånd på en overtone av venstre hånd (A4, E5 og A5 over A2, B4 over E3, G5 over A2, innen 35 cent; 14 av 26 toner i del A) forsvinner med kamfilteret. De godtas sammen med venstre hånd, eller ved et anslag som ikke er i bassen når steget bare har høyre hånd. Feil tone der blir altså godtatt.
+    - **Forrige tone:** med begge hender er `lastAcc` siste godkjente tone i høyre hånd, fordi mikrofonen melder venstre hånd bare som anslag. Ellers ble `sustain` av en høyre hånd-tone regnet som bom når venstre hånd kom etter.
 
 ## Noteark (abcjs) – feller
 
@@ -98,7 +104,7 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - `src/songs/`: én fil per låt, `index.ts` er registeret
 - `src/notation/`: `abc.ts` (`toAbc`, rent), `sheet.ts` (abcjs-tegning og markør)
 - `src/audio/synth.ts`: AudioContext, toner og metronomklikk
-- `src/input/`: `pitch.ts` (YIN + Goertzel, rent), `mic.ts`, `midi.ts`
+- `src/input/`: `pitch.ts` (YIN + Goertzel, rent), `twohands.ts` (begge hender, rent), `mic.ts`, `midi.ts`
 - `src/practice/`: `input.ts` (felles inngang for alle kilder), `wait.ts` (vent på meg), `takt.ts` (spill i takt og demo), `judge.ts` (rene regler), `progress.ts`, `session.ts` (del, modus, visning, hopp til note)
 - `src/ui/`: `dom.ts` (alle elementer), `view.ts` (`refresh` og alt som tegnes), `keyboard.ts`, `strip.ts`
 - `src/songs/`: `dovregubben.ts`, `gameshow.ts` (egne lyder, variantene er deler), `klassisk.ts` (de første klassiske temaene og hjelperen `klassisk`), `klaver.ts`, `marsjer.ts`, `opera.ts` og `orkester.ts` (flere klassiske temaer, kilder i assumptions.md), `index.ts` (register og `findSection`)
@@ -115,6 +121,7 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - `tests/fixtures/del-a-oktav-ned-feil-tone.wav`: samme en oktav lavere, med en feil F4 (0,45 s) før tone 8. Forventet: 26/26, 1 bom.
 - `tests/fixtures/del-a-svak-ipad.wav`: `del-a-hoyre-hand.wav` dempet 17 dB (`ffmpeg -af volume=-17dB`). Det er samme nivå som iPad-mikrofonen målte i notestativet. Med «Høy» høres 1 av 26 toner, med kalibrert følsomhet alle 26 uten bom.
 - `tests/fixtures/spenning-lh-legato.wav` og `…-svak.wav`: kunstige pianotoner fra `node tests/fixtures/make-synthetic.mjs` (inharmoniske overtoner, to-trinns utklingning). Hjerteslaget i «Spenning» med venstre hånd, A2 A2 legato, på normalt nivå og 17 dB svakere. Forventet: 8/8, 0 bom (svak med kalibrert grense 0,0008).
+- `tests/fixtures/del-a-begge-hender.wav` og `…-svak.wav`: også fra `make-synthetic.mjs`. Del A med begge hender, 100 BPM, høyre hånd staccato, A2 + E3 på hvert slag. Venstre hånd kommer skiftevis samtidig, 45 ms etter, 30 ms før og 20 ms etter høyre hånd. Forventet: 27/27, 0 bom (svak med kalibrert grense 0,0008), både i Playwright og i `twohands.wav.test.ts`.
 - `del-a-*.wav` er laget fra `noter/lyd-ovetempo.ly` → MIDI → `noter/scripts/postprocess.py` → fluidsynth (FluidR3_GM, 48 kHz) → ffmpeg (mono, 16 bit, 3 s stillhet til slutt). LilyPond og FluidSynth er ikke installert lokalt nå, så nye opptak lages med `make-synthetic.mjs`.
 - Node: prosjektet krever Node 20.19 eller nyere (`.nvmrc`). Standard i skallet kan være Node 18, og da feiler Vitest.
 - Testene kjører med én worker fordi takt-testene måler timing.

@@ -7,6 +7,12 @@ const YIN_FALLBACK_MAX = 0.3;
 export const MIN_CONFIDENCE = 0.75;
 /** Toner lenger unna nærmeste halvtone enn dette (i halvtoner) forkastes. */
 export const MAX_SEMITONE_OFFSET = 0.42;
+/** Samme tone så mange rammer på rad gir en `stable`-hendelse, og så mange en `sustain`. */
+export const STABLE_FRAMES = 3;
+export const SUSTAIN_FRAMES = 9;
+/** Et anslag er et RMS-hopp over så mange ganger nivået før, minst så mange ms etter forrige anslag. */
+export const ATTACK_RATIO = 1.4;
+export const ATTACK_HOLDOFF_MS = 140;
 
 let yinD: Float32Array | null = null;
 

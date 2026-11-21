@@ -51,7 +51,8 @@ function judgeWaitBoth(step: Step, m: number, ev: InputEvent): void {
   if (hand && part && matchesPart(part, m, anyOct)) {
     if (step.got?.[hand]) return; // samme hånd igjen: ikke bom, men heller ikke noe nytt
     if (state.tStart == null) state.tStart = performance.now();
-    state.lastAcc = m;
+    // Mikrofonen melder venstre hånd bare som anslag, så tonen som kan klinge videre uten nytt anslag er høyre hånds
+    if (hand === 'rh') state.lastAcc = m;
     step.got = { ...step.got, [hand]: true };
     flashKey(m, 'hit');
     clearGhost();
