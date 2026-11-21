@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { findSection } from '../songs';
 import { dovregubben } from '../songs/dovregubben';
-import { barLength, beamGroup, build, clickLength, countInBars, type Hand } from './song';
+import { barLength, beamGroup, build, clickLength, countInBars, type PracticeHand } from './song';
 import { parsePitch, sciName } from './theory';
 
-const model = (id: string, hand: Hand = 'rh') => { const { song, sec } = findSection(id); return build(song, sec, hand); };
+const model = (id: string, hand: PracticeHand = 'rh') => { const { song, sec } = findSection(id); return build(song, sec, hand); };
 
 describe('parsePitch', () => {
   it('leser tonenavn og beholder stavemåten', () => {
@@ -58,6 +58,23 @@ describe('build', () => {
     expect(m.steps[0]).toMatchObject({ type: 'chord', midis: [45, 52], f: '5 1', name: 'A+E', pos: 0 });
     expect(m.acc).toHaveLength(26);
     expect(m.bars.map(b => b.label)).toEqual(['Del A', null, null, null]);
+  });
+
+  it('begge hender: ett steg per anslag, med en del for hver hånd som slår an', () => {
+    const m = model('delA', 'both');
+    expect(m.hand).toBe('both');
+    // 26 toner i høyre hånd, og én kvint i venstre (siste slag i takt 4) der høyre hånd holder en lang tone
+    expect(m.steps).toHaveLength(27);
+    expect(m.steps[0]).toMatchObject({ pos: 0, midis: [45, 52, 69], name: 'A / A+E' });
+    expect(m.steps[0].parts?.rh).toMatchObject({ midis: [69], f: '1', idx: 0 });
+    expect(m.steps[0].parts?.lh).toMatchObject({ midis: [45, 52], f: '5 1', idx: 0 });
+    expect(m.steps[1].parts?.lh).toBeUndefined();
+    const lhOnly = m.steps.filter(s => s.parts?.lh && !s.parts.rh);
+    expect(lhOnly.map(s => s.pos)).toEqual([30]);
+    expect(m.acc).toEqual([]);
+    expect(m.bars).toHaveLength(4);
+    expect(m.staffs.rh).toHaveLength(4);
+    expect(m.staffs.lh).toHaveLength(4);
   });
 
   it('lager nye stegobjekter for hver build, så status fra en runde ikke lekker', () => {

@@ -4,7 +4,7 @@ import { emitInput } from '../practice/input';
 import { mic, run, spell, state } from '../state';
 import { store } from '../storage';
 import { els } from '../ui/dom';
-import { setPill, setStatus, updateButtons } from '../ui/view';
+import { micListeningText, setPill, setStatus, updateButtons } from '../ui/view';
 import { keepAwake } from '../wakeLock';
 import type { Frame } from './calibrate';
 import { estimatePitch, type PitchEstimate } from './pitch';
@@ -152,7 +152,7 @@ export async function toggleMic(): Promise<void> {
     det.floor = 0.002; det.emitted = null;
     keepAwake('mic', true);
     setPill(els.pillMic, 'Mikrofon på', 'on');
-    setStatus('Mikrofonen lytter. Spill høyre hånd.', 'ok');
+    setStatus(micListeningText(), state.hand === 'both' ? 'warn' : 'ok');
   } catch (err) {
     const name = (err as { name?: string } | null)?.name || '';
     setPill(els.pillMic, 'Mikrofon blokkert', 'bad');

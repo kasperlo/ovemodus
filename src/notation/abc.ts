@@ -1,4 +1,4 @@
-import type { Bar, Meter, Model } from '../music/song';
+import type { Bar, Hand, Meter, Model } from '../music/song';
 import { beamGroup } from '../music/song';
 
 export function abcNote(midi: number, name: string): { s: string; alt: number; key: string } {
@@ -40,8 +40,23 @@ export function keyAccidentals(key: string): Record<string, number> {
 }
 
 interface Voice {
-  /** Fingersetting, tonenavn under og etiketter som «Del A». Bare for hånden man øver på. */
+  /** Fingersetting og tonenavn under. For hånden man øver på (begge når man øver begge). */
   annotate: boolean;
+  /** Etiketter som «Del A». Bare på én stemme, så de ikke står to ganger. */
+  label: boolean;
+  /**
+   * Vis fingersetting bare når den endrer seg (og i starten av linjen). Brukes for venstre hånd når man øver
+   * begge hender, der samme kvint med 5 og 1 ellers står over hver eneste note mellom systemene.
+   */
+  sparse?: { prev: string };
+}
+
+function showFingers(voice: Voice, f: string): boolean {
+  if (!voice.annotate || !f) return false;
+  if (!voice.sparse) return true;
+  const changed = voice.sparse.prev !== f;
+  voice.sparse.prev = f;
+  return changed;
 }
 
 /**
@@ -62,16 +77,16 @@ function barAbc(bar: Bar, sig: Record<string, number>, meter: Meter, voice: Voic
   bar.items.forEach((it, idx) => {
     const p = it.pos - bar.start;
     const beam = it.type !== 'rest' && it.d < 2;
-    let t = voice.annotate && idx === 0 && bar.label ? `"^${bar.label}"` : '';
+    let t = voice.label && idx === 0 && bar.label ? `"^${bar.label}"` : '';
     if (it.type === 'rest') {
       t += 'z' + abcDur(it.d);
     } else if (it.type === 'chord') {
       // abcjs stabler fingersettingen nedenfra, så fingeren til den dypeste tonen står nærmest akkorden
-      if (voice.annotate && it.f) t += it.f.split(' ').map(f => `!${f}!`).join('');
+      if (showFingers(voice, it.f)) t += it.f.split(' ').map(f => `!${f}!`).join('');
       t += '[' + it.midis.map((m, i) => note(m, it.names[i])).join('') + ']' + abcDur(it.d);
       if (voice.annotate) lyr.push(it.short || it.name);
     } else {
-      if (voice.annotate && it.f) t += `!${it.f}!`;
+      if (showFingers(voice, it.f)) t += `!${it.f}!`;
       if (it.fermata) t += '!fermata!';
       t += note(it.midi, it.name) + abcDur(it.d);
       if (voice.annotate) lyr.push(it.name);
@@ -85,23 +100,34 @@ function barAbc(bar: Bar, sig: Record<string, number>, meter: Meter, voice: Voic
 
 /**
  * Lager ABC for notearket av samme data som dømmingen bruker. Hånden man øver på får fingersetting over
- * og tonenavn under. Den andre hånden vises bare når `showOther` er på, alltid som et vanlig pianosystem
- * (høyre hånd øverst).
+ * og tonenavn under. Den andre hånden vises når `showOther` er på, og alltid når man øver begge hender,
+ * som et vanlig pianosystem (høyre hånd øverst).
  */
 export function toAbc(model: Model, perLine: number, showOther: boolean): string {
   const { song, hand } = model;
   const sig = keyAccidentals(song.key);
-  const out = ['X:1', `M:${song.meter.beats}/${song.meter.unit}`, 'L:1/8', `K:${song.key}` + (hand === 'lh' && !showOther ? ' clef=bass' : '')];
-  if (showOther) out.push('%%score {RH LH}', 'V:RH clef=treble', 'V:LH clef=bass');
+  const two = hand === 'both' || showOther;
+  const out = ['X:1', `M:${song.meter.beats}/${song.meter.unit}`, 'L:1/8', `K:${song.key}` + (hand === 'lh' && !two ? ' clef=bass' : '')];
+  if (two) out.push('%%score {RH LH}', 'V:RH clef=treble', 'V:LH clef=bass');
+  const voice = (h: Hand): Voice => ({ annotate: hand === h || hand === 'both', label: (hand === 'lh') === (h === 'lh') });
   for (let i = 0; i < model.bars.length; i += perLine) {
     const end = i + perLine >= model.bars.length ? ' |]' : ' |';
-    const mine = model.bars.slice(i, i + perLine).map(b => barAbc(b, sig, song.meter, { annotate: true }));
-    const music = mine.map(r => r.music).join(' | ') + end;
-    const lyr = 'w: ' + mine.map(r => r.lyr).join(' | ');
-    if (!showOther) { out.push(music, lyr); continue; }
-    const theirs = model.other.slice(i, i + perLine).map(b => barAbc(b, sig, song.meter, { annotate: false }).music).join(' | ') + end;
-    if (hand === 'rh') out.push('[V:RH] ' + music, lyr, '[V:LH] ' + theirs);
-    else out.push('[V:RH] ' + theirs, '[V:LH] ' + music, lyr);
+    const line = (h: Hand) => {
+      const v = { ...voice(h), sparse: hand === 'both' && h === 'lh' ? { prev: '' } : undefined };
+      return model.staffs[h].slice(i, i + perLine).map(b => barAbc(b, sig, song.meter, v));
+    };
+    const music = (bars: { music: string }[]) => bars.map(r => r.music).join(' | ') + end;
+    const lyr = (bars: { lyr: string }[]) => 'w: ' + bars.map(r => r.lyr).join(' | ');
+    if (!two) {
+      const mine = line(hand === 'lh' ? 'lh' : 'rh');
+      out.push(music(mine), lyr(mine));
+      continue;
+    }
+    const rh = line('rh'), lh = line('lh');
+    out.push('[V:RH] ' + music(rh));
+    if (voice('rh').annotate) out.push(lyr(rh));
+    out.push('[V:LH] ' + music(lh));
+    if (voice('lh').annotate) out.push(lyr(lh));
   }
   return out.join('\n');
 }

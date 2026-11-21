@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { build, type Hand } from '../music/song';
+import { build, type PracticeHand } from '../music/song';
 import { findSection } from '../songs';
 import { abcDur, abcNote, keyAccidentals, toAbc } from './abc';
 
-const model = (id: string, hand: Hand = 'rh') => { const { song, sec } = findSection(id); return build(song, sec, hand); };
+const model = (id: string, hand: PracticeHand = 'rh') => { const { song, sec } = findSection(id); return build(song, sec, hand); };
 
 describe('abcNote', () => {
   it('skriver oktaver med store/små bokstaver, komma og apostrof', () => {
@@ -90,6 +90,21 @@ describe('toAbc', () => {
     expect(abc[7]).toBe('[V:RH] C/E/G/c/ [CEGc]6 |]');
     expect(abc[8]).toBe('[V:LH] "^Riktig svar – fanfare"z2 !5!!1![C,,C,]6 |]');
     expect(abc[9]).toBe('w: C+C');
+  });
+
+  it('begge hender: begge systemer med fingre og tonenavn, etiketten bare øverst', () => {
+    const abc = toAbc(model('riktig', 'both'), 4, false).split('\n');
+    expect(abc.slice(4, 7)).toEqual(['%%score {RH LH}', 'V:RH clef=treble', 'V:LH clef=bass']);
+    expect(abc[7]).toBe('[V:RH] "^Riktig svar – fanfare"!1!C/!2!E/!3!G/!5!c/ !1!!2!!3!!5![CEGc]6 |]');
+    expect(abc[8]).toBe('w: C E G C C');
+    expect(abc[9]).toBe('[V:LH] z2 !5!!1![C,,C,]6 |]');
+    expect(abc[10]).toBe('w: C+C');
+  });
+
+  it('begge hender: venstre hånds fingre vises bare når de endrer seg, og i starten av linjen', () => {
+    const lines = toAbc(model('delA', 'both'), 2, false).split('\n').filter(l => l.startsWith('[V:LH]'));
+    expect(lines[0]).toBe('[V:LH] !5!!1![A,,E,]2 [A,,E,]2 [A,,E,]2 [A,,E,]2 | [A,,E,]2 [A,,E,]2 [A,,E,]2 [A,,E,]2 |');
+    expect(lines[1].startsWith('[V:LH] !5!!1![A,,E,]2 [A,,E,]2')).toBe(true);
   });
 
   it('toneart og taktart fra låten, og fortegn ut fra tonearten', () => {

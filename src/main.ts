@@ -70,7 +70,7 @@ els.selSong.addEventListener('change', () => {
 });
 els.segHand.addEventListener('click', e => {
   const b = (e.target as Element).closest<HTMLElement>('button[data-hand]');
-  if (b) setHand(b.dataset.hand === 'lh' ? 'lh' : 'rh');
+  if (b) setHand(b.dataset.hand === 'lh' || b.dataset.hand === 'both' ? b.dataset.hand : 'rh');
 });
 
 els.segMode.addEventListener('click', e => {
@@ -135,7 +135,7 @@ loadImported();
 renderSongSelect();
 renderCasioTable();
 initImport();
-state.hand = store.settings.hand === 'lh' ? 'lh' : 'rh';
+state.hand = store.settings.hand === 'lh' || store.settings.hand === 'both' ? store.settings.hand : 'rh';
 state.mode = store.settings.mode === 'takt' ? 'takt' : 'vent';
 setSection(store.settings.section);
 setView(store.settings.view);

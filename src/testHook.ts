@@ -24,7 +24,11 @@ export function installTestHook(actions: Actions): void {
         micOn: mic.on,
         run: { t0: run.t0, countIn: run.countIn, e8: run.e8, kind: run.kind },
         sheet: { ok: sheet.ok, count: sheet.notes.length, perLine: sheet.perLine, cursorW: sheet.cursor ? Number(sheet.cursor.getAttribute('width')) : -1 },
-        notes: state.model.steps.map(s => ({ m: s.type === 'chord' ? s.midis[0] : s.midi, t: s.t, judged: s.judged || null }))
+        notes: state.model.steps.map(s => ({
+          m: s.type === 'chord' ? s.midis[0] : s.midi, t: s.t, judged: s.judged || null,
+          // Begge hender: én tone fra hver hånd sin del, så testene kan spille begge
+          ...(s.parts ? { rh: s.parts.rh?.midis[0], lh: s.parts.lh?.midis[0] } : {})
+        }))
       };
     }
   };

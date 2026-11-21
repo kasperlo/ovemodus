@@ -10,6 +10,8 @@ export interface InputEvent {
   attack: boolean;
   /** Mikrofonen melder `stable` etter 3 like rammer og `sustain` etter 9. */
   phase: 'stable' | 'sustain';
+  /** MIDI-kanal 1–16. Casio CT-S400 sender venstre hånd på kanal 3 når keyboardet er splittet. */
+  channel?: number;
 }
 
 /** Ekko-sperre: mikrofonen ignoreres så lenge etter en tone fra MIDI eller skjermtastaturet. */

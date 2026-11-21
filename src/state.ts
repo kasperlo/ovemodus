@@ -1,4 +1,4 @@
-import { build, type Hand, type Model, type Section, type Song } from './music/song';
+import { build, type Model, type PracticeHand, type Section, type Song } from './music/song';
 import { sciName, octOf, pc } from './music/theory';
 import { songs } from './songs';
 import type { Mode } from './storage';
@@ -22,7 +22,7 @@ const firstSong = songs[0], firstSection = firstSong.sections[0];
 export const state = {
   song: firstSong as Song,
   sec: firstSection as Section,
-  hand: 'rh' as Hand,
+  hand: 'rh' as PracticeHand,
   model: build(firstSong, firstSection) as Model,
   mode: 'vent' as Mode,
   tempo: 100,

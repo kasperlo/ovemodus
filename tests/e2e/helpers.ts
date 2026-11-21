@@ -22,7 +22,8 @@ export interface OvemodusHook {
     result: { big: string; sub: string; then: string } | null;
     run: { t0: number; countIn: number; e8: number; kind: string | null };
     sheet: { ok: boolean; count: number; perLine: number; cursorW: number };
-    notes: { m: number; t: number; judged: string | null }[];
+    /** `rh` og `lh` finnes bare når man øver begge hender. */
+    notes: { m: number; t: number; judged: string | null; rh?: number; lh?: number }[];
   };
 }
 

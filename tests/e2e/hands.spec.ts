@@ -72,10 +72,10 @@ test('notearket har én note per steg i alle deler, med begge hender og med den 
   test.setTimeout(120_000);
   const ids = await sectionIds(page);
   expect(ids.length).toBeGreaterThanOrEqual(11);
-  for (const hand of ['rh', 'lh'] as const) {
+  for (const hand of ['rh', 'lh', 'both'] as const) {
     await page.click(`#segHand button[data-hand="${hand}"]`);
-    for (const other of [false, true]) {
-      await page.setChecked('#optLHStaff', other);
+    for (const other of hand === 'both' ? [true] : [false, true]) {
+      if (hand !== 'both') await page.setChecked('#optLHStaff', other);
       for (const id of ids) {
         const st = await page.evaluate(s => { window.ovemodus.setSection(s); return window.ovemodus.state; }, id);
         const where = `${id} ${hand}${other ? ' + andre hånd' : ''}`;
@@ -101,4 +101,56 @@ test('spill i takt med 2/4: inntelling på to takter og fire klikk', async ({ pa
     return r;
   });
   expect(run.countIn).toBeCloseTo(8 * run.e8);
+});
+
+test('begge hender, vent på meg: steget venter til begge hendene har spilt sin del', async ({ page }) => {
+  await page.click('#segHand button[data-hand="both"]');
+  await expect(page.locator('#segHand button[data-hand="both"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#subText')).toContainText('begge hender');
+  await expect(page.locator('#kbd .key[data-m="36"]')).toHaveCount(1);
+  await expect(page.locator('#kbd .key[data-m="84"]')).toHaveCount(1);
+  await expect(page.locator('#clueSub')).toHaveText('Høyre: A4 (1) · Venstre: A2 E3 (5 1)');
+
+  const first = await page.evaluate(() => window.ovemodus.state.notes[0]);
+  expect(first).toMatchObject({ rh: 69, lh: 45 });
+  await page.evaluate(m => window.ovemodus.input(m), first.rh!);
+  expect(await page.evaluate(() => window.ovemodus.state.cur)).toBe(0);
+  await expect(page.locator('#clueSub')).toHaveText('Høyre: A4 (1) ✓ · Venstre: A2 E3 (5 1)');
+  await expect(page.locator('#kbd .key[data-m="69"]')).not.toHaveClass(/target/);
+  await expect(page.locator('#kbd .key[data-m="45"]')).toHaveClass(/target/);
+
+  await page.evaluate(m => window.ovemodus.input(m), first.lh!);
+  expect(await page.evaluate(() => window.ovemodus.state.cur)).toBe(1);
+
+  const st = await page.evaluate(() => {
+    const o = window.ovemodus;
+    o.state.notes.slice(1).forEach(n => { if (n.lh) o.input(n.lh); if (n.rh) o.input(n.rh); });
+    return o.state;
+  });
+  expect(st.steps).toBe(27);
+  expect(st.finished).toBe(true);
+  expect(st.misses).toBe(0);
+  const rec = await page.evaluate(() => JSON.parse(localStorage.getItem('dovregubben-ovemodus-v1')!).rec);
+  expect(Object.keys(rec)).toEqual(['delA|both|vent']);
+});
+
+test('begge hender, spill i takt: begge hender i takt gir 100 %, og hver hånd teller', async ({ page }) => {
+  await page.click('#segHand button[data-hand="both"]');
+  const st = await page.evaluate(async () => {
+    const o = window.ovemodus;
+    o.setMode('takt');
+    o.setTempo(120);
+    o.startRun('takt');
+    const s = o.state, t0 = s.run.t0;
+    s.notes.forEach(n => {
+      const at = t0 + n.t * 1000 - performance.now();
+      if (n.rh) setTimeout(() => o.input(n.rh!), at);
+      if (n.lh) setTimeout(() => o.input(n.lh!), at + 5);
+    });
+    await new Promise(r => setTimeout(r, t0 + (s.run.countIn + 32 * s.run.e8) * 1000 - performance.now() + 900));
+    return o.state;
+  });
+  expect(st.result?.big).toBe('100 %');
+  // 26 toner i høyre hånd og 16 kvinter i venstre
+  expect(st.result?.sub).toContain('42 av 42 toner');
 });

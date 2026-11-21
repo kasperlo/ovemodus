@@ -1,5 +1,5 @@
 import type { CasioSetup } from '../casio';
-import { parsePitch, pc } from './theory';
+import { SHARP, parsePitch, pc } from './theory';
 
 /** Varigheter i åttedeler. `ed` er punktert åttendedel, `qd` punktert fjerdedel. */
 export const s16 = 0.5, e = 1, ed = 1.5, q = 2, qd = 3, h = 4, dh = 6, w = 8;
@@ -59,6 +59,8 @@ export const DY = (lo: string, hi: string, d: number, f = '5 1'): ChordEvent => 
 export const R = (d: number): RestEvent => ({ type: 'rest', d });
 
 export type Hand = 'rh' | 'lh';
+/** Hånden man øver på, eller begge samtidig. */
+export type PracticeHand = Hand | 'both';
 
 export interface Meter {
   beats: number;
@@ -136,7 +138,27 @@ export type Step = (NoteEvent | ChordEvent) & Placed & {
   stumbled?: boolean;
   /** Avvik i sekunder for et treff i takt-modus. Positivt er for sent. */
   offset?: number;
+  /** Bare når man øver begge hender: delen til hver hånd. */
+  parts?: Partial<Record<Hand, Part>>;
+  /** Vent på meg med begge hender: hendene som har spilt sin del av steget. */
+  got?: Partial<Record<Hand, boolean>>;
 };
+
+/** Den ene hånden sin del av et steg når man øver begge hender samtidig. */
+export interface Part {
+  hand: Hand;
+  type: 'note' | 'chord';
+  midis: number[];
+  pcs: Set<number>;
+  name: string;
+  sci: string;
+  f: string;
+  /** Plassen blant stegene i denne hånden alene, til koblingen mot notearket. */
+  idx: number;
+  /** Takt-modus: treff eller bom for denne hånden, og avviket i sekunder. */
+  judged?: Judgement | null;
+  offset?: number;
+}
 
 export type Item = Step | (RestEvent & Placed);
 
@@ -155,12 +177,12 @@ export interface AccEvent {
 
 export interface Model {
   song: Song;
-  hand: Hand;
+  hand: PracticeHand;
   barLen: number;
-  /** Takter for hånden man øver på. */
+  /** Stegene og pausene takt for takt: hånden man øver på, eller begge hender slått sammen. */
   bars: Bar[];
-  /** Takter for den andre hånden (til notearket). */
-  other: Bar[];
+  /** Hver hånd for seg, til notearket. */
+  staffs: Record<Hand, Bar[]>;
   items: Item[];
   steps: Step[];
   /** Den andre hånden, til avspilling. */
@@ -183,10 +205,33 @@ function place(events: BarEvent[], start: number, label: string | null, out: Ite
   return bar;
 }
 
-export function build(song: Song, sec: Section, hand: Hand = 'rh'): Model {
+const isStep = (it: Item): it is Step => it.type !== 'rest';
+const midisOf = (s: NoteEvent | ChordEvent): number[] => s.type === 'chord' ? s.midis : [s.midi];
+
+function part(s: Step, hand: Hand): Part {
+  return { hand, type: s.type, midis: midisOf(s), pcs: s.type === 'chord' ? s.pcs : new Set([pc(s.midi)]), name: s.name, sci: s.sci, f: s.f, idx: s.si };
+}
+
+/** Et steg med begge hender: alt som slås an samtidig. Venstre hånds toner står først i `midis`, så høyre. */
+function combine(r: Step | undefined, l: Step | undefined, pos: number, d: number): Step {
+  const parts: Partial<Record<Hand, Part>> = {};
+  if (l) parts.lh = part(l, 'lh');
+  if (r) parts.rh = part(r, 'rh');
+  const ps = [parts.lh, parts.rh].filter((x): x is Part => !!x);
+  const midis = ps.flatMap(x => x.midis);
+  const name = [parts.rh?.name, parts.lh?.name].filter(Boolean).join(' / ');
+  return {
+    type: 'chord', midis, names: midis.map(m => SHARP[pc(m)]), pcs: new Set(midis.map(pc)),
+    name, short: name, sci: [parts.rh?.sci, parts.lh?.sci].filter(Boolean).join(' + '), d,
+    f: [parts.rh?.f, parts.lh?.f].filter(Boolean).join(' / '), pos, si: -1, parts
+  };
+}
+
+export function build(song: Song, sec: Section, hand: PracticeHand = 'rh'): Model {
   const len = barLength(song.meter);
   const rest = [R(len)];
-  const bars: Bar[] = [], other: Bar[] = [], items: Item[] = [], otherItems: Item[] = [];
+  const staffs: Record<Hand, Bar[]> = { rh: [], lh: [] };
+  const items: Record<Hand, Item[]> = { rh: [], lh: [] };
   let pos = 0;
   sec.groups.forEach(g => {
     g.bars.forEach(([rhKey, lhKey], bi) => {
@@ -194,16 +239,38 @@ export function build(song: Song, sec: Section, hand: Hand = 'rh'): Model {
       const lh = lhKey ? song.lh[lhKey] : rest;
       if (!rh || !lh) throw new Error(`Ukjent takt i ${song.id}: ${rhKey} / ${lhKey}`);
       const label = bi === 0 ? g.label : null;
-      bars.push(place(hand === 'rh' ? rh : lh, pos, label, items));
-      other.push(place(hand === 'rh' ? lh : rh, pos, null, otherItems));
+      staffs.rh.push(place(rh, pos, label, items.rh));
+      staffs.lh.push(place(lh, pos, label, items.lh));
       pos += len;
     });
   });
-  const steps = items.filter((it): it is Step => it.type !== 'rest');
-  steps.forEach((s, i) => { s.si = i; });
-  const acc = otherItems.filter((it): it is Step => it.type !== 'rest')
-    .map(it => ({ pos: it.pos, d: it.d, midis: it.type === 'chord' ? it.midis : [it.midi] }));
-  return { song, hand, barLen: len, bars, other, items, steps, acc, total: pos, split: splitPoint(song, sec) };
+  const stepsOf = (h: Hand): Step[] => {
+    const list = items[h].filter(isStep);
+    list.forEach((x, i) => { x.si = i; });
+    return list;
+  };
+  const base = { song, hand, barLen: len, staffs, total: pos, split: splitPoint(song, sec) };
+  if (hand !== 'both') {
+    const steps = stepsOf(hand);
+    const other: Hand = hand === 'rh' ? 'lh' : 'rh';
+    const acc = items[other].filter(isStep).map(it => ({ pos: it.pos, d: it.d, midis: midisOf(it) }));
+    return { ...base, bars: staffs[hand], items: items[hand], steps, acc };
+  }
+  const rhAt = new Map(stepsOf('rh').map(x => [x.pos, x]));
+  const lhAt = new Map(stepsOf('lh').map(x => [x.pos, x]));
+  const onsets = [...new Set([...items.rh, ...items.lh].map(it => it.pos))].sort((a, b) => a - b);
+  const bars: Bar[] = staffs.rh.map(b => ({ label: b.label, start: b.start, items: [] }));
+  const all: Item[] = [];
+  onsets.forEach((p, i) => {
+    const d = (onsets[i + 1] ?? pos) - p;
+    const r = rhAt.get(p), l = lhAt.get(p);
+    const it: Item = r || l ? combine(r, l, p, d) : { type: 'rest', d, pos: p };
+    all.push(it);
+    bars[Math.min(bars.length - 1, Math.floor(p / len + 1e-9))].items.push(it);
+  });
+  const steps = all.filter(isStep);
+  steps.forEach((x, i) => { x.si = i; });
+  return { ...base, bars, items: all, steps, acc: [] };
 }
 
 const pitchesOf = (events: BarEvent[]): number[] => events.flatMap(ev => ev.type === 'rest' ? [] : ev.type === 'chord' ? ev.midis : [ev.midi]);

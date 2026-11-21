@@ -1,4 +1,4 @@
-import type { Hand } from './music/song';
+import type { PracticeHand } from './music/song';
 
 export type Mode = 'vent' | 'takt';
 export type View = 'noter' | 'bokstaver';
@@ -7,7 +7,7 @@ export type Sensitivity = 'lav' | 'middels' | 'hoy' | 'kalibrert';
 export interface Settings {
   section: string;
   /** Hånden man øver på. */
-  hand: Hand;
+  hand: PracticeHand;
   mode: Mode;
   oct: boolean;
   /** MIDI: ignorer den andre hånden (delt ved midtre C). Navnet er fra da bare venstre hånd kunne ignoreres. */
@@ -53,9 +53,9 @@ export function save(): void {
 }
 
 // Høyre hånd beholder nøklene fra før venstre hånd fantes, så gamle rekorder gjelder fortsatt.
-const recKey = (sectionId: string, hand: Hand, mode: Mode): string => `${sectionId}${hand === 'lh' ? '|lh' : ''}|${mode}`;
+const recKey = (sectionId: string, hand: PracticeHand, mode: Mode): string => `${sectionId}${hand === 'rh' ? '' : '|' + hand}|${mode}`;
 
-export const waitRecord = (sectionId: string, hand: Hand): WaitRecord | undefined => store.rec[recKey(sectionId, hand, 'vent')] as WaitRecord | undefined;
-export const taktRecord = (sectionId: string, hand: Hand): TaktRecord | undefined => store.rec[recKey(sectionId, hand, 'takt')] as TaktRecord | undefined;
-export function setWaitRecord(sectionId: string, hand: Hand, r: WaitRecord): void { store.rec[recKey(sectionId, hand, 'vent')] = r; save(); }
-export function setTaktRecord(sectionId: string, hand: Hand, r: TaktRecord): void { store.rec[recKey(sectionId, hand, 'takt')] = r; save(); }
+export const waitRecord = (sectionId: string, hand: PracticeHand): WaitRecord | undefined => store.rec[recKey(sectionId, hand, 'vent')] as WaitRecord | undefined;
+export const taktRecord = (sectionId: string, hand: PracticeHand): TaktRecord | undefined => store.rec[recKey(sectionId, hand, 'takt')] as TaktRecord | undefined;
+export function setWaitRecord(sectionId: string, hand: PracticeHand, r: WaitRecord): void { store.rec[recKey(sectionId, hand, 'vent')] = r; save(); }
+export function setTaktRecord(sectionId: string, hand: PracticeHand, r: TaktRecord): void { store.rec[recKey(sectionId, hand, 'takt')] = r; save(); }

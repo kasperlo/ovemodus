@@ -8,7 +8,10 @@ export function resetProgress(): void {
   state.tStart = null; state.tEnd = null; state.finished = false; state.lastAcc = null; state.result = null;
   run.offsets = [];
   state.partial = false;
-  state.model.steps.forEach(s => { s.judged = null; s.stumbled = false; s.offset = undefined; });
+  state.model.steps.forEach(s => {
+    s.judged = null; s.stumbled = false; s.offset = undefined; s.got = undefined;
+    Object.values(s.parts ?? {}).forEach(p => { if (p) { p.judged = null; p.offset = undefined; } });
+  });
   clearMarks();
   els.strip.scrollTop = 0;
   els.sheet.scrollTop = 0;

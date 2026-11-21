@@ -42,9 +42,13 @@ function onMidi(e: MIDIMessageEvent): void {
   if (!e.data) return;
   const [st, d1, d2] = e.data;
   const cmd = st & 0xf0;
+  const channel = (st & 0x0f) + 1;
   if (cmd === 0x90 && d2 > 0) {
     const split = state.model.split;
-    const otherHand = split != null && (state.hand === 'rh' ? d1 < split : d1 >= split);
+    // Kanal 3 er venstre hånd når Casio-keyboardet er splittet. Ellers skilles hendene på tonehøyde.
+    const lowerPart = channel === 3;
+    const otherHand = state.hand === 'rh' ? lowerPart || (split != null && d1 < split)
+      : state.hand === 'lh' ? !lowerPart && split != null && d1 >= split : false;
     if (els.optLH.checked && otherHand) {
       setHint(`Ignorerte ${sciName(d1)} (${state.hand === 'rh' ? 'venstre' : 'høyre'} hånd).`, '');
       return;
@@ -52,7 +56,7 @@ function onMidi(e: MIDIMessageEvent): void {
     const k = keyEls[inRange(d1)];
     if (k) k.classList.add('down');
     els.heard.textContent = 'Du trykket: ' + spell(d1);
-    emitInput(d1, 'midi', e.timeStamp || performance.now(), { attack: true });
+    emitInput(d1, 'midi', e.timeStamp || performance.now(), { attack: true, channel });
   } else if (cmd === 0x80 || (cmd === 0x90 && d2 === 0)) {
     const k = keyEls[inRange(d1)];
     if (k) k.classList.remove('down');

@@ -1,5 +1,5 @@
 import { audio, audioCtx, click, masterBus, tone } from '../audio/synth';
-import { clickLength, countInBars, type Hand } from '../music/song';
+import { clickLength, countInBars, type Hand, type PracticeHand, type Step } from '../music/song';
 import { pc } from '../music/theory';
 import { avgOffsetMs, mic, run, spell, state, type RunKind } from '../state';
 import { setTaktRecord, taktRecord } from '../storage';
@@ -8,7 +8,7 @@ import { flashKey } from '../ui/keyboard';
 import { celebrate, markStep, markTiming, refresh, setHint } from '../ui/view';
 import { keepAwake } from '../wakeLock';
 import type { InputEvent } from './input';
-import { RECORD_MIN_PCT, hitWindow, matches, timingText } from './judge';
+import { RECORD_MIN_PCT, handOf, hitWindow, matches, matchesPart, timingText } from './judge';
 import { TEMPO_MAX, TEMPO_MIN, resetProgress, setTempo } from './progress';
 
 /**
@@ -16,8 +16,19 @@ import { TEMPO_MAX, TEMPO_MIN, resetProgress, setTempo } from './progress';
  * Øver man høyre hånd, er toner mer enn en kvart under skillet appens venstre hånd (under MIDI 55 når skillet er midtre C).
  * Øver man venstre, er toner fra skillet og opp appens høyre hånd.
  */
-const isAccompaniment = (m: number, hand: Hand, split: number | null): boolean =>
-  split != null && (hand === 'rh' ? m < split - 5 : m >= split);
+const isAccompaniment = (m: number, hand: PracticeHand, split: number | null): boolean =>
+  hand !== 'both' && split != null && (hand === 'rh' ? m < split - 5 : m >= split);
+
+const handsOf = (s: Step): Hand[] => (['rh', 'lh'] as Hand[]).filter(h => s.parts?.[h]);
+
+/** Begge hender: steget får farge når begge delene er dømt, treff bare hvis begge traff. */
+function settle(s: Step): void {
+  const hs = handsOf(s);
+  if (hs.some(h => !s.parts![h]!.judged)) return;
+  const allHit = hs.every(h => s.parts![h]!.judged === 'hit');
+  s.judged = allHit ? 'hit' : 'miss';
+  markStep(s.si, allHit ? 'hit' : 'missed');
+}
 
 /** Starter «Spill i takt» (innteller + metronom) eller demo (appen spiller selv). */
 export function startRun(kind: RunKind): void {
@@ -78,11 +89,15 @@ export function runFrame(now: number): void {
   if (run.kind === 'takt') {
     for (const s of steps) {
       if (s.t! - s.win! > tt) break;
-      if (!s.judged && tt > s.t! + s.win!) {
+      if (s.judged || tt <= s.t! + s.win!) continue;
+      if (s.parts) {
+        handsOf(s).forEach(h => { const p = s.parts![h]!; if (!p.judged) { p.judged = 'miss'; state.misses++; } });
+        settle(s);
+      } else {
         s.judged = 'miss'; state.misses++;
         markStep(s.si, 'missed');
-        changed = true;
       }
+      changed = true;
     }
     run.cursor = steps.findIndex(s => !s.judged);
     const beat = tt < run.countIn ? Math.floor(tt / (run.clickLen * run.e8)) : 99;
@@ -102,6 +117,7 @@ export function judgeTakt(m: number, t: number, ev: InputEvent): void {
   if (ev.src === 'mic' && els.optAcc.checked && isAccompaniment(m, state.hand, state.model.split)) return;
   const tt = (t - run.t0) / 1000;
   if (tt < run.countIn - 0.3) return;
+  if (state.model.hand === 'both') { judgeTaktBoth(m, tt, ev); return; }
   let best = null, bd = 1e9;
   for (const s of state.model.steps) {
     if (s.judged) continue;
@@ -127,6 +143,41 @@ export function judgeTakt(m: number, t: number, ev: InputEvent): void {
   refresh();
 }
 
+/** Begge hender: tonen tilordnes en hånd og dømmes mot den hånden sin del av nærmeste steg. */
+function judgeTaktBoth(m: number, tt: number, ev: InputEvent): void {
+  const anyOct = els.optOct.checked;
+  const hand = handOf(m, state.model.split, ev.channel);
+  let best: { s: Step; h: Hand } | null = null, bd = 1e9;
+  for (const s of state.model.steps) {
+    if (s.judged) continue;
+    const dt = tt - s.t!;
+    if (dt < -s.win!) break;
+    if (Math.abs(dt) > s.win!) continue;
+    for (const h of handsOf(s)) {
+      const p = s.parts![h]!;
+      if (p.judged || (hand && hand !== h) || !matchesPart(p, m, anyOct)) continue;
+      if (Math.abs(dt) < bd) { best = { s, h }; bd = Math.abs(dt); }
+    }
+  }
+  if (best) {
+    const p = best.s.parts![best.h]!;
+    p.judged = 'hit';
+    p.offset = tt - best.s.t!;
+    state.hits++;
+    state.lastAcc = m;
+    run.offsets.push(p.offset);
+    markTiming(best.s.si, p.offset, best.h);
+    flashKey(m, 'hit');
+    settle(best.s);
+  } else {
+    if (ev.src === 'mic' && !ev.attack && state.lastAcc != null && pc(m) === pc(state.lastAcc)) return;
+    state.extra++;
+    flashKey(m, 'wrong');
+    setHint(`Feil tone eller utenfor takt: ${spell(m)}`, 'bad');
+  }
+  refresh();
+}
+
 function finishRun(): void {
   const kind = run.kind;
   run.active = false;
@@ -134,8 +185,9 @@ function finishRun(): void {
   const bus = run.bus;
   setTimeout(() => { try { bus!.disconnect(); } catch { /* ignorer */ } }, 1500);
   if (kind === 'takt') {
-    const steps = state.model.steps, n = steps.length;
-    const hits = steps.filter(s => s.judged === 'hit').length;
+    // Med begge hender teller hver hånd sin del som én tone
+    const units = state.model.steps.flatMap(s => s.parts ? handsOf(s).map(h => s.parts![h]!.judged) : [s.judged]);
+    const n = units.length, hits = units.filter(j => j === 'hit').length;
     const pct = Math.round(100 * hits / n);
     const prev = taktRecord(state.sec.id, state.hand);
     let badge: string | null = null;

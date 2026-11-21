@@ -1,4 +1,4 @@
-import { clickLength, countInBars, type Section, type Step, type StepStatus } from '../music/song';
+import { clickLength, countInBars, type Hand, type Section, type Step, type StepStatus } from '../music/song';
 import { clearOverlay, sheet, paintSheet, paintTiming, sheetCursor } from '../notation/sheet';
 import { timingClass } from '../practice/judge';
 import { avgOffsetMs, currentIndex, elapsed, mic, run, state, type ClueAction } from '../state';
@@ -29,10 +29,10 @@ export function markStep(si: number, status: StepStatus): void {
   paintSheet(si, status, state.model.steps);
 }
 
-export function markTiming(si: number, offsetS: number): void {
+export function markTiming(si: number, offsetS: number, hand?: Hand): void {
   const kind = timingClass(offsetS);
   if (kind) chipEls[si]?.classList.add(kind);
-  paintTiming(si, offsetS);
+  paintTiming(si, offsetS, hand);
 }
 
 export function clearMarks(): void {
@@ -63,7 +63,9 @@ export function refresh(): void {
   const ci = currentIndex();
   setCurrentMark(ci);
   const showKeys = ci >= 0 && !(state.mode === 'takt' && !run.active);
-  setTargets(showKeys ? steps[ci] : null, showKeys ? steps[ci + 1] : null, run.active && run.kind === 'demo');
+  const cur = showKeys ? steps[ci] : null;
+  const done = new Set((['rh', 'lh'] as const).flatMap(h => cur?.got?.[h] ? cur.parts?.[h]?.midis ?? [] : []));
+  setTargets(cur, showKeys ? steps[ci + 1] : null, run.active && run.kind === 'demo', done);
   renderClue(ci);
   renderStats();
   updateButtons();
@@ -99,8 +101,17 @@ function setClue(label: string, big: string, sub: string, then: string, opts: Cl
 const fingerText = (s: Step): string => s.f ? ` · ${s.type === 'chord' ? 'fingre' : 'finger'} ${s.f}` : '';
 
 function stepSub(s: Step): string {
-  return s.sci + fingerText(s);
+  if (!s.parts) return s.sci + fingerText(s);
+  // Begge hender: én linje per hånd, med hake når hånden har spilt sin del
+  return (['rh', 'lh'] as const).filter(h => s.parts![h]).map(h => {
+    const p = s.parts![h]!;
+    return `${h === 'rh' ? 'Høyre' : 'Venstre'}: ${p.sci}${p.f ? ` (${p.f})` : ''}${s.got?.[h] ? ' ✓' : ''}`;
+  }).join(' · ');
 }
+
+/** Stort navn i «neste tone»-kortet: med begge hender er det melodien i høyre hånd som vises stort. */
+const bigName = (s: Step): string => s.parts ? (s.parts.rh ?? s.parts.lh)!.name : s.name;
+const clueLabel = (s: Step): string => s.parts ? 'Neste, begge hender' : s.type === 'chord' ? 'Neste akkord' : 'Neste tone';
 
 function renderClue(ci: number): void {
   const steps = state.model.steps;
@@ -119,7 +130,7 @@ function renderClue(ci: number): void {
     const s = steps[ci];
     if (!s) { setClue(run.kind === 'demo' ? 'Hør etter' : 'Spill nå', '…', '', ''); return; }
     const nx = steps[ci + 1];
-    setClue(run.kind === 'demo' ? 'Hør etter' : 'Spill nå', s.name, stepSub(s), nx ? 'deretter ' + nx.name : 'siste tone', { small: s.type === 'chord' });
+    setClue(run.kind === 'demo' ? 'Hør etter' : 'Spill nå', bigName(s), stepSub(s), nx ? 'deretter ' + nx.name : 'siste tone', { small: s.type === 'chord' && !s.parts });
     return;
   }
   if (state.mode === 'takt') {
@@ -129,7 +140,7 @@ function renderClue(ci: number): void {
   const s = steps[state.cur];
   if (!s) return;
   const nx = steps[state.cur + 1];
-  setClue(s.type === 'chord' ? 'Neste akkord' : 'Neste tone', s.name, stepSub(s), nx ? 'deretter ' + nx.name : 'siste tone!', { small: s.type === 'chord' });
+  setClue(clueLabel(s), bigName(s), stepSub(s), nx ? 'deretter ' + nx.name : 'siste tone!', { small: s.type === 'chord' && !s.parts });
 }
 
 const NUMBER_WORDS: Record<number, string> = { 2: 'to', 3: 'tre', 4: 'fire', 5: 'fem', 6: 'seks', 8: 'åtte' };
@@ -184,7 +195,7 @@ export function updateButtons(): void {
   segButtons(els.segSection).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sec === state.sec.id)));
   segButtons(els.segMode).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === state.mode)));
   els.btnMic.textContent = mic.on ? 'Slå av mikrofon' : 'Bruk mikrofon';
-  els.setupSum.textContent = [state.sec.title, state.hand === 'lh' ? 'Venstre hånd' : '', state.mode === 'vent' ? 'Vent på meg' : 'Spill i takt', `${state.tempo} BPM`]
+  els.setupSum.textContent = [state.sec.title, state.hand === 'lh' ? 'Venstre hånd' : state.hand === 'both' ? 'Begge hender' : '', state.mode === 'vent' ? 'Vent på meg' : 'Spill i takt', `${state.tempo} BPM`]
     .filter(Boolean).join(' · ');
 }
 
@@ -202,6 +213,13 @@ type Tone = '' | 'ok' | 'warn' | 'bad' | 'on';
 export function setStatus(text: string, kind: Tone = ''): void {
   els.inputStatus.textContent = text;
   els.inputStatus.className = 'status' + (kind ? ' ' + kind : '');
+}
+
+/** Statusteksten når mikrofonen er på, avhengig av hånd. */
+export function micListeningText(): string {
+  return state.hand === 'both'
+    ? 'Mikrofonen lytter, men hører foreløpig bare én tone om gangen. Med begge hender virker MIDI og skjermtastaturet best.'
+    : `Mikrofonen lytter. Spill ${state.hand === 'lh' ? 'venstre' : 'høyre'} hånd.`;
 }
 
 export function setPill(el: HTMLElement, text: string, kind: Tone = ''): void {

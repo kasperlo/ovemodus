@@ -6,7 +6,8 @@ import { flashKey } from '../ui/keyboard';
 import { clearGhost, showGhost } from '../notation/sheet';
 import { celebrate, fmtSec, markStep, refresh, renderStats, setHint, shakeStep } from '../ui/view';
 import type { InputEvent } from './input';
-import { matches } from './judge';
+import type { Hand, Step } from '../music/song';
+import { handOf, matches, matchesPart } from './judge';
 import { resetProgress } from './progress';
 import { setMode } from './session';
 
@@ -17,6 +18,7 @@ export function judgeWait(m: number, ev: InputEvent): void {
   const mic = ev.src === 'mic';
   // Mikrofonen hører fortsatt forrige tone: ikke regn den som ny
   if (mic && !ev.attack && state.lastAcc != null && pc(m) === pc(state.lastAcc)) return;
+  if (step.parts) { judgeWaitBoth(step, m, ev); return; }
   if (matches(step, m, els.optOct.checked)) {
     if (state.tStart == null) state.tStart = performance.now();
     state.hits++;
@@ -35,6 +37,39 @@ export function judgeWait(m: number, ev: InputEvent): void {
   flashKey(m, 'wrong');
   shakeStep(step.si);
   showGhost(step, m, els.optOct.checked);
+  setHint(`Du spilte ${spell(m)}. Neste er ${step.name}.`, 'bad');
+  renderStats();
+}
+
+/** Begge hender: steget er ferdig når hver hånd har spilt sin del. Tonen tilordnes en hånd før den dømmes. */
+function judgeWaitBoth(step: Step, m: number, ev: InputEvent): void {
+  const parts = step.parts!;
+  const anyOct = els.optOct.checked;
+  const free = (['rh', 'lh'] as Hand[]).filter(h => parts[h] && !step.got?.[h]);
+  const hand = handOf(m, state.model.split, ev.channel) ?? free.find(h => matchesPart(parts[h]!, m, anyOct)) ?? null;
+  const part = hand ? parts[hand] : undefined;
+  if (hand && part && matchesPart(part, m, anyOct)) {
+    if (step.got?.[hand]) return; // samme hånd igjen: ikke bom, men heller ikke noe nytt
+    if (state.tStart == null) state.tStart = performance.now();
+    state.lastAcc = m;
+    step.got = { ...step.got, [hand]: true };
+    flashKey(m, 'hit');
+    clearGhost();
+    if ((['rh', 'lh'] as Hand[]).every(h => !parts[h] || step.got?.[h])) {
+      state.hits++;
+      markStep(step.si, step.stumbled ? 'stumbled' : 'done');
+      state.cur++;
+      if (state.cur >= state.model.steps.length) finishWait();
+    }
+    refresh();
+    return;
+  }
+  if (ev.src === 'mic' && ev.phase !== 'sustain') return;
+  state.misses++;
+  step.stumbled = true;
+  flashKey(m, 'wrong');
+  shakeStep(step.si);
+  showGhost(step, m, anyOct, hand ?? undefined);
   setHint(`Du spilte ${spell(m)}. Neste er ${step.name}.`, 'bad');
   renderStats();
 }

@@ -1,10 +1,25 @@
 import { pc } from '../music/theory';
-import type { ChordEvent, NoteEvent } from '../music/song';
+import type { ChordEvent, Hand, NoteEvent, Part } from '../music/song';
 
 /** Riktig tone? En akkord godtas når én av akkordtonene spilles. */
 export function matches(step: NoteEvent | ChordEvent, m: number, anyOctave: boolean): boolean {
   if (step.type === 'chord') return anyOctave ? step.pcs.has(pc(m)) : step.midis.includes(m);
   return anyOctave ? pc(m) === pc(step.midi) : m === step.midi;
+}
+
+/** Riktig tone for den ene hånden sin del av et steg (begge hender)? En akkord godtas når én av tonene spilles. */
+export function matchesPart(part: Part, m: number, anyOctave: boolean): boolean {
+  return anyOctave ? part.pcs.has(pc(m)) : part.midis.includes(m);
+}
+
+/**
+ * Hvilken hånd en tone hører til når man øver begge hender. Kanal 3 er venstre hånd når Casio-keyboardet er
+ * splittet. Ellers avgjør skillet mellom hendene. `null` når hendene overlapper og kanalen ikke sier noe.
+ */
+export function handOf(m: number, split: number | null, channel?: number): Hand | null {
+  if (channel === 3) return 'lh';
+  if (split == null) return null;
+  return m >= split ? 'rh' : 'lh';
 }
 
 /** Tidsvindu i sekunder til hver side av tonen: halve varigheten, maks en kvartnote, mellom 90 og 200 ms. */
