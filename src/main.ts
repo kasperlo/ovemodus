@@ -7,7 +7,7 @@ import { resetProgress, setTempo } from './practice/progress';
 import { drawSheet, setHand, setMode, setSection, setView } from './practice/session';
 import { runFrame, startRun, stopRun } from './practice/takt';
 import { songs } from './songs';
-import { SFX_KEYS, casioText } from './casio';
+import { SFX_KEYS, casioSounds } from './casio';
 import { elapsed, mic, run, spell, state } from './state';
 import { save, store, type Mode, type Sensitivity } from './storage';
 import { installTestHook } from './testHook';
@@ -53,10 +53,11 @@ els.kbd.addEventListener('click', e => {
 function renderCasioTable(): void {
   const body = els.casioTable.tBodies[0];
   body.innerHTML = '';
-  songs.filter(s => s.casio).sort((a, b) => a.casio!.reg[0] - b.casio!.reg[0] || a.casio!.reg[1] - b.casio!.reg[1]).forEach(s => {
+  const slot = (reg?: [number, number]): number => reg ? reg[0] * 10 + reg[1] : 100;
+  songs.filter(s => s.casio).sort((a, b) => slot(a.casio!.reg) - slot(b.casio!.reg)).forEach(s => {
     const c = s.casio!;
     const tr = body.insertRow();
-    [`${c.reg[0]}-${c.reg[1]}`, s.title, casioText(c).replace(/^Registrering \d+-\d+: /, ''), c.tip ?? ''].forEach(text => {
+    [c.reg ? `${c.reg[0]}-${c.reg[1]}` : '–', s.title, casioSounds(c), c.tip ?? ''].forEach(text => {
       tr.insertCell().textContent = text;
     });
   });

@@ -2,8 +2,8 @@
 // Nummer og navn er som i tonelisten i brukerveiledningen (CTS400-E-2B, s. EN-181–193).
 
 export interface CasioSetup {
-  /** Registreringsplass: bank 1–8 og område 1–4. */
-  reg: [bank: number, area: number];
+  /** Registreringsplass: bank 1–8 og område 1–4. Keyboardet har 32, så bare de viktigste lydene får en. */
+  reg?: [bank: number, area: number];
   /** Hovedlyden (UPPER1). */
   tone: number;
   /** Lyd lagt oppå hovedlyden (LAYER, UPPER2). */
@@ -49,11 +49,16 @@ export function toneLabel(no: number): string {
   return `${String(no).padStart(3, '0')} ${t.name}${oct}`;
 }
 
-export function casioText(c: CasioSetup): string {
-  const parts = [`Registrering ${c.reg[0]}-${c.reg[1]}: ${toneLabel(c.tone)}`];
+/** Lydene, for eksempel «224 TRUMPET 1 · lag: 183 STEREO STRINGS». */
+export function casioSounds(c: CasioSetup): string {
+  const parts = [toneLabel(c.tone)];
   if (c.layer) parts.push(`lag: ${toneLabel(c.layer)}`);
   if (c.lower) parts.push(`split: ${toneLabel(c.lower)} i venstre hånd`);
   return parts.join(' · ');
+}
+
+export function casioText(c: CasioSetup): string {
+  return c.reg ? `Registrering ${c.reg[0]}-${c.reg[1]}: ${casioSounds(c)}` : `Lyd: ${casioSounds(c)}`;
 }
 
 /** Nyttige lydeffekter i 599 SFX SET 1 (og gong i 598 CHINESE SET), med tangenten de ligger på. */

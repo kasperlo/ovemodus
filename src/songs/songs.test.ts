@@ -66,8 +66,10 @@ describe.each(songs.map(s => [s.id, s] as const))('%s', (_id, song) => {
     const c = song.casio;
     if (!c) return;
     [c.tone, c.layer, c.lower].filter((n): n is number => n != null).forEach(n => expect(CT_S400_TONES[n], `lyd ${n}`).toBeDefined());
-    expect(c.reg[0]).toBeGreaterThanOrEqual(1); expect(c.reg[0]).toBeLessThanOrEqual(8);
-    expect(c.reg[1]).toBeGreaterThanOrEqual(1); expect(c.reg[1]).toBeLessThanOrEqual(4);
+    if (c.reg) {
+      expect(c.reg[0]).toBeGreaterThanOrEqual(1); expect(c.reg[0]).toBeLessThanOrEqual(8);
+      expect(c.reg[1]).toBeGreaterThanOrEqual(1); expect(c.reg[1]).toBeLessThanOrEqual(4);
+    }
     if (!c.lower) return;
     usedLh.forEach(k => song.lh[k].flatMap(pitches).forEach(m => expect(m, `venstre ${k} under F♯3`).toBeLessThan(54)));
     used.forEach(k => song.bars[k].flatMap(pitches).forEach(m => expect(m, `høyre ${k} fra F♯3`).toBeGreaterThanOrEqual(54)));
@@ -83,8 +85,8 @@ describe.each(songs.map(s => [s.id, s] as const))('%s', (_id, song) => {
   });
 });
 
-it('hver låt har sin egen registreringsplass på keyboardet', () => {
-  const regs = songs.filter(s => s.casio).map(s => s.casio!.reg.join('-'));
+it('ingen låter deler registreringsplass på keyboardet', () => {
+  const regs = songs.flatMap(s => s.casio?.reg ? [s.casio.reg.join('-')] : []);
   expect(new Set(regs).size).toBe(regs.length);
 });
 

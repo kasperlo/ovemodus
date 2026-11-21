@@ -27,12 +27,12 @@ async function sectionIds(page: Page): Promise<string[]> {
 }
 
 test('låtvelger: velger låt og del, og skjuler delvalget når låten har én del', async ({ page }) => {
-  await page.selectOption('#selSong', 'joker');
-  await expect(page.locator('#songTitle')).toHaveText('Joker');
-  await expect(page.locator('#secCasio')).toContainText('Registrering 1-4: 049 CELESTA (en oktav opp) · lag: 202 HARP');
+  await page.selectOption('#selSong', 'wilhelm-tell');
+  await expect(page.locator('#songTitle')).toHaveText('Wilhelm Tell');
+  await expect(page.locator('#secCasio')).toContainText('Registrering 3-1: 224 TRUMPET 1 · lag: 183 STEREO STRINGS');
   expect(await page.locator('#casioTable tbody tr').count()).toBe(await page.locator('#selSong option').count());
   await expect(page.locator('#segSection')).toBeHidden();
-  expect(await page.evaluate(() => window.ovemodus.state.section)).toBe('joker');
+  expect(await page.evaluate(() => window.ovemodus.state.section)).toBe('tell');
 
   await page.selectOption('#selSong', 'dovregubben');
   await expect(page.locator('#segSection button')).toHaveCount(3);

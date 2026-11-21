@@ -106,3 +106,19 @@
 - **Skillet mellom hendene:** innebygde låter bruker midtre C som før. Importerte noter kan ha høyre hånd under midtre C. Skillet regnes derfor ut per del (laveste tone i høyre hånd), og når hendene overlapper, ignorerer MIDI ingen toner.
 - **Skjermtastaturet:** samme område som før når tonene får plass der, ellers to (opptil tre) oktaver rundt tonene.
 - **Avhengighet:** jsdom (bare utvikling) for å teste MusicXML-leseren i Vitest. Nettleseren har sin egen XML-leser, så jsdom følger ikke med i appen.
+
+## 2026-11-21 – Flere varianter av de korte lydene
+
+- **Kontekst:** Kasper vil ha flere alternativer til hver gameshow-lyd, så showet ikke blir ensformig.
+- **Beslutning:** variantene er deler (`sections`) i samme låt. Da står hver lydtype én gang i låtvelgeren, og alle variantene bruker samme registrering på keyboardet. Det krever samme toneart og taktart i hver låt.
+- **Nye deler:** riktig svar (ta-da, signal, lang), feil svar (womp womp, skurr, nedtur), joker (tryllestav, harpe, hemmelig), dobbel poeng (to ganger, trappetrinn, jackpot), spenning (krypende, trussel, tenketid), tiden er ute (alarm, slutt, fall), intro (kort, marsj), vinner (seiersrunde, kroning). Ny låt: nedtelling (ti sekunder, fem sekunder, tre-to-en, siste sekunder), registrering 5-3.
+- **Komponert selv:** alle er nye, korte motiver. De unngår kjente TV-temaer og kjente signaler (for eksempel «Charge!»-signalet og startsignalet i bilspill).
+- **Navn på delene:** de eksisterende delene har fått nye titler («Fanfare», «Trist trombone», «Glitter» osv.). Id-ene er uendret, så lagrede rekorder og innstillinger virker som før.
+- **Nedtelling:** ved tempo 60 er hvert slag ett sekund. Venstre hånd ligger mellom F2 og F3, så den blir pauker med split på 592 ORCHESTRA SET, som i «Spenning».
+- **Test endret:** e2e-testen for låtvelgeren brukte Joker som eksempel på en låt med én del. Den bruker nå Wilhelm Tell.
+
+## 2026-11-21 – Registreringsplass er valgfri
+
+- **Kontekst:** CT-S400 har 32 registreringsplasser (8 banker × 4), og det blir flere lyder enn plasser.
+- **Beslutning:** `reg` i `casio` er valgfri. Lyder uten plass vises som «Lyd: …» og med «–» i tabellen, sist og i samme rekkefølge som i låtvelgeren. De viktigste lydene får plass.
+- **Ikke gjort:** nye lydnumre er ikke lagt til. Casios brukerveiledning kunne ikke lastes ned i denne økten, og lydene som allerede står i `CT_S400_TONES`, dekker behovet.
