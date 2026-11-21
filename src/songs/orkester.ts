@@ -209,7 +209,7 @@ export const paukeslaget = klassisk({
   by: 'Joseph Haydn, Symfoni nr. 94, andre sats. Melodien en oktav opp, med overraskelsesakkorden til slutt.',
   key: 'C',
   meter: M24,
-  casio: { tone: 183, tip: 'Spill svakt hele veien, og den siste akkorden så hardt du kan.' },
+  casio: { reg: [6, 3], tone: 183, tip: 'Spill svakt hele veien, og den siste akkorden så hardt du kan.' },
   bars: {
     H1: [N('C5', e, 1), N('C5', e, 1), N('E5', e, 3), N('E5', e, 3)],
     H2: [N('G5', e, 5), N('G5', e, 5), N('E5', q, 3)],

@@ -31,7 +31,7 @@ Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpne
 
 ## Hva appen gjør
 
-- **Velg låt og del:** nedtrekksliste med «I Dovregubbens hall» (Del A, Del B, Hele stykket) egne gameshow-lyder (intro, riktig svar, feil svar, joker, dobbel poeng, spenning, nedtelling, tiden er ute, vinner, med tre eller fire varianter hver som deler) og klassiske (Wilhelm Tell, Can-can, Trollmannens læregutt, Trolldom, Skjebnesymfonien, Akvariet, Sørgemarsj, Pomp and Circumstance, Halleluja). Delvalget skjules når låten har én del.
+- **Velg låt og del:** nedtrekksliste med «I Dovregubbens hall» (Del A, Del B, Hele stykket) egne gameshow-lyder (intro, riktig svar, feil svar, joker, dobbel poeng, spenning, nedtelling, tiden er ute, vinner, med tre eller fire varianter hver som deler) og klassiske temaer, alfabetisk (blant annet Wilhelm Tell, Can-can, Für Elise, Morgenstemning, Toccata, Te Deum/Eurovision, Also sprach Zarathustra, Ode til gleden, Toreador, Den blå Donau). Delvalget skjules når låten har én del.
 - **Velg hånd:** høyre eller venstre. Venstre hånd vises i bassnøkkel med fingersetting og tonenavn, skjermtastaturet viser C2–C4 (høyre: C4–C6), og «Spill … for meg» og «Vis …» gjelder den andre hånden. Rekorder lagres per hånd (`delA|lh|vent`). Begge hender samtidig er ikke laget ennå.
 - **Importer noter:** «Importer noter» leser MusicXML (`.musicxml`, `.xml`, komprimert `.mxl`) i nettleseren (`src/importer/`). Låten lagres bare på enheten i `localStorage` under `ovemodus-mine-noter-v1` og vises under «Mine noter». Den publiseres aldri (repoet og siden er offentlige, så beskyttet musikk skal bare inn denne veien). Høyre hånd er øverste notesystem, venstre nederste. Fingersetting tas med fra filen, ellers vises ingen fingre. Bindinger blir pauser, opptakt fylles med pauser foran, pyntenoter og andre stemmer hoppes over. Trioler og taktartskifte gir en feilmelding med taktnummer. Lange stykker deles i deler på 16 takter. MIDI og PDF må gjøres om til MusicXML i MuseScore.
 - **Skillet mellom hendene** (`model.split`) er midtre C for de innebygde låtene. For importerte noter er det laveste tone i høyre hånd, eller ingen når hendene overlapper. MIDI-filteret og mikrofonfilteret i takt-modus bruker det.
@@ -100,7 +100,7 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - `src/input/`: `pitch.ts` (YIN + Goertzel, rent), `mic.ts`, `midi.ts`
 - `src/practice/`: `input.ts` (felles inngang for alle kilder), `wait.ts` (vent på meg), `takt.ts` (spill i takt og demo), `judge.ts` (rene regler), `progress.ts`, `session.ts` (del, modus, visning, hopp til note)
 - `src/ui/`: `dom.ts` (alle elementer), `view.ts` (`refresh` og alt som tegnes), `keyboard.ts`, `strip.ts`
-- `src/songs/`: `dovregubben.ts`, `gameshow.ts` (egne lyder), `klassisk.ts` (klassiske temaer, kilder i assumptions.md), `index.ts` (register og `findSection`)
+- `src/songs/`: `dovregubben.ts`, `gameshow.ts` (egne lyder, variantene er deler), `klassisk.ts` (de første klassiske temaene og hjelperen `klassisk`), `klaver.ts`, `marsjer.ts`, `opera.ts` og `orkester.ts` (flere klassiske temaer, kilder i assumptions.md), `index.ts` (register og `findSection`)
 - `src/casio.ts`: lydforslag og registreringer for Casio CT-S400
 - `src/importer/`: `musicxml.ts` (leser MusicXML til et lagringsformat), `zip.ts` (pakker ut `.mxl`), `library.ts` (lagring på enheten og `toSong`). `src/ui/importer.ts` er knappen og meldingene.
 - Testene for MusicXML kjører i jsdom (`// @vitest-environment jsdom`). jsdom er bare en utviklingsavhengighet.
@@ -126,7 +126,7 @@ Kilde: Casios brukerveiledning (CTS400-E-2B) og MIDI Implementation for CT-S400/
 - USB-MIDI er class compliant (micro-B, «USB TO HOST»). Ingen USB-lyd. iPad har ikke Web MIDI i noen nettleser, så MIDI virker bare på Mac/PC med Chrome eller Edge.
 - MIDI-kanaler: hovedlyd (UPPER1) kanal 1, lag (UPPER2) kanal 2, split (LOWER, venstre for splittpunktet, standard F♯3) **kanal 3**. Metronom kanal 8, akkompagnement 9–16. Nyttig for trinn 2: med split på kan hendene skilles på kanal i stedet for tonehøyde.
 - Tonenumrene som sendes følger oktavforskyvning og transponering. Noen lyder legger på en oktav selv (TROMBONE −1, SOLO BASSOON −1, CELESTA/GLOCKENSPIEL +1). Om det også endrer MIDI-tonen, er ikke bekreftet. Test med en MIDI-monitor før trinn 2 stoler på tonehøyde.
-- Registrering: 8 banker × 4 plasser. Lyd, lag, split, oktav, reverb og tempo lagres. Planen for gameshowet står i `casio` i hver låtfil (bank 1–2 egne lyder, 3–4 klassiske, 5 resten).
+- Registrering: 8 banker × 4 plasser. Lyd, lag, split, oktav, reverb og tempo lagres. Planen for gameshowet står i `casio` i hver låtfil (bank 1–2 egne lyder, 3–8 klassiske, Dovregubben og nedtelling). Alle 32 plassene er i bruk, så nye låter får ingen `reg`.
 - Lydeffekter: 599 SFX SET 1 (C5 buzzer, E5 klokketikk, F♯3 applaus, G♯3 hjerteslag, B3 latter). 592 ORCHESTRA SET har pauker F2–F3 i halvtoner.
 
 ## Git og GitHub

@@ -171,3 +171,14 @@
   - Den blå Donau: de første 16 taktene i D-dur, som originalen. Førsteutgaven har ingen opptakt, så det har ikke appen heller. Den holdte melodinoten under «pom-pom»-akkordene er en halvnote.
   - Gymnopédie: to av de fire innledningstaktene, den første frasen og en egen slutt på F♯. Akkordene står i diskanten i originalen og spilles en oktav lavere av venstre hånd.
   - Brahms' vuggevise: flyttet fra Ess-dur til C-dur. Forslagsnotene er sløyfet. Venstre hånd er enkle akkorder.
+- **Kilder, bolk 4:** Liszt, Ungarsk rapsodi nr. 2 (friska): notesnutten i Wikipedia-artikkelen, med begge hender. Flyttet fra F♯-dur til F-dur, og høyre hånd spiller den nederste tonen i oktavene.
+- **Registreringsplasser:** alle 32 er nå i bruk. De nye som fikk plass: nedtelling 5-3, Also sprach Zarathustra 5-4, Toccata 6-1, Morgenstemning 6-2, Paukeslaget 6-3, Ungarsk rapsodi 6-4, Te Deum 7-1, Toreador 7-2, Bryllupsmarsj 7-3, Ode til gleden 7-4, The Entertainer 8-1, Für Elise 8-2, The Liberty Bell 8-3, Stars and Stripes 8-4. Valgt etter hva som trolig trengs raskt under showet (intro, drama, overraskelse, fart, vinner). Kasper kan bytte dem i låtfilene.
+- **Ikke lagt inn ennå (fant ingen kilde som kunne leses sikkert i denne økten):**
+  - Radetzkymarsj: Wikipedia-snutten dekker bare de fire første taktene (i C-dur, originalen er D-dur).
+  - Valkyrieritt, Humlens flukt, Sukkerfeens dans, Barcarole, Dronningen av Saba, Brudekor (Wagner): ingen Mutopia-utgave eller notesnutt. Brudekoret finnes som et lite bilde på Commons, for lite til å lese sikkert.
+  - Svanesjøen: partituret (Jurgenson, archive.org) er for utydelig i obostemmen.
+  - Gladiatorenes inntog: bildet på Commons er for lite.
+  - 1812: temaboka har bare åpningen, ikke finalen.
+  - Mars (Holst): 5/4 og trioler, som appen ikke støtter.
+  - Griegs klaverkonsert: åpningen står i temaboka, men akkordene er for tette til å lese sikkert.
+  - Bryllupsdag på Troldhaugen: hovedtemaet har trioler.

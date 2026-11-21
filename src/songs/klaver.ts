@@ -170,4 +170,38 @@ export const gymnopedie = klassisk({
   }]
 });
 
-export const klaver: Song[] = [furElise, rondoAllaTurca, entertainer, toccata, gymnopedie];
+// ---------- Liszt: Ungarsk rapsodi nr. 2, friska (F♯-dur i originalen, her F-dur) ----------
+
+const FRISKA_C = [DY('G2', 'G3', e), DY('C3', 'E3', e, '2 1'), DY('C2', 'C3', e), DY('C3', 'E3', e, '2 1')];
+const FRISKA_F = [DY('F2', 'F3', e), DY('F3', 'A3', e, '2 1'), DY('C2', 'C3', e), DY('F3', 'A3', e, '2 1')];
+const FRISKA_C7 = [DY('G2', 'G3', e), DY('Bb2', 'E3', e, '2 1'), DY('C2', 'C3', e), DY('Bb2', 'E3', e, '2 1')];
+
+export const rapsodi = klassisk({
+  id: 'ungarsk-rapsodi',
+  title: 'Ungarsk rapsodi nr. 2',
+  by: 'Franz Liszt, friskaen. Flyttet fra F♯-dur til F-dur. Høyre hånd spiller den nederste tonen i oktavene.',
+  key: 'F',
+  meter: M24,
+  casio: { reg: [6, 4], tone: 1, tip: 'Start rolig og øk tempoet for hver runde.' },
+  bars: {
+    F1: [N('B4', e, 2), N('C5', e, 3), N('Bb4', ed, 1), N('C5', s16, 3)],
+    F3: [N('B4', e, 2), N('C5', e, 3), N('A4', ed, 1), N('C5', s16, 3)],
+    F5: [N('B4', e, 1), N('C5', e, 2), N('D5', ed, 3), N('C5', s16, 2)],
+    F7: [N('B4', e, 1), N('C5', e, 2), N('F5', ed, 5), N('C5', s16, 2)],
+    F8: [N('B4', e, 1), N('C5', e, 2), N('F5', q, 5)]
+  },
+  lh: {
+    C: FRISKA_C,
+    F: FRISKA_F,
+    C7: FRISKA_C7,
+    END: [DY('F2', 'F3', e), DY('F3', 'A3', e, '2 1'), DY('F2', 'C3', q)]
+  },
+  sections: [{
+    id: 'rapsodi', title: 'Ungarsk rapsodi nr. 2', tempo: 140, use: 'Hurtigrunde, eller når alt går i kaos.',
+    groups: [{ label: 'Ungarsk rapsodi nr. 2', bars: [
+      ['F1', 'C'], ['F1', 'C'], ['F3', 'F'], ['F3', 'F'], ['F5', 'C7'], ['F5', 'C7'], ['F7', 'F'], ['F8', 'END']
+    ] }]
+  }]
+});
+
+export const klaver: Song[] = [furElise, rondoAllaTurca, entertainer, toccata, gymnopedie, rapsodi];

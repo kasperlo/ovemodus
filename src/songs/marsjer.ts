@@ -13,7 +13,7 @@ export const starsAndStripes = klassisk({
   by: 'John Philip Sousa, siste del av trioen. Forenklet og flyttet fra A♭-dur til C-dur.',
   key: 'C',
   meter: { beats: 2, unit: 2 },
-  casio: { tone: 211, tip: 'Marsjtempo. Øk tempoet når du kan den.' },
+  casio: { reg: [8, 4], tone: 211, tip: 'Marsjtempo. Øk tempoet når du kan den.' },
   bars: {
     P: [R(h), N('G5', h, 5)],
     S1: [N('G5', h, 5), N('F5', q, 4), N('E5', q, 3)],
