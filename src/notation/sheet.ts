@@ -226,9 +226,11 @@ export function paintTiming(si: number, offsetS: number | null, hand?: Hand): vo
   const key = hand ?? 'en';
   sheet.overlay.querySelector(`.abc-timing[data-si="${si}"][data-hand="${key}"]`)?.remove();
   const kind = offsetS == null ? null : timingClass(offsetS);
-  if (!kind || !p.lyric) return;
+  // Under tonenavnet, eller under noten når en gjentatt akkord står uten navn
+  const ref = p.lyric ?? p.box;
+  if (!kind || !ref) return;
   const s = sheet.halfSpace;
-  const cx = p.lyric.x + p.lyric.w / 2, cy = p.lyric.y + p.lyric.h + 0.4 * s;
+  const cx = ref.x + ref.w / 2, cy = ref.y + ref.h + 0.4 * s;
   const dir = kind === 'early' ? -1 : 1;
   const pts = [[cx + dir * 1.4 * s, cy], [cx - dir * 0.6 * s, cy - 0.8 * s], [cx - dir * 0.6 * s, cy + 0.8 * s]];
   const g = svgEl('g', { class: `abc-timing ${kind}`, 'data-si': si, 'data-hand': key }, sheet.overlay);

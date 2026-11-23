@@ -1,11 +1,15 @@
 import type { Section, Song, SongCategory } from '../music/song';
 import { dovregubben } from './dovregubben';
 import { gameshow } from './gameshow';
+import { kanon } from './kanon';
 import { classical } from './klassisk';
 import { furElise, klaver } from './klaver';
 import { marsjer } from './marsjer';
+import { menuett } from './menuett';
 import { opera } from './opera';
 import { orkester } from './orkester';
+import { preludiumC } from './preludiumC';
+import { preludiumE } from './preludiumE';
 
 const byTitle = (a: Song, b: Song): number => a.title.localeCompare(b.title, 'nb');
 
@@ -13,7 +17,7 @@ const byTitle = (a: Song, b: Song): number => a.title.localeCompare(b.title, 'nb
  * Innebygde låter først, så låter importert på denne enheten (`addSong`). Klaverstykkene står etter vanskegrad,
  * de klassiske gameshow-lydene alfabetisk.
  */
-export const songs: Song[] = [dovregubben, furElise, ...gameshow, ...[...classical, ...klaver, ...marsjer, ...opera, ...orkester].sort(byTitle)];
+export const songs: Song[] = [dovregubben, menuett, kanon, preludiumC, furElise, preludiumE, ...gameshow, ...[...classical, ...klaver, ...marsjer, ...opera, ...orkester].sort(byTitle)];
 
 export function addSong(song: Song): void {
   songs.push(song);

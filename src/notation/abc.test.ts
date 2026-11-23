@@ -135,14 +135,34 @@ describe('toAbc', () => {
   it('venstre hånd bytter til diskantnøkkel i overgangen, og nøkkelen skrives igjen i starten av en ny linje', () => {
     const m = model('elise-mellomspill', 'both');
     expect(staffClefs(m.staffs.lh, 'bass')).toEqual(['bass', 'bass', 'bass', 'bass', 'bass', 'treble', 'treble', 'treble']);
-    const lh = toAbc(m, 2, false).split('\n').filter(l => l.startsWith('[V:LH]'));
+    const lh = toAbc(m, 2, false).split('\n').filter(l => l.startsWith('[V:LH'));
     expect(lh[2]).toContain('| [K:clef=treble] ');
-    expect(lh[3].startsWith('[V:LH] [K:clef=treble] ')).toBe(true);
+    expect(lh[3].startsWith('[V:LH clef=treble] ')).toBe(true);
+  });
+
+  it('nøkkelen settes på stemmen ved linjestart og gjelder til neste bytte, også for høyre hånd', () => {
+    // Bach, takt 32–35: takt 33 ligger i bassnøkkel i høyre hånd, takt 34 tilbake i diskant
+    const lines = toAbc(model('preludium-5', 'both'), 2, false).split('\n').filter(l => l.startsWith('[V:RH'));
+    expect(lines.map(l => l.slice(0, l.indexOf(']') + 1))).toEqual(['[V:RH]', '[V:RH clef=bass]', '[V:RH clef=treble]']);
+  });
+
+  it('med ett system varer nøkkelen over linjeskift, og byttes bare ved taktstreken der den endrer seg', () => {
+    const mine = toAbc(model('elise-mellomspill', 'lh'), 2, false);
+    expect(mine.match(/\[K:clef=\w+\]/g)).toEqual(['[K:clef=treble]']);
+    const changes = toAbc(model('elise-hele', 'lh'), 2, false).match(/\[K:clef=\w+\]/g) ?? [];
+    expect(changes.length).toBeGreaterThan(4);
+    changes.forEach((c, i) => expect(c).toBe(i % 2 ? '[K:clef=bass]' : '[K:clef=treble]'));
   });
 
   it('høyre hånd og vanlige låter blir i sin nøkkel', () => {
     expect(new Set(staffClefs(model('elise-hele').bars, 'treble'))).toEqual(new Set(['treble']));
     expect(toAbc(model('hele', 'both'), 4, false)).not.toContain('[K:clef=');
+  });
+
+  it('lange akkordnavn står bare når akkorden endrer seg i takten, korte som før', () => {
+    const w = toAbc(model('chopin-1', 'lh'), 2, false).split('\n').filter(l => l.startsWith('w: '));
+    expect(w[0]).toBe('w:  | G+B+E * * * * * * *');
+    expect(toAbc(model('delA', 'lh'), 2, false)).toContain('w: A+E A+E A+E A+E | A+E A+E A+E A+E');
   });
 
   it('tette takter får færre takter per linje, vanlige takter som før', () => {

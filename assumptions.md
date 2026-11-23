@@ -239,3 +239,26 @@
 - **Rettet i forbifarten:** hintet «Denne delen har bare høyre hånd.» ble visket ut med en gang (`resetProgress` kom etter).
 - **Funnet, ikke rettet:** notearkets maksimale høyde (318 px) virker ikke når arket er høyere enn det. abcjs (`responsive: 'resize'`) setter høyden med `padding-bottom`, og den begrenses ikke av `max-height`. Hele stykket i Dovregubben blir rundt 1300 px høyt ved 1366 px bredde, og siden må rulles. Gjelder også før denne endringen, og blir viktigere med hele stykker. Et utsnitt på noen takter unngår det.
 - **Oppfølging:** test løkken på iPad i notestativet, med mikrofon og CT-S400. Vurder å velge utsnitt ved å trykke i notearket.
+
+## 2026-11-23 – Fire klaverstykker til: Menuett, Kanon, Preludium i C-dur og Preludium i e-moll
+
+- **Metode:** som for Für Elise. LilyPond-filen fra Mutopia er lest med et skript (relativ notasjon, flere stemmer, bindinger), og resultatet er sammenlignet med MIDI-filen fra samme mappe (tonehøyde og plass for hver tone). Appens «Hele stykket» er så sammenlignet tone for tone med det skriptet leste. Skriptene er ikke sjekket inn.
+- **Kilder:**
+  - Menuett i G-dur, BWV Anh. 114 (Christian Petzold): Mutopia `anna-magdalena-04` (Bach-Gesellschaft, Public Domain).
+  - Kanon i D-dur (Pachelbel): eget enkelt arrangement. Grunnbassen og første fiolin i takt 3–12 er tatt fra notesnutten i Wikipedia-artikkelen «Pachelbel's Canon» (avsnittet Analysis). Mutopia-filen `CanonInD` er ikke brukt, fordi den er et arrangement (Jim Paterson, CC BY).
+  - Preludium i C-dur, BWV 846 (Bach): Mutopia `wtk1-prelude1` (Public Domain; kilden er oppgitt som ukjent i filen, notene er de vanlige).
+  - Preludium i e-moll, op. 28 nr. 4 (Chopin): Mutopia `Chop-28-4` (Peters 1879, Public Domain).
+- **Forenklet og endret:**
+  - Kanon: høyre hånd spiller første fiolin, venstre hånd grunnbassen. Takt 1–2 er bare bass, som i originalen. Trillen i takt 10 er sløyfet, og sluttakkorden i takt 11 (D-dur) er egen. Arrangementet stopper der, fordi kilden ikke har resten av variasjonene.
+  - Preludium i C-dur: venstre hånd har to stemmer (bass og tenor). Her er de én stemme i anslagsrekkefølge: bassen som sekstendel, så tenoren holdt ut halvtakten (dobbeltpunktert fjerdedel, i takt 33–34 trippelpunktert halvnote).
+  - Preludium i e-moll: G𝄪5 i takt 16 er skrevet som A5, fordi appen ikke har dobbelte fortegn. H1 i bassen (takt 17 og 24) og E1 (takt 25) er flyttet en oktav opp, og faller bort fordi H2 og E2 allerede står i samme akkord. Forslagsnotene (takt 11 og 19) er sløyfet. Bindingen fra takt 8 til 9 er en pause. Akkordene i takt 24–25 står i bassystemet i originalen, men er en del av høyre hånds stemme og spilles av høyre hånd.
+  - Menuett: forslagsnoten i takt 8 er sløyfet. Sluttakkorden i høyre hånd er H3–D4–G4 som i kilden.
+- **Hendene krysser midtre C** i alle fire (venstre hånd opp til E4 i Menuetten og A4 i Chopin, høyre hånd ned til H3 i Kanon og D3 i Bach), så de står i `HANDS_CROSS`.
+- **Fingersetting:** eget forslag, laget med samme optimering som for Für Elise og rettet for hånd. Menuetten følger vanlig fingersetting (D5 med 5 i takt 1, G4–F♯4 med 2–1). I Chopin har venstre hånds akkorder en fast regel: 5 på bassen, 1 øverst og midtfingeren etter avstanden (4 ved et heltonetrinn eller mindre, 3 opp til en stor ters, ellers 2), så like akkorder får like fingre.
+- **Notearket:**
+  - abcjs 6.4.4 ignorerer `[K:clef=…]` først på en linje i øverste stemme. Nøkkelen settes derfor på stemmen (`[V:RH clef=…]`) ved linjestart. Høyre hånd bytter til bassnøkkel når takten i snitt ligger under A3 (takt 33 i Bach, som i originalen).
+  - Lange akkordnavn står bare når akkorden endrer seg i takten, ellers fløt de sammen under Chopins åtte akkorder per takt. Korte navn som «A+E» i Dovregubben står som før. Timingmerket for en akkord uten navn står under noten.
+  - Takter per linje regner med bredden på tonenavnene. Grensen er hevet fra ni til ti toner per takt i snitt.
+- **Taktnummer (`firstBar`):** delene har numrene fra stykket, med opptakten som takt 0. For «Hele stykket» med repetisjoner (Menuetten, Für Elise) teller numrene videre gjennom repetisjonene.
+- **Tempo:** standardtempo for øving, ikke originaltempoet: Menuett 80, Kanon 60, Preludium i C-dur 50, Preludium i e-moll 50.
+- **Casio:** alle bruker 001 STAGE PIANO uten registreringsplass (alle 32 er i bruk). Ikke lagt til cembalo, fordi lydnummeret ikke er kontrollert mot tonelisten.

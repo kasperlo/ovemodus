@@ -45,7 +45,7 @@ const pitchesIn = (bar: Bar): number[] => bar.items.flatMap(it => it.type === 'r
 
 /**
  * Nøkkelen for hver takt i ett notesystem. Venstre hånd bytter til diskantnøkkel når takten i snitt ligger fra E4 og
- * opp, og tilbake under midtre C. Høyre hånd bytter til bassnøkkel under G3 og tilbake fra midtre C. Avstanden mellom
+ * opp, og tilbake under midtre C. Høyre hånd bytter til bassnøkkel under A3 og tilbake fra midtre C. Avstanden mellom
  * grensene hindrer at nøkkelen bytter for hver takt. Takter uten toner beholder nøkkelen.
  */
 export function staffClefs(bars: Bar[], home: Clef): Clef[] {
@@ -55,7 +55,7 @@ export function staffClefs(bars: Bar[], home: Clef): Clef[] {
     if (!ms.length) return cur;
     const mean = ms.reduce((a, m) => a + m, 0) / ms.length;
     if (home === 'bass') cur = cur === 'bass' ? (mean >= 64 ? 'treble' : 'bass') : (mean < 60 ? 'bass' : 'treble');
-    else cur = cur === 'treble' ? (mean < 55 ? 'bass' : 'treble') : (mean >= 60 ? 'treble' : 'bass');
+    else cur = cur === 'treble' ? (mean < 57 ? 'bass' : 'treble') : (mean >= 60 ? 'treble' : 'bass');
     return cur;
   });
 }
@@ -88,6 +88,8 @@ function showFingers(voice: Voice, f: string): boolean {
  */
 function barAbc(bar: Bar, sig: Record<string, number>, meter: Meter, voice: Voice): { music: string; lyr: string } {
   const acc: Record<string, number> = { ...sig }, toks: string[] = [], lyr: string[] = [];
+  // Lange akkordnavn («G+B+E») står bare når akkorden endrer seg i takten. `*` er en note uten tekst i ABC.
+  let prevChord = '';
   const group = beamGroup(meter);
   const note = (midi: number, name: string): string => {
     const n = abcNote(midi, name);
@@ -110,12 +112,15 @@ function barAbc(bar: Bar, sig: Record<string, number>, meter: Meter, voice: Voic
       // abcjs stabler fingersettingen nedenfra, så fingeren til den dypeste tonen står nærmest akkorden
       if (showFingers(voice, it.f)) t += it.f.split(' ').map(f => `!${f}!`).join('');
       t += '[' + it.midis.map((m, i) => note(m, it.names[i])).join('') + ']' + abcDur(d);
-      if (voice.annotate) lyr.push(it.short || it.name);
+      const label = it.short || it.name;
+      if (voice.annotate) lyr.push(label === prevChord && label.length > 3 ? '*' : label);
+      prevChord = label;
     } else {
       if (showFingers(voice, it.f)) t += `!${it.f}!`;
       if (it.fermata) t += '!fermata!';
       t += note(it.midi, it.name) + abcDur(d);
       if (voice.annotate) lyr.push(it.name);
+      prevChord = '';
     }
     // Trioler og 32-deler bjelkes per åttendedel, ellers blir bjelkene for lange til å lese
     const split = !!triplet?.first || (Number.isInteger(p) && (it.d < 0.5 || prevD < 0.5));
@@ -127,13 +132,25 @@ function barAbc(bar: Bar, sig: Record<string, number>, meter: Meter, voice: Voic
   return { music: toks.join(''), lyr: lyr.join(' ') };
 }
 
+/** Plassen en takt trenger under notene: én per tone, mer for lange akkordnavn som står (se `barAbc`). */
+function barWidth(bar: Bar | undefined): number {
+  let prev = '', n = 0;
+  (bar?.items ?? []).forEach(it => {
+    if (it.type === 'rest') return;
+    const label = it.type === 'chord' ? it.short || it.name : '';
+    n += label && label !== prev ? Math.max(1, label.length / 3) : 1;
+    prev = label;
+  });
+  return n;
+}
+
 /**
- * Taktene på hver linje som [fra, til). Høyst `perLine` takter, og færre når taktene er tette (i snitt mer enn ni
- * toner per takt), ellers flyter tonenavnene under 32-deler og trioler sammen.
+ * Taktene på hver linje som [fra, til). Høyst `perLine` takter, og færre når taktene er tette (i snitt mer enn ti
+ * toner per takt, eller mange lange akkordnavn), ellers flyter tonenavnene under 32-deler og akkorder sammen.
  */
 export function lineRanges(model: Model, perLine: number): [number, number][] {
-  const notes = (i: number): number => Math.max(...(['rh', 'lh'] as Hand[]).map(h => model.staffs[h][i]?.items.filter(it => it.type !== 'rest').length ?? 0));
-  const budget = perLine * 9;
+  const notes = (i: number): number => Math.max(barWidth(model.staffs.rh[i]), barWidth(model.staffs.lh[i]));
+  const budget = perLine * 10;
   const out: [number, number][] = [];
   let start = 0, sum = 0;
   for (let i = 0; i < model.bars.length; i++) {
@@ -163,6 +180,10 @@ export function toAbc(model: Model, perLine: number, showOther: boolean): string
   if (model.firstBar !== 1) out.push('%%sep 0 0 0', `%%setbarnb ${model.firstBar}`);
   if (two) out.push('%%score {RH LH}', `V:RH clef=${clefs.rh[0]}`, `V:LH clef=${clefs.lh[0]}`);
   const voice = (h: Hand): Voice => ({ annotate: hand === h || hand === 'both', label: (hand === 'lh') === (h === 'lh') });
+  // Nøkkelbytter i abcjs 6.4.4: med to systemer starter hver linje med stemmens nøkkel, og `[K:clef=…]` først på en
+  // linje virker ikke for øverste stemme. Nøkkelen på stemmen (`[V:RH clef=…]`) settes derfor ved linjestart, og den
+  // varer til den settes på nytt. Med ett system varer `[K:clef=…]` over linjeskift.
+  const voiceClef = { rh: clefs.rh[0], lh: clefs.lh[0] };
   for (const [i, to] of lineRanges(model, perLine)) {
     const end = to >= model.bars.length ? ' |]' : ' |';
     const line = (h: Hand) => {
@@ -170,9 +191,8 @@ export function toAbc(model: Model, perLine: number, showOther: boolean): string
       return model.staffs[h].slice(i, to).map((b, j) => {
         const r = barAbc(b, sig, song.meter, v);
         const k = i + j;
-        // abcjs starter hver linje med nøkkelen fra hodet, så et bytte må skrives på nytt i starten av linjen
-        const before = j === 0 ? clefs[h][0] : clefs[h][k - 1];
-        return clefs[h][k] !== before ? { ...r, music: `[K:clef=${clefs[h][k]}] ${r.music}` } : r;
+        const change = k > 0 && clefs[h][k] !== clefs[h][k - 1] && !(two && j === 0);
+        return change ? { ...r, music: `[K:clef=${clefs[h][k]}] ${r.music}` } : r;
       });
     };
     const music = (bars: { music: string }[]) => bars.map(r => r.music).join(' | ') + end;
@@ -182,10 +202,15 @@ export function toAbc(model: Model, perLine: number, showOther: boolean): string
       out.push(music(bars), lyr(bars));
       continue;
     }
+    const field = (h: Hand, name: string): string => {
+      if (clefs[h][i] === voiceClef[h]) return `[V:${name}] `;
+      voiceClef[h] = clefs[h][i];
+      return `[V:${name} clef=${clefs[h][i]}] `;
+    };
     const rh = line('rh'), lh = line('lh');
-    out.push('[V:RH] ' + music(rh));
+    out.push(field('rh', 'RH') + music(rh));
     if (voice('rh').annotate) out.push(lyr(rh));
-    out.push('[V:LH] ' + music(lh));
+    out.push(field('lh', 'LH') + music(lh));
     if (voice('lh').annotate) out.push(lyr(lh));
   }
   return out.join('\n');

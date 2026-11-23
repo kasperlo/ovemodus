@@ -11,7 +11,7 @@ import { CT_S400_TONES } from '../casio';
  * Hele klaverstykker der hendene krysser midtre C som i originalen (venstre hånd over, eller høyre hånd under).
  * Der overlapper hendene, så MIDI skiller dem på hva som skal spilles i stedet for på tonehøyde.
  */
-const HANDS_CROSS = new Set(['fur-elise']);
+const HANDS_CROSS = new Set(['menuett-g', 'kanon-d', 'preludium-c', 'fur-elise', 'preludium-e']);
 
 const pitches = (ev: BarEvent): number[] => ev.type === 'rest' ? [] : ev.type === 'chord' ? ev.midis : [ev.midi];
 const fingers = (ev: BarEvent): number[] => ev.type === 'rest' ? [] : ev.f.split(' ').map(Number);

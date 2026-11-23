@@ -130,19 +130,19 @@ export const furElise = stykke({
   },
   sections: [
     {
-      id: 'elise', title: 'Tema', tempo: 70, use: 'Rolig pause, eller når noen tenker lenge.',
+      id: 'elise', title: 'Tema', tempo: 70, firstBar: 0, use: 'Rolig pause, eller når noen tenker lenge.',
       groups: [{ label: 'Für Elise', bars: [
         ['P', null], ['E1', null], ['E2', 'A'], ['E3', 'E'], ['E4', 'A'], ['E1', null], ['E2', 'A'], ['E7', 'E'], ['E8', 'A']
       ] }]
     },
-    { id: 'elise-mellomspill', title: 'Mellomspill', tempo: 60, use: 'Fra slutten av temaet, gjennom C-dur og G-dur, og tilbake.', groups: [{ label: 'Mellomspill', bars: eliseBars(16, 23) }] },
-    { id: 'elise-fdur', title: 'F-dur', tempo: 50, use: 'Inn i F-dur-delen. Venstre hånd går over midtre C.', groups: [{ label: 'F-dur', bars: eliseBars(44, 51) }] },
-    { id: 'elise-32', title: '32-deler', tempo: 50, use: 'De raske figurene og veien tilbake til temaet. Ta dem sakte først.', groups: [{ label: '32-deler', bars: eliseBars(52, 60) }] },
-    { id: 'elise-orgelpunkt', title: 'Orgelpunkt', tempo: 60, use: 'Akkorder i høyre hånd over A-en i bassen.', groups: [{ label: 'Orgelpunkt', bars: eliseBars(81, 89) }] },
-    { id: 'elise-orgelpunkt2', title: 'Orgelpunkt 2', tempo: 60, use: 'Andre halvdel av akkordene, over B♭ og B i bassen.', groups: [{ label: 'Orgelpunkt 2', bars: eliseBars(90, 98) }] },
-    { id: 'elise-arpeggio', title: 'Arpeggio', tempo: 50, use: 'Triolene opp og den kromatiske skalaen ned, tilbake til temaet.', groups: [{ label: 'Arpeggio', bars: eliseBars(98, 105) }] },
+    { id: 'elise-mellomspill', title: 'Mellomspill', tempo: 60, firstBar: 16, use: 'Fra slutten av temaet, gjennom C-dur og G-dur, og tilbake.', groups: [{ label: 'Mellomspill', bars: eliseBars(16, 23) }] },
+    { id: 'elise-fdur', title: 'F-dur', tempo: 50, firstBar: 44, use: 'Inn i F-dur-delen. Venstre hånd går over midtre C.', groups: [{ label: 'F-dur', bars: eliseBars(44, 51) }] },
+    { id: 'elise-32', title: '32-deler', tempo: 50, firstBar: 52, use: 'De raske figurene og veien tilbake til temaet. Ta dem sakte først.', groups: [{ label: '32-deler', bars: eliseBars(52, 60) }] },
+    { id: 'elise-orgelpunkt', title: 'Orgelpunkt', tempo: 60, firstBar: 81, use: 'Akkorder i høyre hånd over A-en i bassen.', groups: [{ label: 'Orgelpunkt', bars: eliseBars(81, 89) }] },
+    { id: 'elise-orgelpunkt2', title: 'Orgelpunkt 2', tempo: 60, firstBar: 90, use: 'Andre halvdel av akkordene, over B♭ og B i bassen.', groups: [{ label: 'Orgelpunkt 2', bars: eliseBars(90, 98) }] },
+    { id: 'elise-arpeggio', title: 'Arpeggio', tempo: 50, firstBar: 98, use: 'Triolene opp og den kromatiske skalaen ned, tilbake til temaet.', groups: [{ label: 'Arpeggio', bars: eliseBars(98, 105) }] },
     {
-      id: 'elise-hele', title: 'Hele stykket', tempo: 60, use: 'Med repetisjonene.',
+      id: 'elise-hele', title: 'Hele stykket', tempo: 60, firstBar: 0, use: 'Med repetisjonene.',
       groups: [
         { label: 'Tema', bars: eliseBars(0, 15) },
         { label: 'Mellomspill', bars: eliseBars(16, 22) },
