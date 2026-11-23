@@ -237,7 +237,7 @@
 - **Beste tempo per dag:** fra alle runder i takt med minst 90 %, med eller uten løkke. Liten linjegraf under knappene i oppsettet, bare dager det er øvd, med tabell for skjermlesere. Y-aksen starter ikke på null, fordi forskjellene er på 5 BPM.
 - **iPad:** løkkekortet står over notearket. Venstre kolonne bestemmer høyden på scenen, så kortet gjør den ikke høyere: tastaturet slutter på 904 px ved 768×1024 med og uten løkke (testet). Kortet har egen start og stopp, så oppsettet kan være skjult under øving. Resultatet mellom rundene har ingen knapper eller merke, så kortet for neste tone holder samme høyde og tastaturet ikke hopper hver runde.
 - **Rettet i forbifarten:** hintet «Denne delen har bare høyre hånd.» ble visket ut med en gang (`resetProgress` kom etter).
-- **Funnet, ikke rettet:** notearkets maksimale høyde (318 px) virker ikke når arket er høyere enn det. abcjs (`responsive: 'resize'`) setter høyden med `padding-bottom`, og den begrenses ikke av `max-height`. Hele stykket i Dovregubben blir rundt 1300 px høyt ved 1366 px bredde, og siden må rulles. Gjelder også før denne endringen, og blir viktigere med hele stykker. Et utsnitt på noen takter unngår det.
+- **Funnet:** notearkets maksimale høyde (318 px) virket ikke når arket var høyere enn det, fordi abcjs (`responsive: 'resize'`) setter høyden med `padding-bottom`. Hele stykket i Dovregubben ble rundt 1300 px høyt ved 1366 px bredde. Fantes fra før. Rettet samme dag, se «Notearket følger med».
 - **Oppfølging:** test løkken på iPad i notestativet, med mikrofon og CT-S400. Vurder å velge utsnitt ved å trykke i notearket.
 
 ## 2026-11-23 – Fire klaverstykker til: Menuett, Kanon, Preludium i C-dur og Preludium i e-moll
@@ -262,3 +262,12 @@
 - **Taktnummer (`firstBar`):** delene har numrene fra stykket, med opptakten som takt 0. For «Hele stykket» med repetisjoner (Menuetten, Für Elise) teller numrene videre gjennom repetisjonene.
 - **Tempo:** standardtempo for øving, ikke originaltempoet: Menuett 80, Kanon 60, Preludium i C-dur 50, Preludium i e-moll 50.
 - **Casio:** alle bruker 001 STAGE PIANO uten registreringsplass (alle 32 er i bruk). Ikke lagt til cembalo, fordi lydnummeret ikke er kontrollert mot tonelisten.
+
+## 2026-11-23 – Notearket følger med
+
+- **Kontekst:** Kasper spør om arket kan rulle av seg selv. Med hele stykker ble arket mange tusen piksler høyt (Für Elise, hele stykket: 7920 px, siden 9730 px), fordi abcjs styrer høyden på elementet den tegner i. Markøren forsvant under skjermkanten, og man måtte rulle selv.
+- **Beslutning:** abcjs tegner i et indre element, så `#sheet` kan begrenses til 318 px og rulle. Når markøren går til en ny linje, rulles den linjen til toppen av arket. Da står neste linje under og kan leses før man kommer dit, som når man blar i noter. Gjelder «Vent på meg», «Spill i takt» og avspillingen. Har man rullet bort selv, rulles det tilbake ved neste tone.
+- **Myk rulling**, men med en gang når `prefers-reduced-motion` er på.
+- **Forkastet:** å rulle bare når markøren går ut av synsfeltet (slik det var tenkt før). Da ser man ikke neste linje før man er der.
+- **Målt:** Für Elise, hele stykket, i takt i 120 BPM: markøren var innenfor arket i alle 249 målinger over 25 s. Siden er 2117 px høy i stedet for 9730.
+- **Ikke gjort:** arket bruker fortsatt høyst 318 px, også på store iPader med ledig plass. Bokstavvisningen ruller som før (når en brikke går ut av synsfeltet).

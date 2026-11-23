@@ -74,3 +74,43 @@ test('spill i takt: merke under tonenavnet for toner som kom for sent, og alt nu
   await expect(page.locator('#sheet .abc-timing')).toHaveCount(0);
   await expect(page.locator('#sheet .n-done')).toHaveCount(0);
 });
+
+/** Markøren målt i forhold til notearket, og hvor langt arket er rullet. */
+const cursorInSheet = (page: Page) => page.evaluate(() => {
+  const s = document.getElementById('sheet')!, c = document.querySelector('#sheet .abc-cursor')!;
+  const a = s.getBoundingClientRect(), b = c.getBoundingClientRect();
+  return { top: b.top - a.top, bottom: b.bottom - a.top, height: a.height, scroll: s.scrollTop };
+});
+
+/** Spiller riktige toner i «Vent på meg» fra der man står, til og med tone nummer `to` (fra 0). */
+const playTo = (page: Page, to: number) => page.evaluate(n => {
+  const o = window.ovemodus, notes = o.state.notes;
+  for (let i = o.state.cur; i <= n; i++) o.input(notes[i].m);
+}, to);
+
+test('notearket ruller innenfor 318 px og følger med: linjen med neste tone står øverst', async ({ page }) => {
+  await page.evaluate(() => window.ovemodus.setSection('hele'));
+  const sheet = page.locator('#sheet');
+  expect((await sheet.boundingBox())!.height).toBeLessThanOrEqual(318);
+  expect(await sheet.evaluate(e => e.scrollHeight)).toBeGreaterThan(900);
+  for (const to of [20, 40, 60]) {
+    await playTo(page, to);
+    await expect.poll(async () => {
+      const c = await cursorInSheet(page);
+      return c.top >= 0 && c.bottom <= c.height && c.top < 60;
+    }, { message: `markøren øverst i arket etter tone ${to}` }).toBe(true);
+  }
+  await expect.poll(async () => (await cursorInSheet(page)).scroll).toBeGreaterThan(300);
+  await page.click('#btnReset');
+  await expect.poll(async () => (await cursorInSheet(page)).scroll).toBe(0);
+});
+
+test('med redusert bevegelse rulles arket med en gang, uten animasjon', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.evaluate(() => window.ovemodus.setSection('hele'));
+  await playTo(page, 40);
+  const c = await cursorInSheet(page);
+  expect(c.scroll).toBeGreaterThan(300);
+  expect(c.top).toBeGreaterThanOrEqual(0);
+  expect(c.top).toBeLessThan(60);
+});

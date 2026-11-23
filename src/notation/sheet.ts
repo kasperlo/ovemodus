@@ -55,8 +55,16 @@ export const sheet = {
   ok: false,
   /** Nøkkelen i hver takt per hånd, så spøkelsesnoten får riktige hjelpelinjer. */
   clefs: { rh: [] as Clef[], lh: [] as Clef[] },
-  barLen: 8
+  barLen: 8,
+  /** Linjen (notesystemet) hvert steg står på, og toppen av hver linje i SVG-enheter. Til å rulle arket. */
+  lineOf: [] as number[],
+  lineTop: [] as number[],
+  /** Linjen arket sist ble rullet til. */
+  followLine: -1
 };
+
+/** Linjenummeret abcjs gir elementene i en linje (`abcjs-l3`). */
+const lineIndex = (el: Element): number => Number(/(?:^|\s)abcjs-l(\d+)(?:\s|$)/.exec(el.getAttribute('class') ?? '')?.[1] ?? -1);
 
 const FINGERING = /^[1-5](\s[1-5])*$/;
 
@@ -134,10 +142,15 @@ export function renderSheet(container: HTMLElement, model: Model, otherChecked: 
   sheet.clefs = { rh: staffClefs(model.staffs.rh, 'treble'), lh: staffClefs(model.staffs.lh, 'bass') };
   sheet.barLen = model.barLen;
   container.innerHTML = '';
+  // abcjs (responsive: 'resize') gir elementet den tegner i høyde med padding-bottom og overflow: hidden.
+  // Da kan ikke arket begrenses eller rulle, så abcjs tegner i et indre element og #sheet ruller.
+  const target = document.createElement('div');
+  target.className = 'sheet-music';
+  container.append(target);
   const perLine = sheet.perLine = sheetPerLine(container);
   const both = model.hand === 'both';
   const showOther = both || (otherChecked && model.acc.length > 0);
-  const tunes = abcjs.renderAbc(container, toAbc(model, perLine, showOther), {
+  const tunes = abcjs.renderAbc(target, toAbc(model, perLine, showOther), {
     add_classes: true, responsive: 'resize', staffwidth: perLine === 4 ? 900 : 500,
     paddingtop: 6, paddingbottom: 6, paddingleft: 6, paddingright: 6,
     selectionColor: '#15161c',
@@ -185,6 +198,13 @@ export function renderSheet(container: HTMLElement, model: Model, otherChecked: 
   }
   if (!sheet.ok) console.warn('Noteark: notene stemmer ikke med stegene', model.song.id, model.hand);
   sheet.beams = findBeams(svg);
+  sheet.lineTop = [];
+  svg.querySelectorAll('.abcjs-staff-wrapper').forEach(w => {
+    const l = lineIndex(w), b = bbox(w);
+    if (l >= 0 && b) sheet.lineTop[l] = Math.min(sheet.lineTop[l] ?? Infinity, b.y);
+  });
+  sheet.lineOf = model.steps.map(st => { const p = partsOf(sheet.notes[st.si])[0]; return p ? lineIndex(p.g) : -1; });
+  sheet.followLine = -1;
 
   const r = svgEl('rect', { class: 'abc-cursor', rx: 4, width: 0, height: 0 });
   svg.insertBefore(r, svg.firstChild);
@@ -285,8 +305,28 @@ export function sheetCursor(ci: number, container: HTMLElement): void {
   r.setAttribute('x', String(n.box.x - pad)); r.setAttribute('y', String(n.box.y - pad));
   r.setAttribute('width', String(n.box.w + 2 * pad)); r.setAttribute('height', String(n.box.h + 2 * pad));
   if (container.hidden) return;
+  follow(ci, r, container);
+}
+
+/**
+ * Arket følger med: når markøren kommer til en ny linje, rulles linjen til toppen, så neste linje står under og kan
+ * leses før man kommer dit. Har man rullet bort selv, rulles det tilbake ved neste tone.
+ */
+function follow(ci: number, r: SVGRectElement, container: HTMLElement): void {
+  const line = sheet.lineOf[ci] ?? -1;
   const rb = r.getBoundingClientRect(), cb = container.getBoundingClientRect();
-  if (rb.top < cb.top + 6 || rb.bottom > cb.bottom - 6) {
-    container.scrollTop = Math.max(0, container.scrollTop + (rb.top - cb.top) - container.clientHeight / 3);
+  if (line === sheet.followLine && rb.top >= cb.top && rb.bottom <= cb.bottom) return;
+  sheet.followLine = line;
+  const svg = r.ownerSVGElement;
+  const vb = svg?.viewBox.baseVal;
+  const top = sheet.lineTop[line];
+  let y = rb.top;
+  if (svg && vb?.height && top != null && isFinite(top)) {
+    const sb = svg.getBoundingClientRect();
+    y = sb.top + top * sb.height / vb.height;
   }
+  const to = Math.max(0, container.scrollTop + y - cb.top - 4);
+  if (Math.abs(to - container.scrollTop) < 2) return;
+  const instant = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  container.scrollTo({ top: to, behavior: instant ? 'auto' : 'smooth' });
 }
