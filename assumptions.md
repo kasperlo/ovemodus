@@ -323,3 +323,17 @@
   - Oktav −1: `casio.octave: -1`. Keyboardet spiller og sender da tonene en oktav lavere, så tangentene C2–C7 dekker C1–C6. Stykkene har bassen som i originalen (F1–A3 i Måneskinn, E1 i Chopin). Valideringen godtar C1–C6 for slike stykker. Teksten i Casio-oppsettet sier fra («oktav −1»).
   - Måneskinn går opp til D♯6 én gang (takt 35). Den tonen er spilt en oktav lavere, fordi C6 er øverste tangent med oktav −1.
   - Lengre Kanon: de senere variasjonene finnes fritt bare i Seiffert-utgaven (Organum, Kistner & Siegel; Seiffert døde 1948) på IMSLP, og IMSLP krever at man godtar vilkårene før nedlasting. Venter på Kaspers valg: laste ned selv, godta vilkårene, eller egne variasjoner over grunnbassen.
+
+
+## 2026-11-23 – Hele akkorden med MIDI
+
+- **Kontekst:** Kasper vil lære konsertversjonene. Appen godkjente en akkord når én av tonene var riktig, så halve akkorder gikk gjennom.
+- **Beslutning (Kasper valgte):** med MIDI må alle tonene i akkorden spilles. Valget «MIDI: hele akkorden må spilles» er på som standard og kan slås av.
+  - Når alle oktaver godtas, må hvert tonenavn spilles én gang (A-moll A4 C5 E5 A5 krever A, C og E). Ellers må hver tone spilles.
+  - «Vent på meg»: tonene kan komme i hvilken som helst rekkefølge. Tangentene som er spilt slukkes på skjermtastaturet.
+  - «Spill i takt»: alle tonene må komme innenfor tidsvinduet. Ellers blir akkorden bom når vinduet er over. Avviket regnes fra tonen som fullførte akkorden.
+  - Begge hender: gjelder hver hånds del for seg, så venstre hånds kvint (A+E) krever begge tonene.
+- **Ikke med mikrofonen:** én mikrofon kan ikke skille alle tonene i en akkord. Toner på en overtone av en annen akkordtone (G over C, E over A) forsvinner, som med begge hender. Mikrofonen godtar fortsatt én tone.
+- **Ikke med skjermtastaturet:** der trykker man én tangent om gangen, så det blir tungvint. Én tone er nok, som før.
+- **iPad:** ingen nettleser på iPad har Web MIDI (alle bruker WebKit). Apper som legger Web MIDI inn i en nettleser, for eksempel «Web MIDI Browser», kan virke, men er ikke testet. Ellers må appen pakkes som en egen iPad-app.
+

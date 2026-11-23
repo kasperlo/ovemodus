@@ -13,6 +13,8 @@ export interface Settings {
   /** MIDI: ignorer den andre hånden (delt ved midtre C). Navnet er fra da bare venstre hånd kunne ignoreres. */
   lh: boolean;
   acc: boolean;
+  /** MIDI: en akkord er riktig først når alle tonene er spilt. */
+  chordAll: boolean;
   sens: Sensitivity;
   /** Tempo per del, og per utsnitt av en del (nøkkel fra `partKey`). */
   tempo: Record<string, number>;
@@ -60,7 +62,7 @@ export function defaultStore(): Store {
   return {
     v: STORE_VERSION,
     settings: {
-      section: 'delA', hand: 'rh', mode: 'vent', oct: true, lh: true, acc: true, sens: 'middels', tempo: {}, view: 'noter',
+      section: 'delA', hand: 'rh', mode: 'vent', oct: true, lh: true, acc: true, chordAll: true, sens: 'middels', tempo: {}, view: 'noter',
       lhStaff: false, setupOpen: true, ranges: {}, loop: false, target: {}
     },
     rec: {},

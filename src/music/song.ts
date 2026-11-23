@@ -180,6 +180,8 @@ export type Step = (NoteEvent | ChordEvent) & Placed & {
   got?: Partial<Record<Hand, boolean>>;
   /** Forsiringer: forslagsnotene og hovedtonen i en trille, som MIDI-tall. Dømmes ikke. */
   ornaments?: Ornaments;
+  /** MIDI med «hele akkorden»: akkordtonene som er spilt (tonenavn når alle oktaver godtas). */
+  played?: number[];
 };
 
 export interface Ornaments {
@@ -201,6 +203,8 @@ export interface Part {
   /** Takt-modus: treff eller bom for denne hånden, og avviket i sekunder. */
   judged?: Judgement | null;
   offset?: number;
+  /** MIDI med «hele akkorden»: akkordtonene denne hånden har spilt. */
+  played?: number[];
 }
 
 export type Item = Step | (RestEvent & Placed);

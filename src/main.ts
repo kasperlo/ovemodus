@@ -125,7 +125,7 @@ els.btnDemo.addEventListener('click', () => {
 });
 els.btnReset.addEventListener('click', () => { stopRun(true); resetProgress(); refresh(); });
 els.tempo.addEventListener('input', () => setTempo(Number(els.tempo.value)));
-([['optOct', 'oct'], ['optLH', 'lh'], ['optAcc', 'acc']] as const).forEach(([id, key]) => {
+([['optOct', 'oct'], ['optLH', 'lh'], ['optAcc', 'acc'], ['optChordAll', 'chordAll']] as const).forEach(([id, key]) => {
   els[id].checked = store.settings[key] !== false;
   els[id].addEventListener('change', () => { store.settings[key] = els[id].checked; save(); });
 });

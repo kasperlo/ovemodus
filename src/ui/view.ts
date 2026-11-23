@@ -1,4 +1,5 @@
 import { clickLength, countInBars, type Hand, type Section, type Step, type StepStatus } from '../music/song';
+import { pc } from '../music/theory';
 import { clearOverlay, sheet, paintSheet, paintTiming, sheetCursor } from '../notation/sheet';
 import { RECORD_MIN_PCT, timingClass } from '../practice/judge';
 import { LADDER_DOWN_PCT } from '../practice/ladder';
@@ -67,7 +68,15 @@ export function refresh(): void {
   setCurrentMark(ci);
   const showKeys = ci >= 0 && !(state.mode === 'takt' && !run.active);
   const cur = showKeys ? steps[ci] : null;
-  const done = new Set((['rh', 'lh'] as const).flatMap(h => cur?.got?.[h] ? cur.parts?.[h]?.midis ?? [] : []));
+  const anyOct = els.optOct.checked;
+  const playedOf = (midis: number[], played?: number[]): number[] => played ? midis.filter(m => played.includes(anyOct ? pc(m) : m)) : [];
+  const done = new Set([
+    ...(['rh', 'lh'] as const).flatMap(h => {
+      const p = cur?.parts?.[h];
+      return !p ? [] : cur?.got?.[h] ? p.midis : playedOf(p.midis, p.played);
+    }),
+    ...(cur?.type === 'chord' && !cur.parts ? playedOf(cur.midis, cur.played) : [])
+  ]);
   setTargets(cur, showKeys ? steps[ci + 1] : null, run.active && run.kind === 'demo', done);
   renderClue(ci);
   renderStats();

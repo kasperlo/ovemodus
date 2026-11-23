@@ -12,8 +12,8 @@ export function resetProgress(): void {
   run.offsets = [];
   state.partial = false;
   state.model.steps.forEach(s => {
-    s.judged = null; s.stumbled = false; s.offset = undefined; s.got = undefined;
-    Object.values(s.parts ?? {}).forEach(p => { if (p) { p.judged = null; p.offset = undefined; } });
+    s.judged = null; s.stumbled = false; s.offset = undefined; s.got = undefined; s.played = undefined;
+    Object.values(s.parts ?? {}).forEach(p => { if (p) { p.judged = null; p.offset = undefined; p.played = undefined; } });
   });
   clearMarks();
   els.strip.scrollTop = 0;

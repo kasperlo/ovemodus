@@ -9,7 +9,7 @@ export const els = {
   btnMic: byId<HTMLButtonElement>('btnMic'), btnMidi: byId<HTMLButtonElement>('btnMidi'),
   meterFill: byId('meterFill'), meterGate: byId('meterGate'), inputStatus: byId('inputStatus'),
   optSens: byId<HTMLSelectElement>('optSens'), optOct: byId<HTMLInputElement>('optOct'),
-  optLH: byId<HTMLInputElement>('optLH'), optAcc: byId<HTMLInputElement>('optAcc'),
+  optLH: byId<HTMLInputElement>('optLH'), optAcc: byId<HTMLInputElement>('optAcc'), optChordAll: byId<HTMLInputElement>('optChordAll'),
   tempo: byId<HTMLInputElement>('tempo'), tempoOut: byId<HTMLOutputElement>('tempoOut'),
   btnGo: byId<HTMLButtonElement>('btnGo'), btnDemo: byId<HTMLButtonElement>('btnDemo'), btnReset: byId<HTMLButtonElement>('btnReset'),
   clue: byId('clue'), clueLabel: byId('clueLabel'), clueBig: byId('clueBig'), clueSub: byId('clueSub'), clueThen: byId('clueThen'), clueActions: byId('clueActions'),

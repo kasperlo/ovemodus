@@ -24,6 +24,22 @@ export function matchesPart(part: Part, m: number, anyOctave: boolean): boolean 
 }
 
 /**
+ * MIDI melder hver tangent for seg, så der kan hele akkorden kreves. Mikrofonen kan ikke skille alle tonene i en
+ * akkord (tonene på overtonene til andre akkordtoner), og på skjermtastaturet trykker man én tangent om gangen.
+ */
+export const wholeChord = (src: string, required: boolean): boolean => required && src === 'midi';
+
+/** Det som må spilles av en akkord: hvert tonenavn når alle oktaver godtas, ellers hver tone. */
+export const chordNeeds = (midis: number[], anyOctave: boolean): number[] => [...new Set(midis.map(m => anyOctave ? pc(m) : m))];
+
+/** Legger en spilt akkordtone til det som er spilt, og sier om hele akkorden nå er spilt. */
+export function addChordTone(played: number[] | undefined, midis: number[], m: number, anyOctave: boolean): { played: number[]; complete: boolean } {
+  const got = new Set(played);
+  got.add(anyOctave ? pc(m) : m);
+  return { played: [...got], complete: chordNeeds(midis, anyOctave).every(n => got.has(n)) };
+}
+
+/**
  * Hvilken hånd en tone hører til når man øver begge hender. Kanal 3 er venstre hånd når Casio-keyboardet er
  * splittet. Ellers avgjør skillet mellom hendene. `null` når hendene overlapper og kanalen ikke sier noe.
  */

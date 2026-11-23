@@ -7,7 +7,7 @@ import { clearGhost, showGhost } from '../notation/sheet';
 import { celebrate, fmtSec, markStep, refresh, renderStats, setHint, shakeStep } from '../ui/view';
 import type { InputEvent } from './input';
 import type { Hand, Step } from '../music/song';
-import { handOf, isOrnament, matches, matchesPart } from './judge';
+import { addChordTone, handOf, isOrnament, matches, matchesPart, wholeChord } from './judge';
 import { addRound, dayKey } from './ladder';
 import { resetProgress } from './progress';
 import { setMode } from './session';
@@ -22,6 +22,11 @@ export function judgeWait(m: number, ev: InputEvent): void {
   if (step.parts) { judgeWaitBoth(step, m, ev); return; }
   if (matches(step, m, els.optOct.checked)) {
     if (state.tStart == null) state.tStart = performance.now();
+    if (step.type === 'chord' && wholeChord(ev.src, els.optChordAll.checked)) {
+      const r = addChordTone(step.played, step.midis, m, els.optOct.checked);
+      step.played = r.played;
+      if (!r.complete) { flashKey(m, 'hit'); clearGhost(); refresh(); return; }
+    }
     state.hits++;
     state.lastAcc = m;
     clearGhost();
@@ -55,9 +60,14 @@ function judgeWaitBoth(step: Step, m: number, ev: InputEvent): void {
     if (state.tStart == null) state.tStart = performance.now();
     // Mikrofonen melder venstre hånd bare som anslag, så tonen som kan klinge videre uten nytt anslag er høyre hånds
     if (hand === 'rh') state.lastAcc = m;
-    step.got = { ...step.got, [hand]: true };
     flashKey(m, 'hit');
     clearGhost();
+    if (part.type === 'chord' && wholeChord(ev.src, els.optChordAll.checked)) {
+      const r = addChordTone(part.played, part.midis, m, anyOct);
+      part.played = r.played;
+      if (!r.complete) { refresh(); return; }
+    }
+    step.got = { ...step.got, [hand]: true };
     if ((['rh', 'lh'] as Hand[]).every(h => !parts[h] || step.got?.[h])) {
       state.hits++;
       markStep(step.si, step.stumbled ? 'stumbled' : 'done');

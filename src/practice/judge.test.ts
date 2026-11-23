@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CH, N, q, type Step } from '../music/song';
-import { hitWindow, isOrnament, matches, timingClass, timingText } from './judge';
+import { addChordTone, chordNeeds, hitWindow, isOrnament, matches, timingClass, timingText, wholeChord } from './judge';
 
 describe('matches', () => {
   const a4 = N('A4', q, 1);
@@ -64,6 +64,39 @@ describe('isOrnament', () => {
     const prev = step({ trill: 77 });
     expect([77, 78, 79, 80, 76].map(m => isOrnament(m, step(undefined), prev, false))).toEqual([true, true, true, false, false]);
     expect(isOrnament(76, step(undefined), step(undefined), false)).toBe(false);
+  });
+});
+
+describe('hele akkorden med MIDI', () => {
+  const am = [69, 72, 76, 81]; // A4 C5 E5 A5
+
+  it('gjelder bare MIDI, og bare når valget er på', () => {
+    expect(wholeChord('midi', true)).toBe(true);
+    expect(wholeChord('midi', false)).toBe(false);
+    for (const src of ['mic', 'click', 'test']) expect(wholeChord(src, true)).toBe(false);
+  });
+
+  it('med alle oktaver teller hvert tonenavn én gang, ellers hver tone', () => {
+    expect(chordNeeds(am, true)).toEqual([9, 0, 4]);
+    expect(chordNeeds(am, false)).toEqual(am);
+  });
+
+  it('er ferdig først når alle tonene er spilt, i hvilken som helst rekkefølge og oktav', () => {
+    let r = addChordTone(undefined, am, 76, true);
+    expect(r.complete).toBe(false);
+    r = addChordTone(r.played, am, 76, true);
+    expect(r).toMatchObject({ complete: false, played: [4] });
+    r = addChordTone(r.played, am, 57, true); // A3 i stedet for A4
+    expect(r.complete).toBe(false);
+    r = addChordTone(r.played, am, 72, true);
+    expect(r.complete).toBe(true);
+  });
+
+  it('uten alle oktaver må både A4 og A5 spilles', () => {
+    let r = addChordTone(undefined, am, 69, false);
+    for (const m of [72, 76]) r = addChordTone(r.played, am, m, false);
+    expect(r.complete).toBe(false);
+    expect(addChordTone(r.played, am, 81, false).complete).toBe(true);
   });
 });
 

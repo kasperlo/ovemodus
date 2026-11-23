@@ -9,7 +9,7 @@ import { flashKey } from '../ui/keyboard';
 import { celebrate, markStep, markTiming, refresh, setHint } from '../ui/view';
 import { keepAwake } from '../wakeLock';
 import type { InputEvent } from './input';
-import { RECORD_MIN_PCT, handOf, hitWindow, matches, matchesPart, timingText } from './judge';
+import { RECORD_MIN_PCT, addChordTone, handOf, hitWindow, matches, matchesPart, timingText, wholeChord } from './judge';
 import { addRound, dayKey, ladderText, nextTempo } from './ladder';
 import { TEMPO_MAX, TEMPO_MIN, resetProgress, setTempo } from './progress';
 
@@ -172,6 +172,12 @@ export function judgeTakt(m: number, t: number, ev: InputEvent): void {
     if (Math.abs(dt) <= s.win! && matches(s, m, els.optOct.checked) && Math.abs(dt) < bd) { best = s; bd = Math.abs(dt); }
   }
   if (best) {
+    // Hele akkorden: treff først når alle tonene er kommet innenfor tidsvinduet. Ellers blir steget bom når vinduet er over.
+    if (best.type === 'chord' && wholeChord(ev.src, els.optChordAll.checked)) {
+      const r = addChordTone(best.played, best.midis, m, els.optOct.checked);
+      best.played = r.played;
+      if (!r.complete) { flashKey(m, 'hit'); refresh(); return; }
+    }
     best.judged = 'hit';
     state.hits++;
     state.lastAcc = m;
@@ -207,6 +213,11 @@ function judgeTaktBoth(m: number, tt: number, ev: InputEvent): void {
   }
   if (best) {
     const p = best.s.parts![best.h]!;
+    if (p.type === 'chord' && wholeChord(ev.src, els.optChordAll.checked)) {
+      const r = addChordTone(p.played, p.midis, m, anyOct);
+      p.played = r.played;
+      if (!r.complete) { flashKey(m, 'hit'); refresh(); return; }
+    }
     p.judged = 'hit';
     p.offset = tt - best.s.t!;
     state.hits++;
