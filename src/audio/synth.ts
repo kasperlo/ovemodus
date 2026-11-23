@@ -23,6 +23,17 @@ export function audio(): AudioContext {
   return ctx;
 }
 
+/**
+ * Ny lydmotor, og den gamle stenges. Brukes til mikrofonen: på iPad kan en lydmotor som har spilt lyd før mikrofonen
+ * ble åpnet, gi bare nuller fra den.
+ */
+export function freshAudio(): AudioContext {
+  const old = ctx;
+  ctx = null; master = null; noiseBuf = null;
+  if (old && old.state !== 'closed') void old.close().catch(() => {});
+  return audio();
+}
+
 /** AudioContext uten å vekke den. Bare gyldig etter at `audio()` er kalt. */
 export const audioCtx = (): AudioContext => ctx!;
 export const masterBus = (): GainNode => master!;

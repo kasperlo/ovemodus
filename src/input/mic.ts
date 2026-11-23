@@ -1,5 +1,5 @@
 // Mikrofon: støyport, anslag og stabile tonehendelser. Ikke endre uten å kjøre mikrofontestene (se CLAUDE.md).
-import { audio, audioCtx } from '../audio/synth';
+import { audio, audioCtx, freshAudio } from '../audio/synth';
 import { emitInput } from '../practice/input';
 import { expectedStep, mic, run, spell, state } from '../state';
 import type { Hand } from '../music/song';
@@ -26,15 +26,21 @@ const det = {
   afterAttack: false,
   floor: 0.002,
   shown: null as string | null,
-  /** Rammer på rad med bare nuller, og om appen har sagt fra om det. */
+  /** Rammer på rad med bare nuller, om mikrofonen er startet på nytt av seg selv, og om appen har sagt fra. */
   zeros: 0,
+  restarted: false,
   dead: false
 };
 
-/** Rundt 3 s med bare nuller før appen sier fra. En ekte mikrofon gir alltid litt støy, så det er ikke stillhet i rommet. */
+/** Rundt 3 s med bare nuller før appen gjør noe. En ekte mikrofon gir alltid litt støy, så det er ikke stillhet i rommet. */
 const DEAD_FRAMES = 180;
 
-/** Sier fra når mikrofonen ikke gir lyd i det hele tatt, og prøver å vekke lydmotoren. */
+/** Nettleserens lydbehandling er laget for tale og ødelegger pianotoner. */
+const MIC_CONSTRAINTS: MediaStreamConstraints = { audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } };
+
+/**
+ * Mikrofonen som ikke gir lyd i det hele tatt: første gang startes den på nytt av seg selv, andre gang sies det fra.
+ */
 function watchSilence(rms: number): void {
   if (rms > 0) {
     if (det.dead) { det.dead = false; setStatus(micListeningText(), 'ok'); }
@@ -42,9 +48,51 @@ function watchSilence(rms: number): void {
     return;
   }
   if (++det.zeros !== DEAD_FRAMES) return;
+  det.zeros = 0;
+  if (!det.restarted) {
+    det.restarted = true;
+    void restartMic();
+    return;
+  }
   det.dead = true;
   audio();
   setStatus('Mikrofonen gir ingen lyd. Trykk et sted i appen. Hjelper ikke det, slå mikrofonen av og på igjen.', 'warn');
+}
+
+/** Ny lydmotor til mikrofonen. Mens en runde spilles, beholdes den gamle, så metronomen ikke stopper. */
+const micAudio = (): AudioContext => run.active ? audio() : freshAudio();
+
+function connectMic(stream: MediaStream, ctx: AudioContext): void {
+  const src = ctx.createMediaStreamSource(stream);
+  const an = ctx.createAnalyser();
+  an.fftSize = 2048;
+  src.connect(an);
+  // Et ekstra, lengre vindu til bassen med begge hender. Det vanlige vinduet er uendret.
+  const long = ctx.createAnalyser();
+  long.fftSize = 8192;
+  src.connect(long);
+  Object.assign(mic, { stream, analyser: an, buf: new Float32Array(an.fftSize), longAnalyser: long, long: new Float32Array(long.fftSize) });
+  watchTrack(stream);
+}
+
+/**
+ * Ny lydmotor, laget etter at mikrofonen er åpnet, og nytt mikrofonspor hvis det gamle er stengt eller satt på pause.
+ * Starter den nye lydmotoren ikke uten et trykk, vekker neste trykk den (main.ts).
+ */
+async function restartMic(): Promise<void> {
+  const old = mic.stream;
+  const track = old?.getAudioTracks()[0];
+  let stream = old;
+  if (!track || track.readyState !== 'live' || track.muted) {
+    try { stream = await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS); } catch { return; }
+  }
+  if (!stream) return;
+  if (!mic.on || mic.stream !== old) {
+    if (stream !== old) stream.getTracks().forEach(t => t.stop());
+    return;
+  }
+  if (stream !== old) old?.getTracks().forEach(t => t.stop());
+  connectMic(stream, micAudio());
 }
 
 const gateFor = (sens: string): number =>
@@ -210,20 +258,12 @@ export async function toggleMic(): Promise<void> {
     return;
   }
   try {
-    const ctx = audio();
-    // Nettleserens lydbehandling er laget for tale og ødelegger pianotoner
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-    const src = ctx.createMediaStreamSource(stream);
-    const an = ctx.createAnalyser();
-    an.fftSize = 2048;
-    src.connect(an);
-    // Et ekstra, lengre vindu til bassen med begge hender. Det vanlige vinduet er uendret.
-    const long = ctx.createAnalyser();
-    long.fftSize = 8192;
-    src.connect(long);
-    Object.assign(mic, { on: true, stream, analyser: an, buf: new Float32Array(an.fftSize), longAnalyser: long, long: new Float32Array(long.fftSize) });
-    watchTrack(stream);
-    det.floor = 0.002; det.emitted = null; det.zeros = 0; det.dead = false;
+    // Lydmotoren lages i trykket, fordi Safari bare lar den starte da
+    const ctx = micAudio();
+    const stream = await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
+    connectMic(stream, ctx);
+    mic.on = true;
+    det.floor = 0.002; det.emitted = null; det.zeros = 0; det.restarted = false; det.dead = false;
     keepAwake('mic', true);
     setPill(els.pillMic, 'Mikrofon på', 'on');
     setStatus(micListeningText(), 'ok');

@@ -188,7 +188,8 @@ test('mikrofon som bare gir nuller: appen sier fra i stedet for å stå stille',
     await page.evaluate(() => localStorage.clear());
     await page.reload();
     await page.click('#btnMic');
-    await expect(page.locator('#inputStatus')).toHaveText(/Mikrofonen gir ingen lyd/, { timeout: 8_000 });
+    // Først starter appen mikrofonen på nytt av seg selv (etter 3 s), så sier den fra (etter 3 s til)
+    await expect(page.locator('#inputStatus')).toHaveText(/Mikrofonen gir ingen lyd/, { timeout: 15_000 });
     await expect(page.locator('#inputStatus')).toHaveClass(/warn/);
   } finally {
     await browser.close();

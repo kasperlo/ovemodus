@@ -303,6 +303,9 @@
   - Mikrofontesten og rapporten viser lydmotoren og mikrofonsporet. Kalibreringen gir et eget råd når det bare kommer nuller.
   - En feil i én animasjonsramme stopper ikke lenger alt (mikrofon, takt og tid). Feilmeldingen vises under mikrofonknappen.
 - **Oppfølging:** skjer det igjen, åpne «Mikrofontest» og trykk «Kopier rapport». Linjene «Lydmotor» og «Mikrofonspor» viser om det var iPaden som stoppet lyden.
+- **Etter første fiks (samme kveld):** iPaden ga fortsatt bare nuller, og meldingen «Mikrofonen gir ingen lyd» kom, også etter trykk. Altså var det ikke bare en lydmotor som sto stille.
+- **Ny antakelse:** lydmotoren hadde spilt lyd (avspilling eller skjermtastaturet) før mikrofonen ble slått på, og på iPad kan en slik lydmotor gi bare nuller fra mikrofonen. Eller iPaden har satt sporet på pause uten å si fra. Ikke bekreftet.
+- **Beslutning 2:** mikrofonen får en ny lydmotor hver gang den slås på (laget i trykket, mens en runde spilles beholdes den gamle). Etter 3 s med bare nuller starter appen lydmotoren på nytt én gang. Den nye lydmotoren lages da etter at mikrofonen er åpnet, og sporet hentes på nytt hvis det er stengt eller satt på pause. Først etter 3 s til kommer meldingen.
 
 ## 2026-11-23 – Konsertversjoner
 
