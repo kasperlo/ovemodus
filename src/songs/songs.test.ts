@@ -11,7 +11,7 @@ import { CT_S400_TONES } from '../casio';
  * Hele klaverstykker der hendene krysser midtre C som i originalen (venstre hånd over, eller høyre hånd under).
  * Der overlapper hendene, så MIDI skiller dem på hva som skal spilles i stedet for på tonehøyde.
  */
-const HANDS_CROSS = new Set(['menuett-g', 'kanon-d', 'preludium-c', 'fur-elise', 'preludium-e']);
+const HANDS_CROSS = new Set(['menuett-g', 'kanon-d', 'preludium-c', 'fur-elise', 'preludium-e', 'sonata-facile', 'maaneskinn']);
 
 const pitches = (ev: BarEvent): number[] => ev.type === 'rest' ? [] : ev.type === 'chord' ? ev.midis : [ev.midi];
 const fingers = (ev: BarEvent): number[] => ev.type === 'rest' ? [] : ev.f.split(' ').map(Number);
@@ -47,15 +47,15 @@ describe.each(songs.map(s => [s.id, s] as const))('%s', (_id, song) => {
     const check = (events: BarEvent[], where: string) => {
       let pos = 0;
       events.forEach((ev, i) => {
-        if (ev.type !== 'rest' && ev.triplet?.first) {
+        if (ev.triplet?.first) {
           const group = events.slice(i, i + 3);
-          expect(group.every(g => g.type !== 'rest' && g.triplet && g.triplet.written === ev.triplet!.written), where).toBe(true);
-          expect(group.filter(g => g.type !== 'rest' && g.triplet?.first), where).toHaveLength(1);
+          expect(group.every(g => g.triplet && g.triplet.written === ev.triplet!.written), where).toBe(true);
+          expect(group.filter(g => g.triplet?.first), where).toHaveLength(1);
           expect(Math.abs(pos * 4 - Math.round(pos * 4)), `${where}: triolen starter midt i en 32-del`).toBeLessThan(1e-9);
         }
         pos += ev.d;
       });
-      const n = events.filter(ev => ev.type !== 'rest' && ev.triplet).length;
+      const n = events.filter(ev => ev.triplet).length;
       expect(n % 3, where).toBe(0);
     };
     used.forEach(k => check(song.bars[k], `høyre ${k}`));

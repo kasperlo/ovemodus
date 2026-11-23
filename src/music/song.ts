@@ -42,6 +42,7 @@ export interface ChordEvent {
 export interface RestEvent {
   type: 'rest';
   d: number;
+  triplet?: Triplet;
 }
 
 export type BarEvent = NoteEvent | ChordEvent | RestEvent;
@@ -67,8 +68,11 @@ export const DY = (lo: string, hi: string, d: number, f = '5 1'): ChordEvent => 
 
 export const R = (d: number): RestEvent => ({ type: 'rest', d });
 
-/** Triol: tre toner på plassen til to. Varighetene skrives som i noten, for eksempel tre sekstendeler på en åttendedel. */
-export function T3(...evs: (NoteEvent | ChordEvent)[]): (NoteEvent | ChordEvent)[] {
+/**
+ * Triol: tre toner (eller pauser) på plassen til to. Varighetene skrives som i noten, for eksempel tre sekstendeler
+ * på en åttendedel.
+ */
+export function T3(...evs: BarEvent[]): BarEvent[] {
   if (evs.length !== 3) throw new Error(`En triol har tre toner, ikke ${evs.length}`);
   return evs.map((ev, i) => ({ ...ev, d: ev.d * 2 / 3, triplet: { written: ev.d, first: i === 0 } }));
 }

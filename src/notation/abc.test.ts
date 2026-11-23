@@ -126,6 +126,11 @@ describe('toAbc', () => {
     expect(abc).toContain('(3!1!A,/!2!C/!3!E/ (3!1!A/!2!c/!5!e/ (3!4!d/!3!c/!2!B/');
   });
 
+  it('pause i en triol skrives inne i triolen', () => {
+    // Måneskinnssonaten, takt 29: triolen på første slag begynner med en pause
+    expect(toAbc(model('maane-5'), 2, false)).toMatch(/\(3z !\d!\^B,!\d!D /);
+  });
+
   it('32-deler: bjelke per åttendedel, og punktert sekstendedel', () => {
     const abc = toAbc(model('elise-32'), 2, false);
     expect(abc).toContain('!1!c//!5!g//!1!G//!5!g// !1!A//!5!g//!2!B//!5!g// !1!c//!5!g//!2!d//!5!g//');

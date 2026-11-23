@@ -271,3 +271,22 @@
 - **Forkastet:** å rulle bare når markøren går ut av synsfeltet (slik det var tenkt før). Da ser man ikke neste linje før man er der.
 - **Målt:** Für Elise, hele stykket, i takt i 120 BPM: markøren var innenfor arket i alle 249 målinger over 25 s. Siden er 2117 px høy i stedet for 9730.
 - **Ikke gjort:** arket bruker fortsatt høyst 318 px, også på store iPader med ledig plass. Bokstavvisningen ruller som før (når en brikke går ut av synsfeltet).
+
+## 2026-11-23 – Sonata facile og Måneskinnssonaten
+
+- **Kilder:**
+  - Mozart, pianosonate i C-dur K. 545, 1. sats: Mutopia `K545-1` (Alejandro Sierra, satt fra en utgave på IMSLP, lisens CC BY-SA 3.0).
+  - Beethoven, pianosonate nr. 14 op. 27 nr. 2, 1. sats: Mutopia `moonlight` (Berners 1908, redigert av A. Winterberger, satt av Stewart Holmes, lisens CC BY-SA 2.5).
+  - **Lisens:** musikken og de trykte forelagene er falt i det fri. Lisensen gjelder Mutopia-filene. Bare tonehøyder og rytmer er brukt, ikke fingersetting, dynamikk eller annet redaksjonelt innhold i filene. Kilden er oppgitt her og i låtfilene. Kasper bør vite om dette valget, siden repoet er offentlig.
+- **Metode:** som for de andre stykkene. Parseren måtte i tillegg forstå variabler, `\tag`, transponering, `\afterGrace`, pauser plassert på en tonehøyde (`d\rest`) og bundne akkorder. Begge filer stemmer med MIDI-filene (bortsett fra forslagsnoter).
+- **Sonata facile:** «Hele satsen» er uten repetisjonene (73 takter), fordi med dem blir det 146 takter med sekstendeler. Trillene (takt 4, 15, 17, 25, 59, 61 og 70) er hovedtonen, og forslagsnotene er sløyfet. Venstre hånds Alberti-bass har fast fingersetting 5-1-3-1 (5-1-2-1 når midttonen ligger en kvart eller mer over bassen), og skalaene i venstre hånd i takt 50–53 vanlig skalafingersetting.
+- **Måneskinnssonaten:**
+  - Melodien og triolene i høyre hånd er to stemmer i originalen. Her er de én stemme: der de slår an samtidig, blir de en akkord.
+  - Melodiens sekstendel etter en punktert åttendedel (takt 5–6, 10–11, 23–24, 42–43 og 46–47) spilles med tredje triolnote, ikke litt etter. Appen kan ikke vise begge rytmene i samme stemme, og dette er en vanlig måte å øve dem sammen på.
+  - Triolnotene som står i bassystemet i originalen (stemmeskifte), spilles av høyre hånd og står i høyre hånds system.
+  - Bassoktavene går ned til F♯1 og G♯1. Toner under C2 er flyttet en oktav opp og faller bort når oktaven allerede har tonen (49 steder), så oktaven blir én tone.
+  - F𝄪 (takt 27 og 34) er skrevet som G, fordi appen ikke har dobbelte fortegn.
+  - Bindinger over taktstreken i bassen (inn i takt 16, 18, 36, 37 og 52) er pauser.
+  - Takt 29 begynner med en pause inne i en triol. Modellen tillater nå pauser i trioler (`T3(R(e), …)`).
+- **Fingersetting:** eget forslag. Venstre hånds oktaver og akkorder har fast regel (5 nederst, 1 øverst). Fingrene i triolene er fra optimeringen og ikke gjennomgått takt for takt.
+- **Tempo:** standardtempo for øving: Sonata facile 60 (hele satsen 80), Måneskinn 50 (hele 55). Originalene er Allegro og Adagio sostenuto.

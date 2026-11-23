@@ -111,6 +111,13 @@ describe('trioler', () => {
     expect(m.total).toBe(8);
   });
 
+  it('en triol kan begynne med en pause', () => {
+    const [r, a] = T3(R(e), N('B#3', e, 4), N('D#4', e, 5));
+    expect(r).toMatchObject({ type: 'rest', triplet: { written: e, first: true } });
+    expect(r.d * 3).toBeCloseTo(2, 9);
+    expect(a.triplet).toEqual({ written: e, first: false });
+  });
+
   it('pause etter triol fyller takten nøyaktig', () => {
     const bar = [...T3(N('C5', s16, 1), N('D5', s16, 2), N('E5', s16, 3)), R(e), R(q)];
     expect(bar.reduce((sum, ev) => sum + ev.d, 0)).toBeCloseTo(4, 9);

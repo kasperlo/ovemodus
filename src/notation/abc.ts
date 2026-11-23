@@ -101,7 +101,7 @@ function barAbc(bar: Bar, sig: Record<string, number>, meter: Meter, voice: Voic
   let prevBeam = false, prevD = 0;
   bar.items.forEach((it, idx) => {
     const p = it.pos - bar.start;
-    const triplet = it.type === 'rest' ? undefined : it.triplet;
+    const triplet = it.triplet;
     // En triol skrives med varighetene som står i noten, og triolmerket foran første tone
     const d = triplet ? triplet.written : it.d;
     const beam = it.type !== 'rest' && d < 2;
