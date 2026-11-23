@@ -9,9 +9,9 @@ import { stykke } from './klassisk';
 /** Hele stykket takt for takt. Takt 0 er opptakten. */
 const PRELUDIUM_E: [string, string | null][] = [
   ['t0', null], ['t1', 't1'], ['t1', 't2'], ['t1', 't3'], ['t4', 't4'], ['t5', 't5'],  // 0
-  ['t5', 't6'], ['t7', 't7'], ['t8', 't8'], ['t9', 't9'], ['t10', 't10'], ['t10', 't11'],  // 6
+  ['t5', 't6'], ['t7', 't7'], ['t8', 't8'], ['t9', 't9'], ['t10', 't10'], ['t11', 't11'],  // 6
   ['t12', 't12'], ['t1', 't1'], ['t1', 't14'], ['t1', 't15'], ['t16', 't16'], ['t17', 't17'],  // 12
-  ['t18', 't18'], ['t10', 't19'], ['t20', 't20'], ['t21', 't21'], ['t21', 't22'], ['t23', 't23'],  // 18
+  ['t18', 't18'], ['t11', 't19'], ['t20', 't20'], ['t21', 't21'], ['t21', 't22'], ['t23', 't23'],  // 18
   ['t24', 't24'], ['t25', 't25'],  // 24
 ];
 const span = (from: number, to: number): [string, string | null][] => PRELUDIUM_E.slice(from, to + 1);
@@ -19,7 +19,7 @@ const span = (from: number, to: number): [string, string | null][] => PRELUDIUM_
 export const preludiumE: Song = stykke({
   id: 'preludium-e',
   title: 'Preludium i e-moll',
-  by: 'Frédéric Chopin, op. 28 nr. 4. Etter Peters (1879).',
+  by: 'Frédéric Chopin, op. 28 nr. 4. Etter Peters (1879). H1 og E1 i bassen er flyttet en oktav opp, fordi CT-S400 går ned til C2.',
   key: 'Em',
   meter: { beats: 2, unit: 2 },
   casio: { tone: 1, tip: 'Langsomt og stille. Venstre hånd jevnt og svakt, melodien litt sterkere.' },
@@ -32,6 +32,7 @@ export const preludiumE: Song = stykke({
     t8: [N('A4', dh, 2), N('G#4', q, 1)],
     t9: [R(q), N('A4', e, 2), N('B4', e, 3), N('D5', e, 5), N('C5', e, 4), N('E4', e, 1), N('A4', e, 4)],
     t10: [N('F#4', dh, 2), N('A4', q, 5)],
+    t11: [N('F#4', dh, 2), N('A4', q, 4, { grace: ['B4'] })],
     t12: [N('G4', e, 4), N('F#4', e, 3), N('C4', e, 2), N('B3', e, 1), N('D#4', e, 3), N('F#4', e, 5), ...T3(N('D5', e, 4), N('C5', e, 3), N('B4', e, 2))],
     t16: [N('B4', ed, 2), N('A#4', s16, 1), N('A#4', q, 1), N('A5', q, 5), N('F#5', ed, 3), N('E5', s16, 2)],
     t17: [N('E5', e, 2), N('D#5', e, 1), N('C6', e, 5), N('D#5', e, 1), N('D#5', e, 1), N('E5', e, 2), N('G5', e, 4), N('B4', e, 1)],
@@ -58,7 +59,7 @@ export const preludiumE: Song = stykke({
     t14: [CH(['F#3', 'A3', 'E4'], e, '5 3 1', 'F♯+A+E'), CH(['F#3', 'A3', 'E4'], e, '5 3 1', 'F♯+A+E'), CH(['F#3', 'A3', 'E4'], e, '5 3 1', 'F♯+A+E'), CH(['F#3', 'A3', 'E4'], e, '5 3 1', 'F♯+A+E'), CH(['F3', 'A3', 'D#4'], e, '5 3 1', 'F+A+D♯'), CH(['F3', 'A3', 'D#4'], e, '5 3 1', 'F+A+D♯'), CH(['F3', 'A3', 'D#4'], e, '5 3 1', 'F+A+D♯'), CH(['F3', 'A3', 'D#4'], e, '5 3 1', 'F+A+D♯')],
     t15: [CH(['F3', 'G#3', 'D#4'], e, '5 3 1', 'F+G♯+D♯'), CH(['F3', 'G#3', 'D#4'], e, '5 3 1', 'F+G♯+D♯'), CH(['F3', 'G#3', 'D4'], e, '5 3 1', 'F+G♯+D'), CH(['F3', 'G#3', 'D4'], e, '5 3 1', 'F+G♯+D'), CH(['E3', 'G#3', 'D4'], e, '5 3 1', 'E+G♯+D'), CH(['E3', 'G#3', 'D4'], e, '5 3 1', 'E+G♯+D'), CH(['E3', 'G#3', 'D4'], e, '5 3 1', 'E+G♯+D'), CH(['E3', 'G#3', 'D4'], e, '5 3 1', 'E+G♯+D')],
     t16: [CH(['E3', 'G3', 'D4'], e, '5 3 1', 'E+G+D'), CH(['E3', 'G3', 'D4'], e, '5 3 1', 'E+G+D'), CH(['E3', 'G3', 'C#4'], e, '5 3 1', 'E+G+C♯'), CH(['E3', 'G3', 'C#4'], e, '5 3 1', 'E+G+C♯'), CH(['C#3', 'E3', 'A#3'], e, '5 3 1', 'C♯+E+A♯'), CH(['C#3', 'E3', 'A#3'], e, '5 3 1', 'C♯+E+A♯'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A')],
-    t17: [N('B2', e, 5), CH(['A3', 'C4', 'F#4', 'A4'], e, '5 4 2 1', 'A+C+F♯+A'), CH(['A3', 'C4', 'F#4', 'A4'], e, '5 4 2 1', 'A+C+F♯+A'), CH(['A3', 'C4', 'F#4', 'A4'], e, '5 4 2 1', 'A+C+F♯+A'), CH(['G3', 'B3', 'D#4', 'F#4'], e, '5 4 3 2', 'G+B+D♯+F♯'), CH(['G3', 'B3', 'E4'], e, '5 3 1', 'G+B+E'), CH(['G3', 'B3', 'E4'], e, '5 3 1', 'G+B+E'), CH(['G3', 'B3', 'E4'], e, '5 3 1', 'G+B+E')],
+    t17: [N('B2', e, 5), CH(['A3', 'C4', 'F#4', 'A4'], e, '5 4 2 1', 'A+C+F♯+A'), CH(['A3', 'C4', 'F#4', 'A4'], e, '5 4 2 1', 'A+C+F♯+A'), CH(['A3', 'C4', 'F#4', 'A4'], e, '5 4 2 1', 'A+C+F♯+A'), CH(['G3', 'B3', 'D#4', 'F#4'], e, '5 3 2 1', 'G+B+D♯+F♯'), CH(['G3', 'B3', 'E4'], e, '5 3 1', 'G+B+E'), CH(['G3', 'B3', 'E4'], e, '5 3 1', 'G+B+E'), CH(['G3', 'B3', 'E4'], e, '5 3 1', 'G+B+E')],
     t18: [CH(['A3', 'C4', 'E4'], e, '5 3 1', 'A+C+E'), CH(['A3', 'C4', 'E4'], e, '5 3 1', 'A+C+E'), N('A2', e, 5), CH(['E3', 'F#3', 'C4'], e, '5 4 1', 'E+F♯+C'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A')],
     t19: [CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A')],
     t20: [CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'D#3', 'B3'], e, '5 3 1', 'B+D♯+B'), CH(['B2', 'D#3', 'B3'], e, '5 3 1', 'B+D♯+B'), CH(['B2', 'D#3', 'A3'], e, '5 3 1', 'B+D♯+A'), CH(['B2', 'D#3', 'A3'], e, '5 3 1', 'B+D♯+A')],

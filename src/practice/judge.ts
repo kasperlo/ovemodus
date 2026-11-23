@@ -1,10 +1,21 @@
 import { pc } from '../music/theory';
-import type { ChordEvent, Hand, NoteEvent, Part } from '../music/song';
+import type { ChordEvent, Hand, NoteEvent, Part, Step } from '../music/song';
 
 /** Riktig tone? En akkord godtas når én av akkordtonene spilles. */
 export function matches(step: NoteEvent | ChordEvent, m: number, anyOctave: boolean): boolean {
   if (step.type === 'chord') return anyOctave ? step.pcs.has(pc(m)) : step.midis.includes(m);
   return anyOctave ? pc(m) === pc(step.midi) : m === step.midi;
+}
+
+/**
+ * Hører tonen til en forsiring, så den ikke skal gi bom? Forslagsnotene til steget man venter på, og trillen på steget
+ * man nettopp spilte: hovedtonen og tonen et halvt eller helt trinn over.
+ */
+export function isOrnament(m: number, step: Step | undefined, prev: Step | undefined, anyOctave: boolean): boolean {
+  const same = (x: number) => anyOctave ? pc(x) === pc(m) : x === m;
+  if (step?.ornaments?.grace?.some(same)) return true;
+  const t = prev?.ornaments?.trill;
+  return t != null && [t, t + 1, t + 2].some(same);
 }
 
 /** Riktig tone for den ene hånden sin del av et steg (begge hender)? En akkord godtas når én av tonene spilles. */

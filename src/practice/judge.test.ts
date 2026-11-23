@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { CH, N, q } from '../music/song';
-import { hitWindow, matches, timingClass, timingText } from './judge';
+import { CH, N, q, type Step } from '../music/song';
+import { hitWindow, isOrnament, matches, timingClass, timingText } from './judge';
 
 describe('matches', () => {
   const a4 = N('A4', q, 1);
@@ -50,3 +50,20 @@ describe('timingText', () => {
     expect(timingText(-45)).toBe('I snitt 45 ms for tidlig.');
   });
 });
+
+describe('isOrnament', () => {
+  const step = (o: Step['ornaments']): Step => ({ ...N('C5', q, 1), pos: 0, si: 0, ornaments: o });
+
+  it('forslagsnotene til steget man venter på gir ikke bom', () => {
+    expect(isOrnament(65, step({ grace: [65, 69] }), undefined, false)).toBe(true);
+    expect(isOrnament(64, step({ grace: [65, 69] }), undefined, false)).toBe(false);
+    expect(isOrnament(77, step({ grace: [65, 69] }), undefined, true)).toBe(true);
+  });
+
+  it('trillen på forrige steg: hovedtonen og tonen et halvt eller helt trinn over', () => {
+    const prev = step({ trill: 77 });
+    expect([77, 78, 79, 80, 76].map(m => isOrnament(m, step(undefined), prev, false))).toEqual([true, true, true, false, false]);
+    expect(isOrnament(76, step(undefined), step(undefined), false)).toBe(false);
+  });
+});
+

@@ -123,3 +123,25 @@ describe('trioler', () => {
     expect(bar.reduce((sum, ev) => sum + ev.d, 0)).toBeCloseTo(4, 9);
   });
 });
+
+describe('forsiringer', () => {
+  const song: Song = {
+    id: 'o', title: 'O', by: '', category: 'mine', key: 'C', meter: { beats: 2, unit: 4 },
+    bars: { a: [N('C5', q, 2, { grace: ['F4', 'A4'] }), N('F5', e, 4, { trill: true }), N('E5', e, 3)] },
+    lh: { a: [N('C3', q, 5), R(q)] },
+    sections: [{ id: 'o1', title: 'O', tempo: 60, groups: [{ label: 'O', bars: [['a', 'a']] }] }]
+  };
+
+  it('forslagsnoter og triller følger tonen, og stegene får MIDI-tallene', () => {
+    expect(N('C5', q, 2, { grace: ['F4', 'A4'] }).grace).toEqual(['F4', 'A4']);
+    expect(() => N('C5', q, 2, { grace: ['H4'] })).toThrow();
+    const m = build(song, song.sections[0], 'rh');
+    expect(m.steps.map(s => s.ornaments)).toEqual([{ grace: [65, 69] }, { trill: 77 }, undefined]);
+  });
+
+  it('med begge hender følger forsiringene steget', () => {
+    const m = build(song, song.sections[0], 'both');
+    expect(m.steps[0].ornaments).toEqual({ grace: [65, 69] });
+    expect(m.steps[1].ornaments).toEqual({ trill: 77 });
+  });
+});

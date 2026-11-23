@@ -1,5 +1,6 @@
 import type { Bar, Hand, Meter, Model } from '../music/song';
 import { beamGroup } from '../music/song';
+import { parsePitch } from '../music/theory';
 
 export type Clef = 'treble' | 'bass';
 
@@ -62,6 +63,15 @@ export function staffClefs(bars: Bar[], home: Clef): Clef[] {
 
 export const homeClef = (h: Hand): Clef => h === 'lh' ? 'bass' : 'treble';
 
+/** Tonen et trinn over i tonearten, som en trille veksler med: et halvt eller helt trinn opp. */
+export function trillUpper(m: number, key: string): number {
+  const acc = keyAccidentals(key);
+  const scale = ['C', 'D', 'E', 'F', 'G', 'A', 'B'].map((l, i) => ([0, 2, 4, 5, 7, 9, 11][i] + (acc[l] ?? 0) + 12) % 12);
+  const at = scale.indexOf(((m % 12) + 12) % 12);
+  if (at < 0) return m + 2;
+  return m + ((scale[(at + 1) % 7] - (((m % 12) + 12) % 12) + 12) % 12 || 12);
+}
+
 interface Voice {
   /** Fingersetting og tonenavn under. For hånden man øver på (begge når man øver begge). */
   annotate: boolean;
@@ -88,14 +98,16 @@ function showFingers(voice: Voice, f: string): boolean {
  */
 function barAbc(bar: Bar, sig: Record<string, number>, meter: Meter, voice: Voice): { music: string; lyr: string } {
   const acc: Record<string, number> = { ...sig }, toks: string[] = [], lyr: string[] = [];
-  // Lange akkordnavn («G+B+E») står bare når akkorden endrer seg i takten. `*` er en note uten tekst i ABC.
+  // Akkordnavn står bare når akkorden endrer seg i takten, når navnet er langt («G+B+E») eller akkordene er korte.
+  // Fjerdedelskvintene i Dovregubben («A+E») står som før. `*` er en note uten tekst i ABC.
   let prevChord = '';
   const group = beamGroup(meter);
-  const note = (midi: number, name: string): string => {
+  // Forslagsnoter (`keep`) endrer ikke fortegnene for resten av takten, så hovednotene etter får sitt eget fortegn
+  const note = (midi: number, name: string, keep = false): string => {
     const n = abcNote(midi, name);
     const letter = name[0];
     const cur = acc[letter] ?? 0;
-    acc[letter] = n.alt;
+    if (!keep) acc[letter] = n.alt;
     return (n.alt === cur ? '' : n.alt === 1 ? '^' : n.alt === -1 ? '_' : '=') + n.s;
   };
   let prevBeam = false, prevD = 0;
@@ -113,11 +125,13 @@ function barAbc(bar: Bar, sig: Record<string, number>, meter: Meter, voice: Voic
       if (showFingers(voice, it.f)) t += it.f.split(' ').map(f => `!${f}!`).join('');
       t += '[' + it.midis.map((m, i) => note(m, it.names[i])).join('') + ']' + abcDur(d);
       const label = it.short || it.name;
-      if (voice.annotate) lyr.push(label === prevChord && label.length > 3 ? '*' : label);
+      if (voice.annotate) lyr.push(label === prevChord && (label.length > 3 || it.d < 2) ? '*' : label);
       prevChord = label;
     } else {
       if (showFingers(voice, it.f)) t += `!${it.f}!`;
       if (it.fermata) t += '!fermata!';
+      if (it.trill) t += '!trill!';
+      if (it.grace) t += '{' + it.grace.map(g => { const p = parsePitch(g); return note(p.midi, p.name, true); }).join('') + '}';
       t += note(it.midi, it.name) + abcDur(d);
       if (voice.annotate) lyr.push(it.name);
       prevChord = '';
@@ -138,7 +152,7 @@ function barWidth(bar: Bar | undefined): number {
   (bar?.items ?? []).forEach(it => {
     if (it.type === 'rest') return;
     const label = it.type === 'chord' ? it.short || it.name : '';
-    n += label && label !== prev ? Math.max(1, label.length / 3) : 1;
+    n += label && !(label === prev && (label.length > 3 || it.d < 2)) ? Math.max(1, label.length / 3) : 1;
     prev = label;
   });
   return n;

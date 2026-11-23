@@ -304,3 +304,19 @@
   - En feil i én animasjonsramme stopper ikke lenger alt (mikrofon, takt og tid). Feilmeldingen vises under mikrofonknappen.
 - **Oppfølging:** skjer det igjen, åpne «Mikrofontest» og trykk «Kopier rapport». Linjene «Lydmotor» og «Mikrofonspor» viser om det var iPaden som stoppet lyden.
 
+## 2026-11-23 – Konsertversjoner
+
+- **Kontekst:** Kasper skrev (via økten for løkke og tempotrapp): «Det er ikke forenklede versjoner du lærer meg vel? Jeg vil ha "konsertversjonene"».
+- **Status:** alle klaverstykkene unntatt Kanon er originalnotene fra utgavene i Mutopia, tone for tone. Kanon er et eget, kort arrangement, slik bestillingen sa.
+- **Rettet nå:**
+  - Triller og forslagsnoter vises i notearket og spilles i «Hør hvordan det går» (Für Elise, Menuett, Preludium i e-moll, Sonata facile, og trillen i Kanon takt 10). Bare hovedtonen dømmes. Trillen spilles fra tonen over, slik det var vanlig på Mozarts og Beethovens tid.
+  - Forslagsnotene og trilletonene (hovedtonen og tonen et halvt eller helt trinn over, rett etter steget med trillen) gir ikke bom i «Vent på meg». I «Spill i takt» teller de som ekstra toner, som ikke trekker ned prosenten.
+  - Et fortegn i en forslagsnote gjelder bare forslaget. Hovednoter senere i takten får sitt eget fortegn.
+  - «Hele satsen» i Sonata facile har nå repetisjonene, som i noten (146 takter).
+  - Teksten under låttittelen sier hvor stykket avviker på grunn av CT-S400 (Für Elise, Preludium i e-moll, Måneskinn).
+  - Gjentatte akkordnavn står bare én gang i takten når akkordene er kortere enn en fjerdedel (Alberti- og akkordtakter i Mozart), ellers fløt de sammen.
+- **Ikke rettet, krever Kaspers valg:**
+  - Kanon: en konsertversjon for klaver finnes ikke (originalen er for tre fioliner og bass). Alternativet er et fullt arrangement av alle variasjonene, eller å bytte ut stykket.
+  - Bassoktaver under C2 i Måneskinn og Chopin: med oktav −1 på CT-S400 får hele stykket plass (F♯1–G♯5 og E1–C6), og oktavene kan stå som i originalen. Det krever at Kasper setter oktaven når han spiller dem.
+  - Måneskinn: melodiens sekstendel etter tredje triolnote krever to stemmer i høyre hånd, som appen ikke har.
+  - En akkord godtas når én av tonene spilles. Det gjelder hele appen og hører til økten for øving og dømming.

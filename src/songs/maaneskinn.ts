@@ -27,7 +27,7 @@ const span = (from: number, to: number): [string, string | null][] => MAANESKINN
 export const maaneskinn: Song = stykke({
   id: 'maaneskinn',
   title: 'Måneskinnssonaten, 1. sats',
-  by: 'Ludwig van Beethoven, pianosonate nr. 14 i ciss-moll, op. 27 nr. 2, 1. sats (Adagio sostenuto).',
+  by: 'Ludwig van Beethoven, pianosonate nr. 14 i ciss-moll, op. 27 nr. 2, 1. sats (Adagio sostenuto). Melodiens sekstendel spilles med tredje triolnote, og bassoktaver under C2 er enkelttoner, fordi CT-S400 går ned til C2.',
   key: 'C#m',
   meter: { beats: 2, unit: 2 },
   casio: { tone: 1, tip: 'Svært stille og jevnt. La melodien synge over triolene.' },

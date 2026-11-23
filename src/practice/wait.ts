@@ -7,7 +7,7 @@ import { clearGhost, showGhost } from '../notation/sheet';
 import { celebrate, fmtSec, markStep, refresh, renderStats, setHint, shakeStep } from '../ui/view';
 import type { InputEvent } from './input';
 import type { Hand, Step } from '../music/song';
-import { handOf, matches, matchesPart } from './judge';
+import { handOf, isOrnament, matches, matchesPart } from './judge';
 import { addRound, dayKey } from './ladder';
 import { resetProgress } from './progress';
 import { setMode } from './session';
@@ -33,6 +33,7 @@ export function judgeWait(m: number, ev: InputEvent): void {
     return;
   }
   if (mic && ev.phase !== 'sustain') return; // vent til tonen er stabil før vi kaller det bom
+  if (isOrnament(m, step, state.model.steps[state.cur - 1], els.optOct.checked)) return;
   state.misses++;
   step.stumbled = true;
   flashKey(m, 'wrong');
@@ -67,6 +68,7 @@ function judgeWaitBoth(step: Step, m: number, ev: InputEvent): void {
     return;
   }
   if (ev.src === 'mic' && ev.phase !== 'sustain') return;
+  if (isOrnament(m, step, state.model.steps[state.cur - 1], anyOct)) return;
   state.misses++;
   step.stumbled = true;
   flashKey(m, 'wrong');

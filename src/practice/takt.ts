@@ -1,6 +1,7 @@
 import { audio, audioCtx, click, masterBus, tone } from '../audio/synth';
 import { clickLength, countInBars, type Hand, type PracticeHand, type Step } from '../music/song';
 import { pc } from '../music/theory';
+import { trillUpper } from '../notation/abc';
 import { avgOffsetMs, mic, partId, run, spell, state, targetTempo, type RunKind } from '../state';
 import { progressOf, setProgress, setTaktRecord, store, taktRecord } from '../storage';
 import { els } from '../ui/dom';
@@ -33,6 +34,22 @@ function settle(s: Step): void {
   const allHit = hs.every(h => s.parts![h]!.judged === 'hit');
   s.judged = allHit ? 'hit' : 'miss';
   markStep(s.si, allHit ? 'hit' : 'missed');
+}
+
+/**
+ * Avspilling av forsiringer: forslagsnotene rett før tonen, og trillen som veksling mellom tonen over og hovedtonen,
+ * til slutt på hovedtonen. Gir hovedtonen i trillen tilbake, så den ikke spilles to ganger.
+ */
+function playOrnaments(s: Step, at: number, e8: number, key: string, bus: GainNode): number | undefined {
+  const o = s.ornaments;
+  if (!o) return undefined;
+  const g = Math.min(0.07, e8 / 4);
+  o.grace?.forEach((m, i, all) => tone(m, at + s.t! - (all.length - i) * g, g * 1.2, 0.7, bus));
+  if (o.trill == null) return undefined;
+  const up = trillUpper(o.trill, key), len = Math.min(0.09, Math.max(0.05, e8 / 4));
+  const n = Math.max(2, 2 * Math.floor(s.dur! * 0.85 / len / 2));
+  for (let i = 0; i < n; i++) tone(i % 2 ? o.trill : up, at + s.t! + i * len, len * 1.1, 0.8, bus);
+  return o.trill;
 }
 
 /** Starter «Spill i takt» (innteller + metronom) eller demo (appen spiller selv). */
@@ -68,8 +85,12 @@ export function startRun(kind: RunKind): void {
     const perBar = Math.round(M.barLen / clickLen);
     for (let b = 0; b < clicks; b++) click(at + b * clickLen * e8, b % perBar === 0, bus);
   } else {
-    M.steps.forEach(s => (s.type === 'chord' ? s.midis : [s.midi])
-      .forEach(m => tone(m, at + s.t!, s.dur! * (s.d >= 4 ? 0.85 : 0.55), 0.9, bus)));
+    M.steps.forEach(s => {
+      const trilled = playOrnaments(s, at, e8, M.song.key, bus);
+      (s.type === 'chord' ? s.midis : [s.midi]).forEach(m => {
+        if (m !== trilled) tone(m, at + s.t!, s.dur! * (s.d >= 4 ? 0.85 : 0.55), 0.9, bus);
+      });
+    });
   }
   if (els.optAcc.checked) {
     M.acc.forEach(ev => ev.midis.forEach(m => tone(m, at + countIn + ev.pos * e8, ev.d * e8 * 0.5, 0.55, bus)));

@@ -3,7 +3,7 @@ import { stykke } from './klassisk';
 
 // ---------- Pachelbel: Kanon i D-dur ----------
 // Eget arrangement. Grunnbassen og første fiolin (takt 3–12) er hentet fra notesnutten i Wikipedia-artikkelen
-// «Pachelbel's Canon». Trillen i takt 10 er sløyfet, og sluttakkorden er egen. Se assumptions.md (2026-11-23).
+// «Pachelbel's Canon». Sluttakkorden er egen. Se assumptions.md (2026-11-23).
 
 /** Hele arrangementet takt for takt (11 takter). Første fiolin kommer inn i takt 3, som i originalen. */
 const KANON: [string, string | null][] = [
@@ -26,9 +26,9 @@ export const kanon: Song = stykke({
     t4: [N('D5', q, 5), N('C#5', q, 4), N('B4', q, 3), N('A4', q, 2)],
     t5: [N('G4', q, 1), N('F#4', q, 3), N('G4', q, 4), N('E4', q, 2)],
     t6: [N('D4', e, 1), N('F#4', e, 2), N('A4', e, 4), N('G4', e, 3), N('F#4', e, 2), N('D4', e, 1), N('F#4', e, 4), N('E4', e, 3)],
-    t7: [N('D4', e, 2), N('B3', e, 1), N('D4', e, 2), N('A4', e, 5), N('G4', e, 1), N('B4', e, 3), N('A4', e, 2), N('G4', e, 1)],
+    t7: [N('D4', e, 2), N('B3', e, 1), N('D4', e, 2), N('A4', e, 5), N('G4', e, 3), N('B4', e, 5), N('A4', e, 4), N('G4', e, 3)],
     t8: [N('F#4', e, 3), N('D4', e, 1), N('E4', e, 2), N('C#5', e, 1), N('D5', e, 2), N('F#5', e, 3), N('A5', e, 5), N('A4', e, 1)],
-    t9: [N('B4', e, 2), N('G4', e, 1), N('A4', e, 3), N('F#4', e, 2), N('D4', e, 1), N('D5', e, 5), N('D5', ed, 5), N('C#5', s16, 4)],
+    t9: [N('B4', e, 2), N('G4', e, 1), N('A4', e, 3), N('F#4', e, 2), N('D4', e, 1), N('D5', e, 5), N('D5', ed, 5, { trill: true }), N('C#5', s16, 4)],
     t10: [CH(['F#4', 'A4', 'D5'], w, '1 2 5', 'F♯+A+D')],
   },
   lh: {

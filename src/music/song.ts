@@ -21,6 +21,10 @@ export interface NoteEvent {
   f: string;
   /** Fermat: hold tonen litt lenger. Vises bare i notearket. */
   fermata?: boolean;
+  /** Trille. Vises i notearket og spilles i avspillingen. Bare hovedtonen dømmes. */
+  trill?: boolean;
+  /** Forslagsnoter foran tonen, for eksempel `['F4', 'A4']`. Vises i notearket og spilles i avspillingen, men dømmes ikke. */
+  grace?: string[];
   triplet?: Triplet;
 }
 
@@ -48,8 +52,13 @@ export interface RestEvent {
 export type BarEvent = NoteEvent | ChordEvent | RestEvent;
 
 /** Finger kan være tom («») for importerte noter uten fingersetting. */
-export const N = (s: string, d: number, f: number | string, opts: { fermata?: boolean } = {}): NoteEvent =>
-  ({ type: 'note', ...parsePitch(s), d, f: String(f), ...(opts.fermata ? { fermata: true } : {}) });
+export const N = (s: string, d: number, f: number | string, opts: { fermata?: boolean; trill?: boolean; grace?: string[] } = {}): NoteEvent => {
+  opts.grace?.forEach(parsePitch);
+  return {
+    type: 'note', ...parsePitch(s), d, f: String(f),
+    ...(opts.fermata ? { fermata: true } : {}), ...(opts.trill ? { trill: true } : {}), ...(opts.grace?.length ? { grace: opts.grace } : {})
+  };
+};
 
 /** Akkord eller flere toner samtidig. Godtas når én av tonene spilles. */
 export const CH = (notes: string[], d: number, f: string, name: string, short: string = name): ChordEvent => {
@@ -169,7 +178,14 @@ export type Step = (NoteEvent | ChordEvent) & Placed & {
   parts?: Partial<Record<Hand, Part>>;
   /** Vent på meg med begge hender: hendene som har spilt sin del av steget. */
   got?: Partial<Record<Hand, boolean>>;
+  /** Forsiringer: forslagsnotene og hovedtonen i en trille, som MIDI-tall. Dømmes ikke. */
+  ornaments?: Ornaments;
 };
+
+export interface Ornaments {
+  grace?: number[];
+  trill?: number;
+}
 
 /** Den ene hånden sin del av et steg når man øver begge hender samtidig. */
 export interface Part {
@@ -224,11 +240,17 @@ export interface Model {
   firstBar: number;
 }
 
+function ornamentsOf(ev: NoteEvent | ChordEvent): Ornaments | undefined {
+  if (ev.type !== 'note' || (!ev.grace && !ev.trill)) return undefined;
+  return { ...(ev.grace ? { grace: ev.grace.map(g => parsePitch(g).midi) } : {}), ...(ev.trill ? { trill: ev.midi } : {}) };
+}
+
 function place(events: BarEvent[], start: number, label: string | null, out: Item[]): Bar {
   const bar: Bar = { label, start, items: [] };
   let pos = start;
   events.forEach(ev => {
-    const it: Item = ev.type === 'rest' ? { ...ev, pos } : { ...ev, pos, si: -1 };
+    const orn = ev.type === 'rest' ? undefined : ornamentsOf(ev);
+    const it: Item = ev.type === 'rest' ? { ...ev, pos } : { ...ev, pos, si: -1, ...(orn ? { ornaments: orn } : {}) };
     bar.items.push(it); out.push(it); pos = snap(pos + ev.d);
   });
   return bar;
@@ -249,10 +271,13 @@ function combine(r: Step | undefined, l: Step | undefined, pos: number, d: numbe
   const ps = [parts.lh, parts.rh].filter((x): x is Part => !!x);
   const midis = ps.flatMap(x => x.midis);
   const name = [parts.rh?.name, parts.lh?.name].filter(Boolean).join(' / ');
+  const grace = [...(r?.ornaments?.grace ?? []), ...(l?.ornaments?.grace ?? [])];
+  const trill = r?.ornaments?.trill ?? l?.ornaments?.trill;
+  const ornaments = grace.length || trill != null ? { ...(grace.length ? { grace } : {}), ...(trill != null ? { trill } : {}) } : undefined;
   return {
     type: 'chord', midis, names: midis.map(m => SHARP[pc(m)]), pcs: new Set(midis.map(pc)),
     name, short: name, sci: [parts.rh?.sci, parts.lh?.sci].filter(Boolean).join(' + '), d,
-    f: [parts.rh?.f, parts.lh?.f].filter(Boolean).join(' / '), pos, si: -1, parts
+    f: [parts.rh?.f, parts.lh?.f].filter(Boolean).join(' / '), pos, si: -1, parts, ...(ornaments ? { ornaments } : {})
   };
 }
 

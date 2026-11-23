@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { build, type PracticeHand } from '../music/song';
 import { findSection } from '../songs';
-import { abcDur, abcNote, keyAccidentals, lineRanges, staffClefs, toAbc } from './abc';
+import { abcDur, abcNote, keyAccidentals, lineRanges, staffClefs, toAbc, trillUpper } from './abc';
 
 const model = (id: string, hand: PracticeHand = 'rh') => { const { song, sec } = findSection(id); return build(song, sec, hand); };
 
@@ -23,6 +23,15 @@ describe('abcNote', () => {
 describe('abcDur', () => {
   it('skriver varigheter i åttedeler som ABC-lengder', () => {
     expect([1, 0.5, 0.25, 0.75, 1.5, 2, 3, 2.5, 3.5, 6].map(abcDur)).toEqual(['', '/', '//', '3/4', '3/2', '2', '3', '5/2', '7/2', '6']);
+  });
+});
+
+describe('trillUpper', () => {
+  it('tonen et trinn over i tonearten', () => {
+    expect(trillUpper(77, 'C')).toBe(79); // F5 → G5
+    expect(trillUpper(71, 'C')).toBe(72); // B4 → C5
+    expect(trillUpper(76, 'G')).toBe(78); // E5 → F♯5 i G-dur
+    expect(trillUpper(73, 'C')).toBe(75); // C♯5 er ikke i skalaen: et helt trinn opp
   });
 });
 
@@ -126,6 +135,17 @@ describe('toAbc', () => {
     expect(abc).toContain('(3!1!A,/!2!C/!3!E/ (3!1!A/!2!c/!5!e/ (3!4!d/!3!c/!2!B/');
   });
 
+  it('triller og forslagsnoter vises i notearket', () => {
+    // Mozart takt 4: trille på F5. Takt 22–23: forslagsnoter foran C5, E5 og A5, og trille med forslag på A5 i takt 25.
+    expect(toAbc(model('mozart-1'), 2, false)).toContain('!trill!f');
+    const abc = toAbc(model('mozart-4'), 2, false);
+    expect(abc).toContain('{B}c2');
+    expect(abc).toContain('{^d}e2');
+    expect(abc).toContain('!trill!{b}a8');
+    // Fortegnet i forslaget gjelder ikke resten av takten: G♯ etter forslaget får sitt eget ♯
+    expect(abc).toMatch(/\{\^g\}a3 !\d!b\/\/!\d!a\/\/!\d!\^g\/\//);
+  });
+
   it('pause i en triol skrives inne i triolen', () => {
     // Måneskinnssonaten, takt 29: triolen på første slag begynner med en pause
     expect(toAbc(model('maane-5'), 2, false)).toMatch(/\(3z !\d!\^B,!\d!D /);
@@ -134,7 +154,7 @@ describe('toAbc', () => {
   it('32-deler: bjelke per åttendedel, og punktert sekstendedel', () => {
     const abc = toAbc(model('elise-32'), 2, false);
     expect(abc).toContain('!1!c//!5!g//!1!G//!5!g// !1!A//!5!g//!2!B//!5!g// !1!c//!5!g//!2!d//!5!g//');
-    expect(toAbc(model('elise-fdur'), 2, false)).toContain('!2!c2 !5!f3/4!4!e//');
+    expect(toAbc(model('elise-fdur'), 2, false)).toContain('!2!{FA}c2 !5!f3/4!4!e//');
   });
 
   it('venstre hånd bytter til diskantnøkkel i overgangen, og nøkkelen skrives igjen i starten av en ny linje', () => {
