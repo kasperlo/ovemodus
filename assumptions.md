@@ -193,3 +193,27 @@
 - **Forsinkelse:** venstre hånd godtas 117 ms etter anslaget. I «Vent på meg» går markøren videre så mye senere. I «Spill i takt» dømmes tonen etter anslaget.
 - **Oppfølging:** test på iPad i notestativet med CT-S400 og del A med begge hender. Lim inn rapporten fra «Mikrofontest» hvis venstre hånd ikke blir hørt. Mulige justeringer er grensen 0,25 for bassandelen og ventetiden på 7 rammer.
 
+
+## 2026-11-23 – Hele klaverstykker: notemodellen og Für Elise
+
+- **Kontekst:** Kasper vil lære hele «Für Elise» og noen lignende stykker, øve hendene hver for seg og sammen, og høre dem i appen. Modellen manglet 32-deler, trioler og venstre hånd over midtre C.
+- **Beslutning, modellen:**
+  - Nye varigheter `s32` (0,25) og `s16d` (0,75). Trioler med `T3(...)`: tre toner på plassen til to, varighetene skrives som i noten.
+  - Plassene i takten legges på et rutenett av 1/48 åttedel, så tre tredjedeler blir nøyaktig en hel og hendene møtes på samme plass etter en triol.
+  - Venstre hånd over midtre C (og høyre under) er lov for stykker i `HANDS_CROSS` i `songs.test.ts`. Der er skillet `null` i deler der hendene overlapper. MIDI og skjermtastaturet skiller da hendene på hva som skal spilles (som for importerte noter). Med «Godta riktig tone i alle oktaver» kan en tone da bli regnet til feil hånd i et steg der begge hender har samme tonenavn. Steget blir likevel riktig ferdig.
+  - Mikrofonen med begge hender: når skillet er `null`, lages et skille per steg (`stepSplit`), og bare venstre hånds toner under det trekkes fra med kamfiltre. Ellers ville høye toner i venstre hånd (E5 i overgangen) blitt trukket fra, og høyre hånd under midtre C (A3 i arpeggioen) aldri blitt hørt. Deler med skille, som alle låtene før, oppfører seg som før. Ikke testet med lyd.
+- **Beslutning, notearket:**
+  - Venstre hånd bytter til diskantnøkkel når en takt i snitt ligger fra E4 og opp, og tilbake under midtre C. Avstanden mellom grensene hindrer at nøkkelen bytter for hver takt. Originalen bytter midt i takten noen steder, appen bare ved taktstrek.
+  - Takter med mange korte noter får færre takter per linje (høyst ni toner per takt i snitt), fordi tonenavnene under 32-deler ellers flyter sammen. Eksisterende låter har høyst åtte toner per takt og får samme oppsett som før.
+  - Trioler og 32-deler bjelkes per åttendedel, som i originalen.
+- **Kilde, Für Elise:** Mutopia `fur_Elise_WoO59` (Breitkopf & Härtel 1888, typesatt av Stelios Samelis, Public Domain). LilyPond-filen er lest med et skript (ikke sjekket inn), og resultatet er sammenlignet tone for tone (tonehøyde, plass og varighet) med det appen bygger for «Hele stykket».
+- **Endret fra kilden:**
+  - Taktnumrene her følger `ELISE` i `klaver.ts`, der repetisjonene er skrevet ut og opptakten er takt 0.
+  - Toner utenfor CT-S400 (C2–C7) er flyttet en oktav inn: E7 og D7 øverst i arpeggioen (takt 101) spilles som E6 og D6. A1 i venstre hånd (takt 99) blir A2. Oktaven A1+A2 (takt 89 og 125) blir bare A2, fordi begge tonene ellers ville vært A2.
+  - Forslagsnotene (F–A foran takt 45 og B♭ i takt 48) er sløyfet, fordi de ikke tar tid i takten.
+  - Opptakten står i en egen takt med pause foran, og siste takt (to åttendedeler) er fylt ut med en pause.
+  - Repetisjonene er skrevet ut i «Hele stykket» (126 takter). Øvedelene har ingen repetisjoner.
+- **Fingersetting:** kilden har ingen. Taktene fra gameshow-delen beholder fingrene de hadde. Resten er et eget forslag, laget med en enkel optimering (Parncutt-lignende kostnader for strekk, tommelkryss og svarte tangenter) og deretter rettet for hånd der forslaget var dårlig (for eksempel G3 og B3 med samme finger, tommel på D♯5). Fingrene i arpeggioen tar hensyn til at E6 og D6 er flyttet ned.
+- **Deler:** «Tema» er gameshow-delen `elise` (samme id, takter, tempo og registrering 8-2, ny tittel fordi låten nå har flere deler). Nye deler: Mellomspill, F-dur, 32-deler, Orgelpunkt, Orgelpunkt 2, Arpeggio og Hele stykket, på rundt åtte takter hver. Standardtempo 50–60 for øvedelene; originalen har fjerdedel = 72.
+- **Kategori:** ny kategori «Klaverstykker (lettest først)» øverst i låtvelgeren. Für Elise er flyttet dit fra gameshow-temaene. Gameshow-delen finnes fortsatt som «Tema».
+- **Ikke gjort:** MusicXML-importen avviser fortsatt trioler. Modellen har nå det som trengs for å støtte dem.

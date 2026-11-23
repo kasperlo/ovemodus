@@ -1,6 +1,8 @@
 import type { Bar, Hand, Meter, Model } from '../music/song';
 import { beamGroup } from '../music/song';
 
+export type Clef = 'treble' | 'bass';
+
 export function abcNote(midi: number, name: string): { s: string; alt: number; key: string } {
   const letter = name[0];
   const alt = name.includes('♯') ? 1 : name.includes('♭') ? -1 : 0;
@@ -39,6 +41,27 @@ export function keyAccidentals(key: string): Record<string, number> {
   return out;
 }
 
+const pitchesIn = (bar: Bar): number[] => bar.items.flatMap(it => it.type === 'rest' ? [] : it.type === 'chord' ? it.midis : [it.midi]);
+
+/**
+ * Nøkkelen for hver takt i ett notesystem. Venstre hånd bytter til diskantnøkkel når takten i snitt ligger fra E4 og
+ * opp, og tilbake under midtre C. Høyre hånd bytter til bassnøkkel under G3 og tilbake fra midtre C. Avstanden mellom
+ * grensene hindrer at nøkkelen bytter for hver takt. Takter uten toner beholder nøkkelen.
+ */
+export function staffClefs(bars: Bar[], home: Clef): Clef[] {
+  let cur = home;
+  return bars.map(b => {
+    const ms = pitchesIn(b);
+    if (!ms.length) return cur;
+    const mean = ms.reduce((a, m) => a + m, 0) / ms.length;
+    if (home === 'bass') cur = cur === 'bass' ? (mean >= 64 ? 'treble' : 'bass') : (mean < 60 ? 'bass' : 'treble');
+    else cur = cur === 'treble' ? (mean < 55 ? 'bass' : 'treble') : (mean >= 60 ? 'treble' : 'bass');
+    return cur;
+  });
+}
+
+export const homeClef = (h: Hand): Clef => h === 'lh' ? 'bass' : 'treble';
+
 interface Voice {
   /** Fingersetting og tonenavn under. For hånden man øver på (begge når man øver begge). */
   annotate: boolean;
@@ -73,29 +96,53 @@ function barAbc(bar: Bar, sig: Record<string, number>, meter: Meter, voice: Voic
     acc[letter] = n.alt;
     return (n.alt === cur ? '' : n.alt === 1 ? '^' : n.alt === -1 ? '_' : '=') + n.s;
   };
-  let prevBeam = false;
+  let prevBeam = false, prevD = 0;
   bar.items.forEach((it, idx) => {
     const p = it.pos - bar.start;
-    const beam = it.type !== 'rest' && it.d < 2;
-    let t = voice.label && idx === 0 && bar.label ? `"^${bar.label}"` : '';
+    const triplet = it.type === 'rest' ? undefined : it.triplet;
+    // En triol skrives med varighetene som står i noten, og triolmerket foran første tone
+    const d = triplet ? triplet.written : it.d;
+    const beam = it.type !== 'rest' && d < 2;
+    let t = (triplet?.first ? '(3' : '') + (voice.label && idx === 0 && bar.label ? `"^${bar.label}"` : '');
     if (it.type === 'rest') {
-      t += 'z' + abcDur(it.d);
+      t += 'z' + abcDur(d);
     } else if (it.type === 'chord') {
       // abcjs stabler fingersettingen nedenfra, så fingeren til den dypeste tonen står nærmest akkorden
       if (showFingers(voice, it.f)) t += it.f.split(' ').map(f => `!${f}!`).join('');
-      t += '[' + it.midis.map((m, i) => note(m, it.names[i])).join('') + ']' + abcDur(it.d);
+      t += '[' + it.midis.map((m, i) => note(m, it.names[i])).join('') + ']' + abcDur(d);
       if (voice.annotate) lyr.push(it.short || it.name);
     } else {
       if (showFingers(voice, it.f)) t += `!${it.f}!`;
       if (it.fermata) t += '!fermata!';
-      t += note(it.midi, it.name) + abcDur(it.d);
+      t += note(it.midi, it.name) + abcDur(d);
       if (voice.annotate) lyr.push(it.name);
     }
-    const joined = idx > 0 && beam && prevBeam && p % group !== 0;
+    // Trioler og 32-deler bjelkes per åttendedel, ellers blir bjelkene for lange til å lese
+    const split = !!triplet?.first || (Number.isInteger(p) && (it.d < 0.5 || prevD < 0.5));
+    const joined = idx > 0 && beam && prevBeam && p % group !== 0 && !split;
     toks.push(idx === 0 || joined ? t : ' ' + t);
     prevBeam = beam;
+    prevD = it.d;
   });
   return { music: toks.join(''), lyr: lyr.join(' ') };
+}
+
+/**
+ * Taktene på hver linje som [fra, til). Høyst `perLine` takter, og færre når taktene er tette (i snitt mer enn ni
+ * toner per takt), ellers flyter tonenavnene under 32-deler og trioler sammen.
+ */
+export function lineRanges(model: Model, perLine: number): [number, number][] {
+  const notes = (i: number): number => Math.max(...(['rh', 'lh'] as Hand[]).map(h => model.staffs[h][i]?.items.filter(it => it.type !== 'rest').length ?? 0));
+  const budget = perLine * 9;
+  const out: [number, number][] = [];
+  let start = 0, sum = 0;
+  for (let i = 0; i < model.bars.length; i++) {
+    const n = notes(i);
+    if (i > start && (i - start >= perLine || sum + n > budget)) { out.push([start, i]); start = i; sum = 0; }
+    sum += n;
+  }
+  if (model.bars.length) out.push([start, model.bars.length]);
+  return out;
 }
 
 /**
@@ -107,20 +154,28 @@ export function toAbc(model: Model, perLine: number, showOther: boolean): string
   const { song, hand } = model;
   const sig = keyAccidentals(song.key);
   const two = hand === 'both' || showOther;
-  const out = ['X:1', `M:${song.meter.beats}/${song.meter.unit}`, 'L:1/8', `K:${song.key}` + (hand === 'lh' && !two ? ' clef=bass' : '')];
-  if (two) out.push('%%score {RH LH}', 'V:RH clef=treble', 'V:LH clef=bass');
+  const clefs = { rh: staffClefs(model.staffs.rh, 'treble'), lh: staffClefs(model.staffs.lh, 'bass') };
+  const mine: Hand = hand === 'lh' ? 'lh' : 'rh';
+  const out = ['X:1', `M:${song.meter.beats}/${song.meter.unit}`, 'L:1/8', `K:${song.key}` + (!two && clefs[mine][0] === 'bass' ? ' clef=bass' : '')];
+  if (two) out.push('%%score {RH LH}', `V:RH clef=${clefs.rh[0]}`, `V:LH clef=${clefs.lh[0]}`);
   const voice = (h: Hand): Voice => ({ annotate: hand === h || hand === 'both', label: (hand === 'lh') === (h === 'lh') });
-  for (let i = 0; i < model.bars.length; i += perLine) {
-    const end = i + perLine >= model.bars.length ? ' |]' : ' |';
+  for (const [i, to] of lineRanges(model, perLine)) {
+    const end = to >= model.bars.length ? ' |]' : ' |';
     const line = (h: Hand) => {
       const v = { ...voice(h), sparse: hand === 'both' && h === 'lh' ? { prev: '' } : undefined };
-      return model.staffs[h].slice(i, i + perLine).map(b => barAbc(b, sig, song.meter, v));
+      return model.staffs[h].slice(i, to).map((b, j) => {
+        const r = barAbc(b, sig, song.meter, v);
+        const k = i + j;
+        // abcjs starter hver linje med nøkkelen fra hodet, så et bytte må skrives på nytt i starten av linjen
+        const before = j === 0 ? clefs[h][0] : clefs[h][k - 1];
+        return clefs[h][k] !== before ? { ...r, music: `[K:clef=${clefs[h][k]}] ${r.music}` } : r;
+      });
     };
     const music = (bars: { music: string }[]) => bars.map(r => r.music).join(' | ') + end;
     const lyr = (bars: { lyr: string }[]) => 'w: ' + bars.map(r => r.lyr).join(' | ');
     if (!two) {
-      const mine = line(hand === 'lh' ? 'lh' : 'rh');
-      out.push(music(mine), lyr(mine));
+      const bars = line(mine);
+      out.push(music(bars), lyr(bars));
       continue;
     }
     const rh = line('rh'), lh = line('lh');

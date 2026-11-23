@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { build, type PracticeHand } from '../music/song';
 import { findSection } from '../songs';
-import { abcDur, abcNote, keyAccidentals, toAbc } from './abc';
+import { abcDur, abcNote, keyAccidentals, lineRanges, staffClefs, toAbc } from './abc';
 
 const model = (id: string, hand: PracticeHand = 'rh') => { const { song, sec } = findSection(id); return build(song, sec, hand); };
 
@@ -22,7 +22,7 @@ describe('abcNote', () => {
 
 describe('abcDur', () => {
   it('skriver varigheter i åttedeler som ABC-lengder', () => {
-    expect([1, 0.5, 0.25, 1.5, 2, 3, 2.5, 6].map(abcDur)).toEqual(['', '/', '//', '3/2', '2', '3', '5/2', '6']);
+    expect([1, 0.5, 0.25, 0.75, 1.5, 2, 3, 2.5, 3.5, 6].map(abcDur)).toEqual(['', '/', '//', '3/4', '3/2', '2', '3', '5/2', '7/2', '6']);
   });
 });
 
@@ -112,5 +112,36 @@ describe('toAbc', () => {
     expect(abc).toContain('M:4/4');
     expect(abc).toContain('K:F');
   });
-});
 
+  it('trioler: triolmerke foran første tone, varighetene som i noten, og bjelke per triol', () => {
+    const abc = toAbc(model('elise-arpeggio'), 2, false);
+    expect(abc).toContain('(3!1!A,/!2!C/!3!E/ (3!1!A/!2!c/!5!e/ (3!4!d/!3!c/!2!B/');
+  });
+
+  it('32-deler: bjelke per åttendedel, og punktert sekstendedel', () => {
+    const abc = toAbc(model('elise-32'), 2, false);
+    expect(abc).toContain('!1!c//!5!g//!1!G//!5!g// !1!A//!5!g//!2!B//!5!g// !1!c//!5!g//!2!d//!5!g//');
+    expect(toAbc(model('elise-fdur'), 2, false)).toContain('!2!c2 !5!f3/4!4!e//');
+  });
+
+  it('venstre hånd bytter til diskantnøkkel i overgangen, og nøkkelen skrives igjen i starten av en ny linje', () => {
+    const m = model('elise-mellomspill', 'both');
+    expect(staffClefs(m.staffs.lh, 'bass')).toEqual(['bass', 'bass', 'bass', 'bass', 'bass', 'treble', 'treble', 'treble']);
+    const lh = toAbc(m, 2, false).split('\n').filter(l => l.startsWith('[V:LH]'));
+    expect(lh[2]).toContain('| [K:clef=treble] ');
+    expect(lh[3].startsWith('[V:LH] [K:clef=treble] ')).toBe(true);
+  });
+
+  it('høyre hånd og vanlige låter blir i sin nøkkel', () => {
+    expect(new Set(staffClefs(model('elise-hele').bars, 'treble'))).toEqual(new Set(['treble']));
+    expect(toAbc(model('hele', 'both'), 4, false)).not.toContain('[K:clef=');
+  });
+
+  it('tette takter får færre takter per linje, vanlige takter som før', () => {
+    expect(lineRanges(model('delA'), 2)).toEqual([[0, 2], [2, 4]]);
+    // Takt 1 har 32-deler (12 toner): alene på linjen med to takter, to sammen med fire
+    const m = model('elise-32');
+    expect(lineRanges(m, 2).slice(0, 3)).toEqual([[0, 1], [1, 2], [2, 3]]);
+    expect(lineRanges(m, 4)[0]).toEqual([0, 3]);
+  });
+});

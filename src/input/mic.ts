@@ -9,7 +9,7 @@ import { micListeningText, setPill, setStatus, updateButtons } from '../ui/view'
 import { keepAwake } from '../wakeLock';
 import type { Frame } from './calibrate';
 import { ATTACK_HOLDOFF_MS, ATTACK_RATIO, STABLE_FRAMES, SUSTAIN_FRAMES, estimatePitch, type PitchEstimate } from './pitch';
-import { TwoHandDetector, ringingAt } from './twohands';
+import { TwoHandDetector, ringingAt, stepSplit } from './twohands';
 
 export const GATES: Record<string, number> = { lav: 0.02, middels: 0.008, hoy: 0.0035 };
 /** Trekkes fra tidspunktet i «Spill i takt». */
@@ -132,11 +132,14 @@ function bothFrame(now: number, frame: Float32Array, rms: number, gate: number):
     const p = step?.parts?.[h];
     return p && !step!.got?.[h] && !p.judged ? p.midis : undefined;
   };
+  const split = stepSplit(step?.parts?.lh?.midis, step?.parts?.rh?.midis, state.model.split);
+  // Bare venstre hånds toner under skillet trekkes fra. En høy tone i venstre hånd kan være den høyre hånd skal spille nå.
+  const ringing = step ? ringingAt(state.model.steps, step.si).filter(m => m < split) : [];
   const events = two.frame({
     now, frame, rms, gate, sr: audioCtx().sampleRate,
     long: () => { mic.longAnalyser?.getFloatTimeDomainData(mic.long); return mic.long; },
-    split: state.model.split ?? 60, anyOct: els.optOct.checked,
-    target: { lh: pending('lh'), rh: pending('rh'), ringing: step ? ringingAt(state.model.steps, step.si) : [] }
+    split, anyOct: els.optOct.checked,
+    target: { lh: pending('lh'), rh: pending('rh'), ringing }
   });
   if (two.heard) showHeard(two.heard.midi, two.heard.f);
   else if (rms < gate) showHeard(null);

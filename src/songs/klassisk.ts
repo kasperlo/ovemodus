@@ -4,6 +4,8 @@ import { CH, DY, N, R, dh, e, ed, h, q, qd, s16, w, type Song } from '../music/s
 // akkorder i venstre. Melodiene er kontrollert mot partiturer uten opphavsrett (se assumptions.md, 2026-11-21).
 
 export const klassisk = (s: Omit<Song, 'category'>): Song => ({ category: 'klassisk', ...s });
+/** Hele klaverstykker til å øve på, ikke gameshow-lyder. */
+export const stykke = (s: Omit<Song, 'category'>): Song => ({ category: 'stykke', ...s });
 export const M24 = { beats: 2, unit: 4 }, M44 = { beats: 4, unit: 4 };
 
 // ---------- Rossini: Wilhelm Tell, finalen i ouverturen (E-dur i originalen, her C-dur) ----------

@@ -1,10 +1,17 @@
+import abcjs from 'abcjs';
 import { describe, expect, it } from 'vitest';
-import { barLength, type BarEvent } from '../music/song';
-import { isKnownKey } from '../notation/abc';
+import { barLength, build, type BarEvent, type PracticeHand } from '../music/song';
+import { isKnownKey, toAbc } from '../notation/abc';
 import { songs } from '.';
 import { CT_S400_TONES } from '../casio';
 
 // Validering av alle låtene, så feil i notene oppdages før de havner i appen.
+
+/**
+ * Hele klaverstykker der hendene krysser midtre C som i originalen (venstre hånd over, eller høyre hånd under).
+ * Der overlapper hendene, så MIDI skiller dem på hva som skal spilles i stedet for på tonehøyde.
+ */
+const HANDS_CROSS = new Set(['fur-elise']);
 
 const pitches = (ev: BarEvent): number[] => ev.type === 'rest' ? [] : ev.type === 'chord' ? ev.midis : [ev.midi];
 const fingers = (ev: BarEvent): number[] => ev.type === 'rest' ? [] : ev.f.split(' ').map(Number);
@@ -25,14 +32,34 @@ describe.each(songs.map(s => [s.id, s] as const))('%s', (_id, song) => {
   });
 
   it('alle takter som brukes, finnes og fyller taktarten', () => {
+    // Trioler gir tredjedeler, så summen sammenlignes med litt slingringsmonn
     used.forEach(k => {
       expect(song.bars[k], `høyre ${k}`).toBeDefined();
-      expect(song.bars[k].reduce((s, ev) => s + ev.d, 0), `høyre ${k}`).toBe(len);
+      expect(song.bars[k].reduce((s, ev) => s + ev.d, 0), `høyre ${k}`).toBeCloseTo(len, 9);
     });
     usedLh.forEach(k => {
       expect(song.lh[k], `venstre ${k}`).toBeDefined();
-      expect(song.lh[k].reduce((s, ev) => s + ev.d, 0), `venstre ${k}`).toBe(len);
+      expect(song.lh[k].reduce((s, ev) => s + ev.d, 0), `venstre ${k}`).toBeCloseTo(len, 9);
     });
+  });
+
+  it('trioler kommer i hele grupper på tre og starter på en hel åttendedel', () => {
+    const check = (events: BarEvent[], where: string) => {
+      let pos = 0;
+      events.forEach((ev, i) => {
+        if (ev.type !== 'rest' && ev.triplet?.first) {
+          const group = events.slice(i, i + 3);
+          expect(group.every(g => g.type !== 'rest' && g.triplet && g.triplet.written === ev.triplet!.written), where).toBe(true);
+          expect(group.filter(g => g.type !== 'rest' && g.triplet?.first), where).toHaveLength(1);
+          expect(Math.abs(pos * 4 - Math.round(pos * 4)), `${where}: triolen starter midt i en 32-del`).toBeLessThan(1e-9);
+        }
+        pos += ev.d;
+      });
+      const n = events.filter(ev => ev.type !== 'rest' && ev.triplet).length;
+      expect(n % 3, where).toBe(0);
+    };
+    used.forEach(k => check(song.bars[k], `høyre ${k}`));
+    usedLh.forEach(k => check(song.lh[k], `venstre ${k}`));
   });
 
   it('fingre er 1–5, én per tone, og følger tonehøyden', () => {
@@ -52,9 +79,33 @@ describe.each(songs.map(s => [s.id, s] as const))('%s', (_id, song) => {
     usedLh.forEach(k => check(song.lh[k], 'lh', k));
   });
 
-  it('høyre hånd fra midtre C og opp, venstre under (MIDI skiller hendene der)', () => {
+  it.skipIf(HANDS_CROSS.has(song.id))('høyre hånd fra midtre C og opp, venstre under (MIDI skiller hendene der)', () => {
     used.forEach(k => song.bars[k].flatMap(pitches).forEach(m => expect(m, `høyre ${k}`).toBeGreaterThanOrEqual(60)));
     usedLh.forEach(k => song.lh[k].flatMap(pitches).forEach(m => expect(m, `venstre ${k}`).toBeLessThan(60)));
+  });
+
+  it('notearket får én note per steg i hver del og hånd (samme kobling som sheet.ok)', () => {
+    const notesIn = (abc: string, staff: number): number => {
+      const tune = abcjs.parseOnly(abc)[0];
+      expect(tune.warnings ?? [], abc.slice(0, 300)).toEqual([]);
+      return tune.lines.reduce((n, line) => n + (line.staff?.[staff]?.voices?.[0] ?? [])
+        .filter(el => el.el_type === 'note' && !(el as { rest?: unknown }).rest).length, 0);
+    };
+    const count = (bars: { items: { type: string }[] }[]) => bars.reduce((n, b) => n + b.items.filter(it => it.type !== 'rest').length, 0);
+    song.sections.forEach(sec => {
+      (['rh', 'lh', 'both'] as PracticeHand[]).forEach(hand => {
+        const m = build(song, sec, hand);
+        const where = `${sec.id} ${hand}`;
+        if (hand === 'both') {
+          const abc = toAbc(m, 4, true);
+          expect(notesIn(abc, 0), where).toBe(count(m.staffs.rh));
+          expect(notesIn(abc, 1), where).toBe(count(m.staffs.lh));
+        } else {
+          expect(notesIn(toAbc(m, 4, false), 0), where).toBe(m.steps.length);
+          expect(notesIn(toAbc(m, 2, true), hand === 'lh' ? 1 : 0), `${where} + andre hånd`).toBe(m.steps.length);
+        }
+      });
+    });
   });
 
   it('alle toner finnes på Casio CT-S400 (C2–C7)', () => {

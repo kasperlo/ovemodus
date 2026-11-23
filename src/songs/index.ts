@@ -2,15 +2,18 @@ import type { Section, Song, SongCategory } from '../music/song';
 import { dovregubben } from './dovregubben';
 import { gameshow } from './gameshow';
 import { classical } from './klassisk';
-import { klaver } from './klaver';
+import { furElise, klaver } from './klaver';
 import { marsjer } from './marsjer';
 import { opera } from './opera';
 import { orkester } from './orkester';
 
 const byTitle = (a: Song, b: Song): number => a.title.localeCompare(b.title, 'nb');
 
-/** Innebygde låter først, så låter importert på denne enheten (`addSong`). De klassiske står alfabetisk. */
-export const songs: Song[] = [dovregubben, ...gameshow, ...[...classical, ...klaver, ...marsjer, ...opera, ...orkester].sort(byTitle)];
+/**
+ * Innebygde låter først, så låter importert på denne enheten (`addSong`). Klaverstykkene står etter vanskegrad,
+ * de klassiske gameshow-lydene alfabetisk.
+ */
+export const songs: Song[] = [dovregubben, furElise, ...gameshow, ...[...classical, ...klaver, ...marsjer, ...opera, ...orkester].sort(byTitle)];
 
 export function addSong(song: Song): void {
   songs.push(song);
@@ -23,6 +26,7 @@ export function removeSong(id: string): void {
 
 export const CATEGORY_LABEL: Record<SongCategory, string> = {
   'låt': 'Låter',
+  stykke: 'Klaverstykker (lettest først)',
   egne: 'Gameshow – egne lyder',
   klassisk: 'Gameshow – klassisk',
   mine: 'Mine noter (bare på denne enheten)'

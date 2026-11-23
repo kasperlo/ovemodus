@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bassRanking, hz, lowpass, maskedBy, rhEstimate, rmsOf } from './twohands';
+import { bassRanking, hz, lowpass, maskedBy, rhEstimate, rmsOf, stepSplit } from './twohands';
 
 const SR = 48000;
 
@@ -69,5 +69,24 @@ describe('venstre hånd: bassnotene rangert i lavpassfiltrert, langt vindu', () 
     expect(rmsOf(lowpass(f, SR, hz(60) * 0.94)) / rmsOf(f)).toBeLessThan(0.15);
     const g = frame([...A2E3, [69, 0, 0.9]], 0.12);
     expect(rmsOf(lowpass(g, SR, hz(60) * 0.94)) / rmsOf(g)).toBeGreaterThan(0.3);
+  });
+});
+
+describe('skillet i ett steg', () => {
+  it('bruker skillet for delen når hendene holder seg på hver sin side', () => {
+    expect(stepSplit([45, 52], [69], 60)).toBe(60);
+    expect(stepSplit(undefined, [57], 60)).toBe(60);
+  });
+
+  it('når hendene overlapper i delen: høyre hånd alene høres også under midtre C', () => {
+    expect(stepSplit(undefined, [57], null)).toBe(57); // A3 i arpeggioen i Für Elise
+    expect(stepSplit(undefined, [76], null)).toBe(60);
+  });
+
+  it('når hendene overlapper i delen: skiller hendene i steget når det går', () => {
+    expect(stepSplit([45, 52], [69], null)).toBe(60);
+    expect(stepSplit([60, 64], [72], null)).toBe(72); // C4 + E4 i venstre, C5 i høyre (F-dur-delen)
+    expect(stepSplit([76], undefined, null)).toBe(60); // E5 i venstre hånd alene høres med YIN
+    expect(stepSplit([64, 67], [64], null)).toBe(60); // samme tone i begge: kan ikke skilles
   });
 });

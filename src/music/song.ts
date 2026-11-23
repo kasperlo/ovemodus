@@ -1,8 +1,15 @@
 import type { CasioSetup } from '../casio';
 import { SHARP, parsePitch, pc } from './theory';
 
-/** Varigheter i åttedeler. `ed` er punktert åttendedel, `qd` punktert fjerdedel. */
-export const s16 = 0.5, e = 1, ed = 1.5, q = 2, qd = 3, h = 4, dh = 6, w = 8;
+/** Varigheter i åttedeler. `s16d` er punktert sekstendedel, `ed` punktert åttendedel, `qd` punktert fjerdedel. */
+export const s32 = 0.25, s16 = 0.5, s16d = 0.75, e = 1, ed = 1.5, q = 2, qd = 3, h = 4, dh = 6, w = 8;
+
+/** Tone i en triol. `written` er varigheten som står i noten (tre sekstendeler i en triol skrives som sekstendeler). */
+export interface Triplet {
+  written: number;
+  /** Første tone i triolen. Notearket skriver triolmerket foran den. */
+  first: boolean;
+}
 
 export interface NoteEvent {
   type: 'note';
@@ -14,6 +21,7 @@ export interface NoteEvent {
   f: string;
   /** Fermat: hold tonen litt lenger. Vises bare i notearket. */
   fermata?: boolean;
+  triplet?: Triplet;
 }
 
 export interface ChordEvent {
@@ -28,6 +36,7 @@ export interface ChordEvent {
   d: number;
   /** Fingre, én per tone fra den dypeste, skilt med mellomrom. */
   f: string;
+  triplet?: Triplet;
 }
 
 export interface RestEvent {
@@ -57,6 +66,18 @@ export const DY = (lo: string, hi: string, d: number, f = '5 1'): ChordEvent => 
 };
 
 export const R = (d: number): RestEvent => ({ type: 'rest', d });
+
+/** Triol: tre toner på plassen til to. Varighetene skrives som i noten, for eksempel tre sekstendeler på en åttendedel. */
+export function T3(...evs: (NoteEvent | ChordEvent)[]): (NoteEvent | ChordEvent)[] {
+  if (evs.length !== 3) throw new Error(`En triol har tre toner, ikke ${evs.length}`);
+  return evs.map((ev, i) => ({ ...ev, d: ev.d * 2 / 3, triplet: { written: ev.d, first: i === 0 } }));
+}
+
+/**
+ * Plasser i takten legges på et rutenett av 1/48 åttedel. Det dekker 32-deler og trioler, og gjør at tre tredjedeler
+ * blir nøyaktig en hel, så toner i hver hånd som slås an samtidig, får samme plass.
+ */
+const snap = (x: number): number => Math.round(x * 48) / 48;
 
 export type Hand = 'rh' | 'lh';
 /** Hånden man øver på, eller begge samtidig. */
@@ -98,7 +119,7 @@ export interface Section {
   use?: string;
 }
 
-export type SongCategory = 'låt' | 'egne' | 'klassisk' | 'mine';
+export type SongCategory = 'låt' | 'stykke' | 'egne' | 'klassisk' | 'mine';
 
 export interface Song {
   id: string;
@@ -200,7 +221,7 @@ function place(events: BarEvent[], start: number, label: string | null, out: Ite
   let pos = start;
   events.forEach(ev => {
     const it: Item = ev.type === 'rest' ? { ...ev, pos } : { ...ev, pos, si: -1 };
-    bar.items.push(it); out.push(it); pos += ev.d;
+    bar.items.push(it); out.push(it); pos = snap(pos + ev.d);
   });
   return bar;
 }

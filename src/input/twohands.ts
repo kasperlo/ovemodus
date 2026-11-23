@@ -107,6 +107,21 @@ export function maskedBy(rh: number, lh: number[], cents = 35): boolean {
   });
 }
 
+/**
+ * Skillet detektoren bruker i ett steg. Holder hendene seg på hver sin side i delen, gjelder skillet for delen.
+ * Overlapper de (`split` er null, som i overgangen i Für Elise), skilles de i steget når det går. Høyre hånd alene
+ * skal alltid kunne høres med YIN, også under midtre C, og venstre hånd over skillet høres med YIN.
+ */
+export function stepSplit(lh: number[] | undefined, rh: number[] | undefined, split: number | null): number {
+  if (split != null) return split;
+  if (!rh?.length) return 60;
+  const hi = Math.min(...rh);
+  if (!lh?.length) return Math.min(60, hi);
+  const lo = Math.max(...lh);
+  if (lo >= hi) return 60;
+  return lo < 60 && hi >= 60 ? 60 : hi;
+}
+
 /** Venstre hånds toner som kan klinge ved steg `i`: i steget selv, og i siste steg før med venstre hånd. */
 export function ringingAt(steps: Step[], i: number): number[] {
   const out = new Set(steps[i]?.parts?.lh?.midis ?? []);

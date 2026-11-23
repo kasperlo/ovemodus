@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { findSection } from '../songs';
 import { dovregubben } from '../songs/dovregubben';
-import { barLength, beamGroup, build, clickLength, countInBars, type PracticeHand } from './song';
+import { N, R, T3, barLength, beamGroup, build, clickLength, countInBars, e, q, s16, type PracticeHand, type Song } from './song';
 import { parsePitch, sciName } from './theory';
 
 const model = (id: string, hand: PracticeHand = 'rh') => { const { song, sec } = findSection(id); return build(song, sec, hand); };
@@ -86,5 +86,33 @@ describe('build', () => {
   it('Dovregubben ligger i a-moll og 4/4', () => {
     expect(dovregubben.key).toBe('Am');
     expect(dovregubben.meter).toEqual({ beats: 4, unit: 4 });
+  });
+});
+
+describe('trioler', () => {
+  const song: Song = {
+    id: 't', title: 'T', by: '', category: 'mine', key: 'C', meter: { beats: 2, unit: 4 },
+    bars: { a: [...T3(N('C5', s16, 1), N('D5', s16, 2), N('E5', s16, 3)), ...T3(N('F5', s16, 4), N('E5', s16, 3), N('D5', s16, 2)), N('C5', q, 1)] },
+    lh: { a: [N('C3', e, 5), N('G3', e, 1), N('C3', q, 5)] },
+    sections: [{ id: 't1', title: 'T', tempo: 60, groups: [{ label: 'T', bars: [['a', 'a'], ['a', 'a']] }] }]
+  };
+
+  it('tre toner på plassen til to, med skrevet varighet', () => {
+    const [a, b, c] = T3(N('C5', s16, 1), N('D5', s16, 2), N('E5', s16, 3));
+    expect([a.d * 3, b.d * 3, c.d * 3]).toEqual([1, 1, 1]);
+    expect([a.triplet, b.triplet]).toEqual([{ written: s16, first: true }, { written: s16, first: false }]);
+    expect(() => T3(N('C5', s16, 1))).toThrow();
+  });
+
+  it('plassene blir eksakte, så hendene slår an sammen etter en triol', () => {
+    const m = build(song, song.sections[0], 'both');
+    expect(m.steps.map(s => s.pos * 3)).toEqual([0, 1, 2, 3, 4, 5, 6, 12, 13, 14, 15, 16, 17, 18]);
+    expect(m.steps.filter(s => s.parts?.rh && s.parts?.lh).map(s => s.pos)).toEqual([0, 1, 2, 4, 5, 6]);
+    expect(m.total).toBe(8);
+  });
+
+  it('pause etter triol fyller takten nøyaktig', () => {
+    const bar = [...T3(N('C5', s16, 1), N('D5', s16, 2), N('E5', s16, 3)), R(e), R(q)];
+    expect(bar.reduce((sum, ev) => sum + ev.d, 0)).toBeCloseTo(4, 9);
   });
 });

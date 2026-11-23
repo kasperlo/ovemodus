@@ -1,5 +1,5 @@
-import { CH, DY, N, R, dh, e, ed, h, q, s16, w, type Song } from '../music/song';
-import { M24, M44, klassisk } from './klassisk';
+import { CH, DY, N, R, T3, dh, e, ed, h, q, qd, s16, s16d, s32, w, type Song } from '../music/song';
+import { M24, M44, klassisk, stykke } from './klassisk';
 
 // Klassiske verk skrevet for klaver og orgel. Melodiene er kontrollert mot partiturer uten opphavsrett
 // (se assumptions.md, 2026-11-21).
@@ -9,10 +9,39 @@ import { M24, M44, klassisk } from './klassisk';
 const ELISE_A = [N('A2', s16, 5), N('E3', s16, 2), N('A3', s16, 1), R(ed)];
 const ELISE_E = [N('E2', s16, 5), N('E3', s16, 2), N('G#3', s16, 1), R(ed)];
 
-export const furElise = klassisk({
+/**
+ * Hele stykket takt for takt, med repetisjonene skrevet ut (126 takter, opptakten er takt 0). Hentet fra Mutopia
+ * (Breitkopf & Härtel 1888) med et skript. Fingersettingen er et eget forslag. Se assumptions.md (2026-11-23).
+ */
+const ELISE: [string, string | null][] = [
+  ['P', null], ['E1', null], ['E2', 'A'], ['E3', 'E'], ['E4', 'A'], ['E1', null],  // 0
+  ['E2', 'A'], ['E7', 'E'], ['t8', 'A'], ['E1', null], ['E2', 'A'], ['E3', 'E'],  // 6
+  ['E4', 'A'], ['E1', null], ['E2', 'A'], ['E7', 'E'], ['t16', 'A'], ['t17', 't17'],  // 12
+  ['t18', 't18'], ['t19', 'A'], ['t20', 't20'], ['t21', 't21'], ['t22', 't22'], ['E1', null],  // 18
+  ['E2', 'A'], ['E3', 'E'], ['E4', 'A'], ['E1', null], ['E2', 'A'], ['E7', 'E'],  // 24
+  ['t16', 'A'], ['t17', 't17'], ['t18', 't18'], ['t19', 'A'], ['t20', 't20'], ['t21', 't21'],  // 30
+  ['t22', 't22'], ['E1', null], ['E2', 'A'], ['E3', 'E'], ['E4', 'A'], ['E1', null],  // 36
+  ['E2', 'A'], ['E7', 'E'], ['t44', 't44'], ['t45', 't45'], ['t46', 't46'], ['t47', 't47'],  // 42
+  ['t48', 't45'], ['t49', 't45'], ['t50', 't50'], ['t51', 't51'], ['t52', 't52'], ['t53', 't53'],  // 48
+  ['t52', 't54'], ['t53', 't53'], ['t56', 't56'], ['t57', null], ['t57', null], ['t59', null],  // 54
+  ['E1', null], ['E2', 'A'], ['E3', 'E'], ['E4', 'A'], ['E1', null], ['E2', 'A'],  // 60
+  ['E7', 'E'], ['t16', 'A'], ['t17', 't17'], ['t18', 't18'], ['t19', 'A'], ['t20', 't20'],  // 66
+  ['t21', 't21'], ['t73', 't22'], ['E1', null], ['E2', 'A'], ['E3', 'E'], ['E4', 'A'],  // 72
+  ['E1', null], ['E2', 'A'], ['E7', 'E'], ['t81', 't81'], ['t82', 't81'], ['t83', 't81'],  // 78
+  ['t84', 't81'], ['t85', 't81'], ['t86', 't86'], ['t87', 't87'], ['t88', 't88'], ['t89', 't81'],  // 84
+  ['t82', 't81'], ['t83', 't81'], ['t92', 't81'], ['t93', 't93'], ['t94', 't93'], ['t95', 't93'],  // 90
+  ['t96', 't96'], ['t97', 't97'], ['t98', 't98'], ['t99', 't99'], ['t100', 't100'], ['t101', 't100'],  // 96
+  ['t102', 't102'], ['t103', null], ['E1', null], ['E2', 'A'], ['E3', 'E'], ['E4', 'A'],  // 102
+  ['E1', null], ['E2', 'A'], ['E7', 'E'], ['t16', 'A'], ['t17', 't17'], ['t18', 't18'],  // 108
+  ['t19', 'A'], ['t20', 't20'], ['t21', 't21'], ['t73', 't22'], ['E1', null], ['E2', 'A'],  // 114
+  ['E3', 'E'], ['E4', 'A'], ['E1', null], ['E2', 'A'], ['E7', 'E'], ['t81', 't125'],  // 120
+];
+const eliseBars = (from: number, to: number): [string, string | null][] => ELISE.slice(from, to + 1);
+
+export const furElise = stykke({
   id: 'fur-elise',
   title: 'Für Elise',
-  by: 'Ludwig van Beethoven. De åtte første taktene.',
+  by: 'Ludwig van Beethoven, WoO 59. Hele stykket etter Breitkopf & Härtel (1888).',
   key: 'Am',
   meter: { beats: 3, unit: 8 },
   casio: { reg: [8, 2], tone: 1, tip: 'Lett og rolig.' },
@@ -23,15 +52,115 @@ export const furElise = klassisk({
     E3: [N('B4', e, 5), R(s16), N('E4', s16, 1), N('G#4', s16, 3), N('B4', s16, 4)],
     E4: [N('C5', e, 5), R(s16), N('E4', s16, 1), N('E5', s16, 5), N('D#5', s16, 4)],
     E7: [N('B4', e, 5), R(s16), N('E4', s16, 1), N('C5', s16, 5), N('B4', s16, 4)],
-    E8: [N('A4', q, 3), R(e)]
+    E8: [N('A4', q, 3), R(e)],
+    t8: [N('A4', q, 3), N('E5', s16, 5), N('D#5', s16, 4)],
+    t16: [N('A4', e, 1), R(s16), N('B4', s16, 2), N('C5', s16, 3), N('D5', s16, 4)],
+    t17: [N('E5', ed, 5), N('G4', s16, 1), N('F5', s16, 5), N('E5', s16, 4)],
+    t18: [N('D5', ed, 3), N('F4', s16, 1), N('E5', s16, 5), N('D5', s16, 4)],
+    t19: [N('C5', ed, 3), N('E4', s16, 1), N('D5', s16, 5), N('C5', s16, 4)],
+    t20: [N('B4', e, 3), R(s16), N('E4', s16, 1), N('E5', s16, 5), R(s16)],
+    t21: [R(s16), N('E5', s16, 1), N('E6', s16, 5), R(s16), R(s16), N('D#5', s16, 4)],
+    t22: [N('E5', e, 5), R(s16), N('D#5', s16, 4), N('E5', s16, 5), N('D#5', s16, 4)],
+    t44: [N('A4', e, 3), R(s16), CH(['E4', 'C5'], s16, '1 5', 'E+C'), CH(['F4', 'C5'], s16, '2 5', 'F+C'), CH(['E4', 'G4', 'C5'], s16, '1 3 5', 'E+G+C')],
+    t45: [N('C5', q, 2), N('F5', s16d, 5), N('E5', s32, 4)],
+    t46: [N('E5', e, 3), N('D5', e, 2), N('Bb5', s16d, 5), N('A5', s32, 4)],
+    t47: [N('A5', s16, 4), N('G5', s16, 3), N('F5', s16, 2), N('E5', s16, 1), N('D5', s16, 3), N('C5', s16, 2)],
+    t48: [N('Bb4', e, 1), N('A4', e, 3), N('A4', s32, 2), N('G4', s32, 1), N('A4', s32, 2), N('Bb4', s32, 3)],
+    t49: [N('C5', q, 4), N('D5', s16, 1), N('D#5', s16, 2)],
+    t50: [N('E5', ed, 3), N('E5', s16, 3), N('F5', s16, 4), N('A4', s16, 1)],
+    t51: [N('C5', q, 3), N('D5', s16d, 4), N('B4', s32, 2)],
+    t52: [N('C5', s32, 1), N('G5', s32, 5), N('G4', s32, 1), N('G5', s32, 5), N('A4', s32, 1), N('G5', s32, 5), N('B4', s32, 2), N('G5', s32, 5), N('C5', s32, 1), N('G5', s32, 5), N('D5', s32, 2), N('G5', s32, 5)],
+    t53: [N('E5', s32, 1), N('G5', s32, 2), N('C6', s32, 5), N('B5', s32, 4), N('A5', s32, 3), N('G5', s32, 2), N('F5', s32, 1), N('E5', s32, 3), N('D5', s32, 2), N('G5', s32, 5), N('F5', s32, 4), N('D5', s32, 2)],
+    t56: [N('E5', s32, 3), N('F5', s32, 4), N('E5', s32, 3), N('D#5', s32, 2), N('E5', s32, 3), N('B4', s32, 1), N('E5', s32, 3), N('D#5', s32, 2), N('E5', s32, 3), N('B4', s32, 1), N('E5', s32, 3), N('D#5', s32, 2)],
+    t57: [N('E5', ed, 5), N('B4', s16, 1), N('E5', s16, 5), N('D#5', s16, 4)],
+    t59: [N('E5', s16, 5), N('D#5', s16, 4), N('E5', s16, 5), N('D#5', s16, 4), N('E5', s16, 5), N('D#5', s16, 4)],
+    t73: [N('E5', s16, 5), R(s16), R(s16), N('D#5', s16, 4), N('E5', s16, 5), N('D#5', s16, 4)],
+    t81: [N('A4', e, 3), R(e), R(e)],
+    t82: [CH(['E4', 'G4', 'Bb4', 'C#5'], qd, '1 2 3 5', 'E+G+B♭+C♯')],
+    t83: [CH(['F4', 'A4', 'D5'], q, '1 2 4', 'F+A+D'), CH(['C#5', 'E5'], s16, '2 4', 'C♯+E'), CH(['D5', 'F5'], s16, '3 5', 'D+F')],
+    t84: [CH(['G#4', 'D5', 'F5'], q, '1 3 5', 'G♯+D+F'), CH(['G#4', 'D5', 'F5'], e, '1 3 5', 'G♯+D+F')],
+    t85: [CH(['A4', 'C5', 'E5'], qd, '1 2 4', 'A+C+E')],
+    t86: [CH(['F4', 'D5'], q, '1 5', 'F+D'), CH(['E4', 'C5'], s16, '1 4', 'E+C'), CH(['D4', 'B4'], s16, '1 4', 'D+B')],
+    t87: [CH(['C4', 'F#4', 'A4'], q, '1 3 5', 'C+F♯+A'), CH(['C4', 'A4'], e, '1 4', 'C+A')],
+    t88: [CH(['C4', 'A4'], e, '1 4', 'C+A'), CH(['E4', 'C5'], e, '2 5', 'E+C'), CH(['D4', 'B4'], e, '1 4', 'D+B')],
+    t89: [CH(['C4', 'A4'], qd, '1 3', 'C+A')],
+    t92: [CH(['D5', 'F5'], q, '3 5', 'D+F'), CH(['D5', 'F5'], e, '3 5', 'D+F')],
+    t93: [CH(['D5', 'F5'], qd, '3 5', 'D+F')],
+    t94: [CH(['G4', 'Eb5'], q, '1 5', 'G+E♭'), CH(['F4', 'D5'], s16, '1 4', 'F+D'), CH(['Eb4', 'C5'], s16, '1 4', 'E♭+C')],
+    t95: [CH(['D4', 'F4', 'Bb4'], q, '1 2 5', 'D+F+B♭'), CH(['D4', 'F4', 'A4'], e, '1 2 4', 'D+F+A')],
+    t96: [CH(['D4', 'F4', 'G#4'], q, '1 2 4', 'D+F+G♯'), CH(['D4', 'F4', 'G#4'], e, '1 2 4', 'D+F+G♯')],
+    t97: [CH(['C4', 'E4', 'A4'], q, '1 2 4', 'C+E+A'), R(e)],
+    t98: [CH(['E4', 'B4'], e, '1 5', 'E+B'), R(e), R(e)],
+    t99: [...T3(N('A3', s16, 1), N('C4', s16, 2), N('E4', s16, 3)), ...T3(N('A4', s16, 1), N('C5', s16, 2), N('E5', s16, 5)), ...T3(N('D5', s16, 4), N('C5', s16, 3), N('B4', s16, 2))],
+    t100: [...T3(N('A4', s16, 1), N('C5', s16, 2), N('E5', s16, 3)), ...T3(N('A5', s16, 1), N('C6', s16, 2), N('E6', s16, 5)), ...T3(N('D6', s16, 4), N('C6', s16, 3), N('B5', s16, 2))],
+    t101: [...T3(N('A5', s16, 1), N('C6', s16, 2), N('E6', s16, 1)), ...T3(N('A6', s16, 3), N('C7', s16, 5), N('E6', s16, 1)), ...T3(N('D6', s16, 1), N('C7', s16, 5), N('B6', s16, 4))],
+    t102: [...T3(N('Bb6', s16, 3), N('A6', s16, 1), N('G#6', s16, 3)), ...T3(N('G6', s16, 1), N('F#6', s16, 3), N('F6', s16, 2)), ...T3(N('E6', s16, 1), N('D#6', s16, 3), N('D6', s16, 1))],
+    t103: [...T3(N('C#6', s16, 3), N('C6', s16, 2), N('B5', s16, 1)), ...T3(N('Bb5', s16, 3), N('A5', s16, 1), N('G#5', s16, 3)), ...T3(N('G5', s16, 1), N('F#5', s16, 3), N('F5', s16, 2))],
   },
-  lh: { A: ELISE_A, E: ELISE_E },
-  sections: [{
-    id: 'elise', title: 'Für Elise', tempo: 70, use: 'Rolig pause, eller når noen tenker lenge.',
-    groups: [{ label: 'Für Elise', bars: [
-      ['P', null], ['E1', null], ['E2', 'A'], ['E3', 'E'], ['E4', 'A'], ['E1', null], ['E2', 'A'], ['E7', 'E'], ['E8', 'A']
-    ] }]
-  }]
+  lh: {
+    A: ELISE_A,
+    E: ELISE_E,
+    t17: [N('C3', s16, 5), N('G3', s16, 2), N('C4', s16, 1), R(s16), R(e)],
+    t18: [N('G2', s16, 5), N('G3', s16, 2), N('B3', s16, 1), R(s16), R(e)],
+    t20: [N('E2', s16, 5), N('E3', s16, 1), N('E4', s16, 1), R(s16), R(s16), N('E4', s16, 5)],
+    t21: [N('E5', s16, 1), R(s16), R(s16), N('D#5', s16, 2), N('E5', s16, 1), R(s16)],
+    t22: [R(s16), N('D#5', s16, 2), N('E5', s16, 1), R(s16), R(e)],
+    t44: [N('A2', s16, 5), N('E3', s16, 2), N('A3', s16, 1), CH(['Bb3', 'C4'], s16, '2 1', 'B♭+C'), CH(['A3', 'C4'], s16, '3 1', 'A+C'), CH(['G3', 'Bb3', 'C4'], s16, '4 2 1', 'G+B♭+C')],
+    t45: [N('F3', s16, 5), N('A3', s16, 3), N('C4', s16, 1), N('A3', s16, 3), N('C4', s16, 1), N('A3', s16, 3)],
+    t46: [N('F3', s16, 5), N('Bb3', s16, 2), N('D4', s16, 1), N('Bb3', s16, 2), N('D4', s16, 1), N('Bb3', s16, 2)],
+    t47: [N('F3', s16, 5), N('E4', s16, 1), CH(['F3', 'G3', 'Bb3'], s16, '5 3 2', 'F+G+B♭'), N('E4', s16, 1), CH(['F3', 'G3', 'Bb3'], s16, '5 3 2', 'F+G+B♭'), N('E4', s16, 1)],
+    t50: [N('E3', s16, 5), N('A3', s16, 2), N('C4', s16, 1), N('A3', s16, 2), CH(['D3', 'D4'], s16, '5 1', 'D+D'), N('F3', s16, 4)],
+    t51: [N('G3', s16, 3), N('E4', s16, 1), N('G3', s16, 3), N('E4', s16, 1), N('G3', s16, 3), N('F4', s16, 1)],
+    t52: [CH(['C4', 'E4'], e, '5 3', 'C+E'), R(s16), CH(['F4', 'G4'], s16, '2 1', 'F+G'), CH(['E4', 'G4'], s16, '3 1', 'E+G'), CH(['D4', 'F4', 'G4'], s16, '4 2 1', 'D+F+G')],
+    t53: [CH(['C4', 'E4', 'G4'], e, '5 3 1', 'C+E+G'), CH(['F3', 'A3'], e, '5 3', 'F+A'), CH(['G3', 'B3'], e, '4 2', 'G+B')],
+    t54: [N('C4', e, 5), R(s16), CH(['F4', 'G4'], s16, '2 1', 'F+G'), CH(['E4', 'G4'], s16, '3 1', 'E+G'), CH(['D4', 'F4', 'G4'], s16, '4 2 1', 'D+F+G')],
+    t56: [CH(['G#3', 'B3'], e, '2 1', 'G♯+B'), R(e), R(e)],
+    t81: [N('A2', s16, 1), N('A2', s16, 1), N('A2', s16, 1), N('A2', s16, 1), N('A2', s16, 1), N('A2', s16, 1)],
+    t86: [CH(['D2', 'A2'], s16, '5 1', 'D+A'), CH(['D2', 'A2'], s16, '5 1', 'D+A'), CH(['D2', 'A2'], s16, '5 1', 'D+A'), CH(['D2', 'A2'], s16, '5 1', 'D+A'), CH(['D2', 'A2'], s16, '5 1', 'D+A'), CH(['D2', 'A2'], s16, '5 1', 'D+A')],
+    t87: [CH(['D#2', 'A2'], s16, '5 1', 'D♯+A'), CH(['D#2', 'A2'], s16, '5 1', 'D♯+A'), CH(['D#2', 'A2'], s16, '5 1', 'D♯+A'), CH(['D#2', 'A2'], s16, '5 1', 'D♯+A'), CH(['D#2', 'A2'], s16, '5 1', 'D♯+A'), CH(['D#2', 'A2'], s16, '5 1', 'D♯+A')],
+    t88: [CH(['E2', 'A2'], s16, '5 1', 'E+A'), CH(['E2', 'A2'], s16, '5 1', 'E+A'), CH(['E2', 'A2'], s16, '5 1', 'E+A'), CH(['E2', 'A2'], s16, '5 1', 'E+A'), CH(['E2', 'G#2'], s16, '5 2', 'E+G♯'), CH(['E2', 'G#2'], s16, '5 2', 'E+G♯')],
+    t93: [N('Bb2', s16, 2), N('Bb2', s16, 2), N('Bb2', s16, 2), N('Bb2', s16, 2), N('Bb2', s16, 2), N('Bb2', s16, 2)],
+    t96: [N('B2', s16, 2), N('B2', s16, 2), N('B2', s16, 2), N('B2', s16, 2), N('B2', s16, 2), N('B2', s16, 2)],
+    t97: [N('C3', q, 1), R(e)],
+    t98: [CH(['E3', 'G#3'], e, '2 1', 'E+G♯'), R(e), R(e)],
+    t99: [N('A2', e, 5), R(e), CH(['A3', 'C4', 'E4'], e, '5 3 1', 'A+C+E')],
+    t100: [CH(['A3', 'C4', 'E4'], e, '5 3 1', 'A+C+E'), R(e), CH(['A3', 'C4', 'E4'], e, '5 3 1', 'A+C+E')],
+    t102: [CH(['A3', 'C4', 'E4'], e, '5 3 1', 'A+C+E'), R(e), R(e)],
+    t125: [N('A2', e, 5), R(e), R(e)],
+  },
+  sections: [
+    {
+      id: 'elise', title: 'Tema', tempo: 70, use: 'Rolig pause, eller når noen tenker lenge.',
+      groups: [{ label: 'Für Elise', bars: [
+        ['P', null], ['E1', null], ['E2', 'A'], ['E3', 'E'], ['E4', 'A'], ['E1', null], ['E2', 'A'], ['E7', 'E'], ['E8', 'A']
+      ] }]
+    },
+    { id: 'elise-mellomspill', title: 'Mellomspill', tempo: 60, use: 'Fra slutten av temaet, gjennom C-dur og G-dur, og tilbake.', groups: [{ label: 'Mellomspill', bars: eliseBars(16, 23) }] },
+    { id: 'elise-fdur', title: 'F-dur', tempo: 50, use: 'Inn i F-dur-delen. Venstre hånd går over midtre C.', groups: [{ label: 'F-dur', bars: eliseBars(44, 51) }] },
+    { id: 'elise-32', title: '32-deler', tempo: 50, use: 'De raske figurene og veien tilbake til temaet. Ta dem sakte først.', groups: [{ label: '32-deler', bars: eliseBars(52, 60) }] },
+    { id: 'elise-orgelpunkt', title: 'Orgelpunkt', tempo: 60, use: 'Akkorder i høyre hånd over A-en i bassen.', groups: [{ label: 'Orgelpunkt', bars: eliseBars(81, 89) }] },
+    { id: 'elise-orgelpunkt2', title: 'Orgelpunkt 2', tempo: 60, use: 'Andre halvdel av akkordene, over B♭ og B i bassen.', groups: [{ label: 'Orgelpunkt 2', bars: eliseBars(90, 98) }] },
+    { id: 'elise-arpeggio', title: 'Arpeggio', tempo: 50, use: 'Triolene opp og den kromatiske skalaen ned, tilbake til temaet.', groups: [{ label: 'Arpeggio', bars: eliseBars(98, 105) }] },
+    {
+      id: 'elise-hele', title: 'Hele stykket', tempo: 60, use: 'Med repetisjonene.',
+      groups: [
+        { label: 'Tema', bars: eliseBars(0, 15) },
+        { label: 'Mellomspill', bars: eliseBars(16, 22) },
+        { label: 'Tema', bars: eliseBars(23, 29) },
+        { label: 'Mellomspill', bars: eliseBars(30, 36) },
+        { label: 'Tema', bars: eliseBars(37, 43) },
+        { label: 'F-dur', bars: eliseBars(44, 59) },
+        { label: 'Tema', bars: eliseBars(60, 66) },
+        { label: 'Mellomspill', bars: eliseBars(67, 73) },
+        { label: 'Tema', bars: eliseBars(74, 80) },
+        { label: 'Orgelpunkt', bars: eliseBars(81, 98) },
+        { label: 'Arpeggio', bars: eliseBars(99, 103) },
+        { label: 'Tema', bars: eliseBars(104, 110) },
+        { label: 'Mellomspill', bars: eliseBars(111, 117) },
+        { label: 'Tema', bars: eliseBars(118, 125) }
+      ]
+    }
+  ]
 });
 
 // ---------- Mozart: Rondo alla turca (Pianosonate nr. 11, siste sats) ----------
@@ -204,4 +333,5 @@ export const rapsodi = klassisk({
   }]
 });
 
-export const klaver: Song[] = [furElise, rondoAllaTurca, entertainer, toccata, gymnopedie, rapsodi];
+/** Gameshow-lydene. Für Elise står for seg, blant klaverstykkene. */
+export const klaver: Song[] = [rondoAllaTurca, entertainer, toccata, gymnopedie, rapsodi];

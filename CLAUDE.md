@@ -7,12 +7,12 @@ Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, vise
 - Appen er Vite + TypeScript uten rammeverk (`index.html`, `src/`). abcjs 6.4.4 kommer fra npm.
 - `prototype/ovemodus.html` er den opprinnelige appen i én fil. Den er referansen for oppførselen og kan fortsatt testes (`npm run test:e2e:prototype`).
 - `tests/e2e/` har Playwright-tester som kjører mot `vite preview`. Åtte av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`. Spec-ene for nye funksjoner (`ipad`, `sheet`, `micdiag`, `hands`) hoppes over mot prototypen.
-- `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon (også begge hender, der `twohands.wav.test.ts` kjører opptakene gjennom detektoren), `build`, `toAbc`, dømming, og `songs.test.ts` som validerer alle låtene (takter fyller taktarten, fingre 1–5 i riktig rekkefølge, høyre hånd fra midtre C og opp, venstre under, alt innenfor C2–C7, Casio-oppsett og standardtempo i steg på 5).
+- `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon (også begge hender, der `twohands.wav.test.ts` kjører opptakene gjennom detektoren), `build`, `toAbc`, dømming, og `songs.test.ts` som validerer alle låtene (takter fyller taktarten, fingre 1–5 i riktig rekkefølge, høyre hånd fra midtre C og opp og venstre under, unntatt klaverstykker der hendene krysser (`HANDS_CROSS`), trioler i hele grupper, alt innenfor C2–C7, Casio-oppsett, standardtempo i steg på 5, og at abcjs gir én note per steg i hver del og hånd).
 - `noter/` har LilyPond-kildene til notearket (PDF), lydfilene (MP3) og skriptet som lager dem.
 
 Appen er publisert på https://kasperlo.github.io/ovemodus/ fra `main` via GitHub Actions (`.github/workflows/deploy.yml`): typesjekk, Vitest og Playwright må være grønne før den publiseres. Pull requests testes, men publiseres ikke.
 
-Steg 1, 2 og 3 er gjort, og iPad-delen av steg 4. Venstre hånd kan øves alene (trinn 1). Import av egne noter (MusicXML) er laget. Begge hender samtidig virker med MIDI og skjermtastatur (trinn 2) og med mikrofon (trinn 3). Mikrofonen med begge hender er bare testet på kunstige opptak, ikke på iPad med ekte keyboard.
+Steg 1, 2 og 3 er gjort, og iPad-delen av steg 4. Venstre hånd kan øves alene (trinn 1). Import av egne noter (MusicXML) er laget. Begge hender samtidig virker med MIDI og skjermtastatur (trinn 2) og med mikrofon (trinn 3). Mikrofonen med begge hender er bare testet på kunstige opptak, ikke på iPad med ekte keyboard. Für Elise ligger inne som helt stykke, med 32-deler, trioler og venstre hånd over midtre C.
 
 ## Kommandoer
 
@@ -31,7 +31,7 @@ Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpne
 
 ## Hva appen gjør
 
-- **Velg låt og del:** nedtrekksliste med «I Dovregubbens hall» (Del A, Del B, Hele stykket) egne gameshow-lyder (intro, riktig svar, feil svar, joker, dobbel poeng, spenning, nedtelling, tiden er ute, vinner, med tre eller fire varianter hver som deler) og klassiske temaer, alfabetisk (blant annet Wilhelm Tell, Can-can, Für Elise, Morgenstemning, Toccata, Te Deum/Eurovision, Also sprach Zarathustra, Ode til gleden, Toreador, Den blå Donau). Delvalget skjules når låten har én del.
+- **Velg låt og del:** nedtrekksliste med «I Dovregubbens hall» (Del A, Del B, Hele stykket), klaverstykker etter vanskegrad (Für Elise i deler på rundt åtte takter og hele stykket; gameshow-delen `elise` heter «Tema»), egne gameshow-lyder (intro, riktig svar, feil svar, joker, dobbel poeng, spenning, nedtelling, tiden er ute, vinner, med tre eller fire varianter hver som deler) og klassiske temaer, alfabetisk (blant annet Wilhelm Tell, Can-can, Morgenstemning, Toccata, Te Deum/Eurovision, Also sprach Zarathustra, Ode til gleden, Toreador, Den blå Donau). Delvalget skjules når låten har én del.
 - **Begge hender:** hvert steg er alt som slås an samtidig, med en del per hånd (`step.parts`). Vent på meg venter til hver hånd har spilt sin del (`step.got`, hake i kortet, tastaturet viser det som gjenstår). Spill i takt dømmer hver hånd for seg, og prosenten regnes av alle delene. Tonen tilordnes en hånd med `handOf`: MIDI-kanal 3 er venstre hånd når Casio-keyboardet er splittet, ellers skillet `model.split`. Notearket viser alltid begge systemer med fingre og tonenavn, og venstre hånds fingre bare når de endrer seg. Mikrofonen hører begge hender med en egen detektor (punkt 12 under Tonegjenkjenning).
 - **Velg hånd:** høyre, venstre eller begge. Venstre hånd vises i bassnøkkel med fingersetting og tonenavn, skjermtastaturet viser C2–C4 (høyre: C4–C6), og «Spill … for meg» og «Vis …» gjelder den andre hånden. Rekorder lagres per hånd (`delA|lh|vent`, `delA|both|vent`).
 - **Importer noter:** «Importer noter» leser MusicXML (`.musicxml`, `.xml`, komprimert `.mxl`) i nettleseren (`src/importer/`). Låten lagres bare på enheten i `localStorage` under `ovemodus-mine-noter-v1` og vises under «Mine noter». Den publiseres aldri (repoet og siden er offentlige, så beskyttet musikk skal bare inn denne veien). Høyre hånd er øverste notesystem, venstre nederste. Fingersetting tas med fra filen, ellers vises ingen fingre. Bindinger blir pauser, opptakt fylles med pauser foran, pyntenoter og andre stemmer hoppes over. Trioler og taktartskifte gir en feilmelding med taktnummer. Lange stykker deles i deler på 16 takter. MIDI og PDF må gjøres om til MusicXML i MuseScore.
@@ -49,14 +49,15 @@ Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpne
 
 ## Datamodellen
 
-Låtene er skrevet som takter i åttedeler (`s16=0.5, e=1, q=2, h=4, dh=6, w=8`):
+Låtene er skrevet som takter i åttedeler (`s32=0.25, s16=0.5, s16d=0.75, e=1, q=2, h=4, dh=6, w=8`):
 
 - `N('D#5', e, 4)`: tone, varighet, finger. Navnet styrer stavemåten (`D#` vises som D♯, `Bb` som B♭).
 - `CH(['A4','C5','E5','A5'], q, '1 2 3 5', 'A-moll', 'Am')`: akkord. Godtas når én av akkordtonene spilles. Fingrene står fra den dypeste tonen.
 - `DY('A2', 'E3', q)`: to toner i venstre hånd (fingre `5 1` som standard), vises som «A+E».
 - `R(q)`: pause. `ed` er punktert åttendedel, `qd` punktert fjerdedel. `N('D4', h, 1, { fermata: true })` gir fermat. Bindinger over taktstrek finnes ikke.
+- `...T3(N('A3', s16, 1), N('C4', s16, 2), N('E4', s16, 3))`: triol med varighetene som i noten. Plassene legges på et rutenett av 1/48 åttedel (`snap` i `place`), så hendene slår an sammen etter en triol.
 - En låt (`Song`) har `key` (ABC, f.eks. `Am`, `F`, `Cm`), `meter` (`{ beats, unit }`), `bars` (høyre hånd), `lh` (venstre hånd, hele takter med pauser) og `sections`. Hver del er grupper av takter (`[høyrehåndsnøkkel, venstrehåndsnøkkel]`) med en etikett. Del-id-ene er unike på tvers av låter, fordi testkroken og lagringen bruker dem.
-- Låtene ligger i `src/songs/` og registreres i `src/songs/index.ts` med kategori (låt, egne, klassisk).
+- Låtene ligger i `src/songs/` og registreres i `src/songs/index.ts` med kategori (låt, stykke, egne, klassisk).
 
 `build(song, section, hand)` gir `{ bars, other, items, steps, acc, total, barLen }`. `steps` er alle toner og akkorder for hånden man øver på, i rekkefølge (uten pauser). `acc` er den andre hånden til avspilling. Både dømming, tastatur, bokstavbrikker og noteark bygger på `steps`, så de kan aldri komme i utakt. Taktarten styrer inntelling (minst fire slag), metronomslag (punktert fjerdedel i 6/8 og 3/8) og bjelker i notearket.
 
@@ -81,6 +82,7 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
     - **Anslag:** måles mot laveste RMS i de siste 4 rammene, ikke mot glidende snitt. Med venstre hånd som klinger faller ikke nivået mellom tonene, og snittet hang etter, så anslag i høyre hånd ble borte.
     - **Kan ikke skilles:** toner i høyre hånd på en overtone av venstre hånd (A4, E5 og A5 over A2, B4 over E3, G5 over A2, innen 35 cent; 14 av 26 toner i del A) forsvinner med kamfilteret. De godtas sammen med venstre hånd, eller ved et anslag som ikke er i bassen når steget bare har høyre hånd. Feil tone der blir altså godtatt.
     - **Forrige tone:** med begge hender er `lastAcc` siste godkjente tone i høyre hånd, fordi mikrofonen melder venstre hånd bare som anslag. Ellers ble `sustain` av en høyre hånd-tone regnet som bom når venstre hånd kom etter.
+    - **Hendene overlapper** (skillet er `null`, som i Für Elise): `stepSplit` lager et skille per steg, og bare venstre hånds toner under det trekkes fra. Da høres høyre hånd under midtre C og venstre hånd over den med YIN. Ikke testet med lyd.
 
 ## Noteark (abcjs) – feller
 
@@ -91,6 +93,8 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - Hver note er en `<g class="abcjs-note abcjs-pN">`. Fargene settes som klasse på den gruppen (`n-done`, `n-stumbled`, `n-missed`).
 - Fingertall og etiketter («Del A») er begge `abcjs-annotation`. Etiketter får klassen `abc-label` (alt som ikke er sifre) og farges ikke.
 - Bjelker er egne elementer uten kobling til notene. `findBeams` kobler dem via x-posisjonen til notehalsene. En bjelke blir blå når alle notene under den er spilt.
+- Nøkkel per takt (`staffClefs`): venstre hånd bytter til diskant når takten i snitt ligger fra E4 og opp, og tilbake under midtre C. abcjs starter hver linje med nøkkelen fra hodet, så et bytte skrives på nytt i starten av linjen.
+- Takter per linje (`lineRanges`): høyst `perLine`, færre når taktene i snitt har mer enn ni toner. Ellers flyter tonenavnene under 32-deler sammen. Trioler (`(3`) og 32-deler bjelkes per åttendedel.
 - Spøkelsesnoten plasseres fra notehodet til noten man skulle spille: ett diatonisk trinn er en åttedel av høyden på notesystemet (`sheet.halfSpace`). Logikken står i `src/notation/staff.ts`.
 - Timingmerker, spøkelsesnote og markør ligger i egne SVG-elementer (`abc-overlay`, `abc-cursor`) og lages på nytt når arket tegnes.
 
@@ -107,7 +111,7 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - `src/input/`: `pitch.ts` (YIN + Goertzel, rent), `twohands.ts` (begge hender, rent), `mic.ts`, `midi.ts`
 - `src/practice/`: `input.ts` (felles inngang for alle kilder), `wait.ts` (vent på meg), `takt.ts` (spill i takt og demo), `judge.ts` (rene regler), `progress.ts`, `session.ts` (del, modus, visning, hopp til note)
 - `src/ui/`: `dom.ts` (alle elementer), `view.ts` (`refresh` og alt som tegnes), `keyboard.ts`, `strip.ts`
-- `src/songs/`: `dovregubben.ts`, `gameshow.ts` (egne lyder, variantene er deler), `klassisk.ts` (de første klassiske temaene og hjelperen `klassisk`), `klaver.ts`, `marsjer.ts`, `opera.ts` og `orkester.ts` (flere klassiske temaer, kilder i assumptions.md), `index.ts` (register og `findSection`)
+- `src/songs/`: `dovregubben.ts`, `gameshow.ts` (egne lyder, variantene er deler), `klassisk.ts` (de første klassiske temaene og hjelperen `klassisk`), `klaver.ts` (hele Für Elise, laget med skript fra Mutopia, og gameshow-temaer), `marsjer.ts`, `opera.ts` og `orkester.ts` (flere klassiske temaer, kilder i assumptions.md), `index.ts` (register og `findSection`)
 - `src/casio.ts`: lydforslag og registreringer for Casio CT-S400
 - `src/importer/`: `musicxml.ts` (leser MusicXML til et lagringsformat), `zip.ts` (pakker ut `.mxl`), `library.ts` (lagring på enheten og `toSong`). `src/ui/importer.ts` er knappen og meldingene.
 - Testene for MusicXML kjører i jsdom (`// @vitest-environment jsdom`). jsdom er bare en utviklingsavhengighet.

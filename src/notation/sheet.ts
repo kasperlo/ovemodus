@@ -1,7 +1,7 @@
 import abcjs from 'abcjs';
 import type { Hand, Item, Model, Step, StepStatus } from '../music/song';
 import { timingClass } from '../practice/judge';
-import { abcNote, toAbc } from './abc';
+import { abcNote, homeClef, staffClefs, toAbc, type Clef } from './abc';
 import { BASS_BOTTOM, TREBLE_BOTTOM, ghostMidi, ghostPitch, ledgerSteps, staffStep } from './staff';
 import { SHARP, pc, sciName } from '../music/theory';
 
@@ -52,7 +52,10 @@ export const sheet = {
   dirty: true,
   perLine: 0,
   /** Antall noter i arket stemmer med antall steg. */
-  ok: false
+  ok: false,
+  /** Nøkkelen i hver takt per hånd, så spøkelsesnoten får riktige hjelpelinjer. */
+  clefs: { rh: [] as Clef[], lh: [] as Clef[] },
+  barLen: 8
 };
 
 const FINGERING = /^[1-5](\s[1-5])*$/;
@@ -128,6 +131,8 @@ export function renderSheet(container: HTMLElement, model: Model, otherChecked: 
   sheet.notes = []; sheet.beams = []; sheet.map = new Map(); sheet.cursor = null; sheet.overlay = null; sheet.ok = false;
   if (container.hidden || !container.clientWidth) { sheet.dirty = true; return; }
   sheet.dirty = false;
+  sheet.clefs = { rh: staffClefs(model.staffs.rh, 'treble'), lh: staffClefs(model.staffs.lh, 'bass') };
+  sheet.barLen = model.barLen;
   container.innerHTML = '';
   const perLine = sheet.perLine = sheetPerLine(container);
   const both = model.hand === 'both';
@@ -255,7 +260,8 @@ export function showGhost(step: Step, played: number, anyOctave: boolean, hand?:
   const cx = p.head.x + p.head.w / 2 + 3.5 * s, cy = yOf(g.step);
   const el = svgEl('g', { class: 'abc-ghost' }, sheet.overlay);
   svgEl('title', {}, el).textContent = `Du spilte ${sciName(played)}`;
-  ledgerSteps(g.step, h === 'lh' ? BASS_BOTTOM : TREBLE_BOTTOM).forEach(st => svgEl('line', { x1: cx - 2 * s, x2: cx + 2 * s, y1: yOf(st), y2: yOf(st) }, el));
+  const clef = sheet.clefs[h][Math.floor(step.pos / sheet.barLen + 1e-9)] ?? homeClef(h);
+  ledgerSteps(g.step, clef === 'bass' ? BASS_BOTTOM : TREBLE_BOTTOM).forEach(st => svgEl('line', { x1: cx - 2 * s, x2: cx + 2 * s, y1: yOf(st), y2: yOf(st) }, el));
   svgEl('ellipse', { cx, cy, rx: 1.3 * s, ry: 0.95 * s, transform: `rotate(-20 ${cx} ${cy})` }, el);
   if (g.sharp) svgEl('text', { x: cx - 2.4 * s, y: cy + 1.1 * s, 'font-size': 3 * s, 'text-anchor': 'middle' }, el).textContent = '♯';
 }
