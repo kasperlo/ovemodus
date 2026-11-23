@@ -25,8 +25,27 @@ const det = {
   attackT: -1e9,
   afterAttack: false,
   floor: 0.002,
-  shown: null as string | null
+  shown: null as string | null,
+  /** Rammer på rad med bare nuller, og om appen har sagt fra om det. */
+  zeros: 0,
+  dead: false
 };
+
+/** Rundt 3 s med bare nuller før appen sier fra. En ekte mikrofon gir alltid litt støy, så det er ikke stillhet i rommet. */
+const DEAD_FRAMES = 180;
+
+/** Sier fra når mikrofonen ikke gir lyd i det hele tatt, og prøver å vekke lydmotoren. */
+function watchSilence(rms: number): void {
+  if (rms > 0) {
+    if (det.dead) { det.dead = false; setStatus(micListeningText(), 'ok'); }
+    det.zeros = 0;
+    return;
+  }
+  if (++det.zeros !== DEAD_FRAMES) return;
+  det.dead = true;
+  audio();
+  setStatus('Mikrofonen gir ingen lyd. Trykk et sted i appen. Hjelper ikke det, slå mikrofonen av og på igjen.', 'warn');
+}
 
 const gateFor = (sens: string): number =>
   (sens === 'kalibrert' ? store.settings.calGate : GATES[sens]) || GATES.middels;
@@ -74,6 +93,7 @@ export function micFrame(now: number): void {
   let ss = 0;
   for (let i = 0; i < buf.length; i++) ss += buf[i] * buf[i];
   const rms = Math.sqrt(ss / buf.length);
+  watchSilence(rms);
   // Støygulv: følger stillheten raskt nedover og kryper sakte oppover
   if (rms < det.floor) det.floor = det.floor * 0.8 + rms * 0.2;
   else det.floor = Math.min(det.floor * 1.0003, 0.006);
@@ -146,6 +166,32 @@ function bothFrame(now: number, frame: Float32Array, rms: number, gate: number):
   for (const e of events) emitInput(e.midi, 'mic', e.phase === 'sustain' ? now : (e.at ?? now) - MIC_LATENCY, { attack: e.attack, phase: e.phase });
 }
 
+/**
+ * iPaden kan dempe eller stenge mikrofonen når man bytter app. Uten dette står appen og venter på lyd som aldri kommer.
+ * Et stengt spor kommer ikke tilbake, så da slås mikrofonen av i appen og man må trykke «Bruk mikrofon» igjen.
+ */
+function watchTrack(stream: MediaStream): void {
+  const track = stream.getAudioTracks()[0];
+  if (!track) return;
+  const current = () => mic.on && mic.stream === stream;
+  track.addEventListener('ended', () => {
+    if (!current()) return;
+    mic.on = false;
+    keepAwake('mic', false);
+    setPill(els.pillMic, 'Mikrofon av', 'bad');
+    setStatus('Nettleseren stengte mikrofonen, for eksempel da du byttet app. Trykk «Bruk mikrofon» igjen.', 'bad');
+    meter(0, gateFor(els.optSens.value));
+    showHeard(null);
+    updateButtons();
+  });
+  track.addEventListener('mute', () => {
+    if (current()) setStatus('iPaden har satt mikrofonen på pause. Kommer den ikke tilbake av seg selv, slå mikrofonen av og på igjen.', 'warn');
+  });
+  track.addEventListener('unmute', () => {
+    if (current()) setStatus(micListeningText(), 'ok');
+  });
+}
+
 export async function toggleMic(): Promise<void> {
   if (mic.on) {
     mic.stream?.getTracks().forEach(t => t.stop());
@@ -176,7 +222,8 @@ export async function toggleMic(): Promise<void> {
     long.fftSize = 8192;
     src.connect(long);
     Object.assign(mic, { on: true, stream, analyser: an, buf: new Float32Array(an.fftSize), longAnalyser: long, long: new Float32Array(long.fftSize) });
-    det.floor = 0.002; det.emitted = null;
+    watchTrack(stream);
+    det.floor = 0.002; det.emitted = null; det.zeros = 0; det.dead = false;
     keepAwake('mic', true);
     setPill(els.pillMic, 'Mikrofon på', 'on');
     setStatus(micListeningText(), 'ok');

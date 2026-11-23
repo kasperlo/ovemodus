@@ -17,7 +17,7 @@ import { initImport, loadImported } from './ui/importer';
 import { initMicDiag } from './ui/micDiag';
 import { renderSongSelect } from './ui/songSelect';
 import { initUpdates } from './ui/update';
-import { fmtSec, refresh, setSetupOpen } from './ui/view';
+import { fmtSec, refresh, setSetupOpen, setStatus } from './ui/view';
 
 /* ---------- Skjermtastatur ---------- */
 function pressKey(k: HTMLElement): void {
@@ -136,15 +136,32 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && (run.activ
 
 /* ---------- Løkke ---------- */
 let lastStatT = 0;
+let lastError = '';
 function frame(now: number): void {
-  if (mic.on) micFrame(now);
-  if (run.active) runFrame(now);
-  if (state.mode === 'vent' && state.tStart != null && !state.finished && now - lastStatT > 100) {
-    lastStatT = now;
-    els.v3.textContent = fmtSec(elapsed());
-  }
   requestAnimationFrame(frame);
+  try {
+    if (mic.on) micFrame(now);
+    if (run.active) runFrame(now);
+    if (state.mode === 'vent' && state.tStart != null && !state.finished && now - lastStatT > 100) {
+      lastStatT = now;
+      els.v3.textContent = fmtSec(elapsed());
+    }
+  } catch (err) {
+    // En feil i én ramme skal ikke stoppe mikrofonen og takten for godt. Meldingen vises én gang, så den kan meldes inn.
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg !== lastError) {
+      lastError = msg;
+      console.error(err);
+      setStatus(`Noe gikk galt i appen: ${msg}`, 'bad');
+    }
+  }
 }
+
+// iPaden avbryter lydmotoren når man bytter app, og den våkner ikke alltid av seg selv. Et trykk vekker den.
+const wakeAudio = (): void => { if (mic.on || run.active) audio(); };
+document.addEventListener('pointerdown', wakeAudio, true);
+document.addEventListener('keydown', wakeAudio, true);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') wakeAudio(); });
 
 /* ---------- Start ---------- */
 loadImported();

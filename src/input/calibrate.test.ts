@@ -40,6 +40,13 @@ describe('analyzeCalibration', () => {
     expect(c.advice[0]).toMatch(/Fant ingen toner/);
   });
 
+  it('bare nuller: mikrofonen gir ingen lyd, og rådet sier hva man gjør', () => {
+    for (const c of [analyzeCalibration(quiet(0), frames(0, 200, false)), analyzeCalibration([], [])]) {
+      expect(c.advice).toHaveLength(1);
+      expect(c.advice[0]).toMatch(/ingen lyd i det hele tatt/);
+    }
+  });
+
   it('holder grensen innenfor fornuftige verdier', () => {
     expect(analyzeCalibration(quiet(0), frames(0.0001, 10)).gate).toBe(GATE_MIN);
     expect(analyzeCalibration(quiet(0.05), frames(0.5, 10)).gate).toBe(GATE_MAX);

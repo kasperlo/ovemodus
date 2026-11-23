@@ -39,7 +39,10 @@ export function analyzeCalibration(silence: number[], playing: Frame[]): Calibra
   const pitchedShare = sound.length ? pitched.length / sound.length : 0;
   const gate = Math.min(GATE_MAX, Math.max(GATE_MIN, noise * 3, note * 0.4));
   const advice: string[] = [];
-  if (!pitched.length) {
+  // En ekte mikrofon gir alltid litt støy. Bare nuller betyr at nettleseren ikke sender lyd i det hele tatt.
+  if ([...silence, ...playing.map(f => f.rms)].every(x => x === 0)) {
+    advice.push('Mikrofonen gir ingen lyd i det hele tatt (−120 dB er helt stille). Slå mikrofonen av og på igjen, eller last siden på nytt. Har du byttet app, kan iPaden ha stengt lyden til nettleseren.');
+  } else if (!pitched.length) {
     advice.push('Fant ingen toner. Spill litt kraftigere, skru opp volumet på keyboardet eller flytt iPaden nærmere høyttalerne.');
   } else {
     if (note < 0.004) advice.push('Tonene er svake når de når mikrofonen. «Bruk denne følsomheten» tar høyde for det. Blir toner fortsatt borte, flytt iPaden nærmere høyttalerne.');

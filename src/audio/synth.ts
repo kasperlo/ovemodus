@@ -6,7 +6,7 @@ declare global {
   interface Window { webkitAudioContext?: typeof AudioContext }
 }
 
-/** Lager AudioContext ved første bruk og vekker den hvis nettleseren har satt den på pause. */
+/** Lager AudioContext ved første bruk og vekker den hvis nettleseren har stoppet den. */
 export function audio(): AudioContext {
   if (!ctx) {
     const AC = window.AudioContext || window.webkitAudioContext!;
@@ -17,7 +17,9 @@ export function audio(): AudioContext {
     master.connect(comp);
     comp.connect(ctx.destination);
   }
-  if (ctx.state === 'suspended') void ctx.resume();
+  // Safari på iPad har også tilstanden «interrupted» når lydøkten blir avbrutt (bytte app, samtale, Siri).
+  // Da får mikrofonen bare nuller, og den våkner ikke alltid av seg selv.
+  if (ctx.state !== 'running' && ctx.state !== 'closed') void ctx.resume().catch(() => {});
   return ctx;
 }
 

@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { test, expect, type Browser } from '@playwright/test';
 import { appUrl, fakeMicArgs } from './helpers';
 
@@ -27,6 +28,8 @@ test('mikrofontest: viser innstillinger, kalibrerer, og del A gjenkjennes med ka
     await expect(dialog).toBeVisible();
     await expect(page.locator('#diagSettings')).toContainText('Ekkofjerning');
     await expect(page.locator('#diagSettings dd').nth(1)).toHaveText('av');
+    await expect(page.locator('#diagSettings')).toContainText('Lydmotorgår');
+    await expect(page.locator('#diagSettings')).toContainText('Mikrofonsporåpent');
     await page.click('#btnCal');
 
     await expect(page.locator('#diagLive')).toContainText(/hører [A-G]/, { timeout: 10_000 });
@@ -163,3 +166,31 @@ for (const [wav, sens, calGate] of [['del-a-begge-hender.wav', 'middels', undefi
     }
   });
 }
+
+/** WAV med bare nuller (mono, 16 bit, 8 kHz), som en mikrofon nettleseren ikke sender lyd fra. */
+function silentWav(seconds: number): Buffer {
+  const rate = 8000, n = rate * seconds, b = Buffer.alloc(44 + 2 * n);
+  b.write('RIFF', 0); b.writeUInt32LE(36 + 2 * n, 4); b.write('WAVE', 8);
+  b.write('fmt ', 12); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22);
+  b.writeUInt32LE(rate, 24); b.writeUInt32LE(2 * rate, 28); b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34);
+  b.write('data', 36); b.writeUInt32LE(2 * n, 40);
+  return b;
+}
+
+test('mikrofon som bare gir nuller: appen sier fra i stedet for å stå stille', async ({ playwright }) => {
+  const wav = test.info().outputPath('stille.wav');
+  fs.mkdirSync(test.info().outputDir, { recursive: true });
+  fs.writeFileSync(wav, silentWav(1));
+  const browser = await playwright.chromium.launch({ args: fakeMicArgs(wav) });
+  try {
+    const page = await newPage(browser);
+    await page.goto(appUrl());
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    await page.click('#btnMic');
+    await expect(page.locator('#inputStatus')).toHaveText(/Mikrofonen gir ingen lyd/, { timeout: 8_000 });
+    await expect(page.locator('#inputStatus')).toHaveClass(/warn/);
+  } finally {
+    await browser.close();
+  }
+});

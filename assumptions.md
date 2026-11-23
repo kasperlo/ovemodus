@@ -290,3 +290,17 @@
   - Takt 29 begynner med en pause inne i en triol. Modellen tillater nå pauser i trioler (`T3(R(e), …)`).
 - **Fingersetting:** eget forslag. Venstre hånds oktaver og akkorder har fast regel (5 nederst, 1 øverst). Fingrene i triolene er fra optimeringen og ikke gjennomgått takt for takt.
 - **Tempo:** standardtempo for øving: Sonata facile 60 (hele satsen 80), Måneskinn 50 (hele 55). Originalene er Allegro og Adagio sostenuto.
+
+## 2026-11-23 – Mikrofonen ga ingen lyd på iPaden
+
+- **Kontekst:** Kasper fikk ingen reaksjon når han spilte (Für Elise, hele stykket, begge hender). Mikrofontesten viste nivå −120 dB, og kalibreringen fant verken støy eller toner. Før har iPaden målt −91 dB i stillhet, så −120 dB betyr at nettleseren sendte bare nuller.
+- **Undersøkt:** samme del, hånd og innstillinger med falsk mikrofon i Chromium virker (nivå, tonegjenkjenning og dømming, ingen feil i konsollen). Koden bruker ingen JavaScript-funksjoner som Safari 16 mangler. Lyd- og mikrofonkoden var ikke endret, bortsett fra skillet per steg med begge hender (kommer etter nivåmålingen).
+- **Antakelse:** iPaden avbrøt lydøkten, trolig da Kasper byttet app (for eksempel for å sende skjermbildet). Safari setter da lydmotoren i tilstanden «interrupted», og den våkner ikke alltid av seg selv. Appen vekket den bare fra «suspended». Ikke bekreftet på iPaden.
+- **Beslutning:**
+  - Lydmotoren vekkes fra alle tilstander unntatt «closed», ved hvert trykk og hver tast, og når appen blir synlig igjen.
+  - Bare nuller i rundt 3 s gir meldingen «Mikrofonen gir ingen lyd …» under mikrofonknappen, og appen prøver å vekke lydmotoren. Meldingen forsvinner når lyden kommer tilbake. En ekte mikrofon gir alltid litt støy, så et stille rom gir ikke meldingen.
+  - Stenger nettleseren mikrofonsporet, slås mikrofonen av i appen med en melding om å trykke «Bruk mikrofon» igjen. Settes sporet på pause, sies det også fra.
+  - Mikrofontesten og rapporten viser lydmotoren og mikrofonsporet. Kalibreringen gir et eget råd når det bare kommer nuller.
+  - En feil i én animasjonsramme stopper ikke lenger alt (mikrofon, takt og tid). Feilmeldingen vises under mikrofonknappen.
+- **Oppfølging:** skjer det igjen, åpne «Mikrofontest» og trykk «Kopier rapport». Linjene «Lydmotor» og «Mikrofonspor» viser om det var iPaden som stoppet lyden.
+

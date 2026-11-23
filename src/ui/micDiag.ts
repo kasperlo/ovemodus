@@ -30,16 +30,21 @@ function readSettings(): [string, string, boolean][] {
     ['Støydemping', onOff(s.noiseSuppression), isOn(s.noiseSuppression)],
     ['Automatisk volum', onOff(s.autoGainControl), isOn(s.autoGainControl)],
     ['Samplingsfrekvens', `${s.sampleRate ? s.sampleRate + ' Hz (mikrofon), ' : ''}${audioCtx().sampleRate} Hz (lydmotor)`, false],
+    ['Lydmotor', engineState(), audioCtx().state !== 'running'],
+    ['Mikrofonspor', `${track.readyState === 'live' ? 'åpent' : 'stengt'}${track.muted ? ', satt på pause' : ''}`, track.readyState !== 'live' || track.muted],
     ['Følsomhet', `${els.optSens.selectedOptions[0]?.textContent ?? els.optSens.value} (grense ${db(diag.gate || GATES.middels)})`, false]
   ];
 }
+
+/** «interrupted» finnes bare i Safari, når iPaden har avbrutt lyden. */
+const engineState = (): string => ({ running: 'går', suspended: 'på pause', interrupted: 'avbrutt av iPaden', closed: 'stengt' } as Record<string, string>)[audioCtx().state] ?? audioCtx().state;
 
 function renderSettings(): void {
   settingsRows = readSettings();
   els.diagSettings.innerHTML = '';
   settingsRows.forEach(([k, v, warn]) => {
     const dt = document.createElement('dt'); dt.textContent = k;
-    const dd = document.createElement('dd'); dd.textContent = v + (warn ? ' – kan dempe pianotoner' : '');
+    const dd = document.createElement('dd'); dd.textContent = v + (warn ? (k === 'Lydmotor' || k === 'Mikrofonspor' ? ' – da kommer det ingen lyd' : ' – kan dempe pianotoner') : '');
     if (warn) dd.className = 'warn';
     els.diagSettings.append(dt, dd);
   });
@@ -49,7 +54,8 @@ function liveText(): string {
   if (!mic.on) return 'Mikrofonen er ikke på.';
   const p = diag.pitch;
   const heard = p ? `${sciName(p.midi)} (${Math.round(p.f)} Hz, ${p.cents > 0 ? '+' : ''}${p.cents} cent, sikkerhet ${p.conf.toFixed(2).replace('.', ',')})` : '–';
-  return `Nivå ${db(diag.rms)} · grense ${db(diag.gate)} · hører ${heard}`;
+  const engine = audioCtx().state === 'running' ? '' : ` · lydmotor ${engineState()}`;
+  return `Nivå ${db(diag.rms)} · grense ${db(diag.gate)} · hører ${heard}${engine}`;
 }
 
 function renderLive(): void {
