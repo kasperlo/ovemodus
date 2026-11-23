@@ -3,8 +3,8 @@ import { stykke } from './klassisk';
 
 // ---------- Chopin: Preludium i e-moll, op. 28 nr. 4 ----------
 // Hentet fra Mutopia (Chop-28-4, Peters 1879, Public Domain) med et skript og sjekket mot MIDI-filen derfra.
-// Endret: G𝄪5 i takt 16 er skrevet som A5, H1 og E1 i bassen til slutt er flyttet en oktav opp, forslagsnotene er
-// sløyfet, og bindingen over taktstreken i takt 8–9 er en pause. Fingersettingen er et eget forslag. Se assumptions.md.
+// Endret: G𝄪5 i takt 16 er skrevet som A5, forslagsnotene er tatt med, og bindingen over taktstreken i takt 8–9 er en
+// pause. Bassen er som i originalen (oktav −1 på keyboardet). Fingersettingen er et eget forslag. Se assumptions.md.
 
 /** Hele stykket takt for takt. Takt 0 er opptakten. */
 const PRELUDIUM_E: [string, string | null][] = [
@@ -19,10 +19,10 @@ const span = (from: number, to: number): [string, string | null][] => PRELUDIUM_
 export const preludiumE: Song = stykke({
   id: 'preludium-e',
   title: 'Preludium i e-moll',
-  by: 'Frédéric Chopin, op. 28 nr. 4. Etter Peters (1879). H1 og E1 i bassen er flyttet en oktav opp, fordi CT-S400 går ned til C2.',
+  by: 'Frédéric Chopin, op. 28 nr. 4. Etter Peters (1879).',
   key: 'Em',
   meter: { beats: 2, unit: 2 },
-  casio: { tone: 1, tip: 'Langsomt og stille. Venstre hånd jevnt og svakt, melodien litt sterkere.' },
+  casio: { tone: 1, octave: -1, tip: 'Sett oktav −1 på keyboardet, så får bassen ned til E1 plass. Langsomt og stille, venstre hånd jevnt og svakt.' },
   bars: {
     t0: [R(dh), N('B3', ed, 1), N('B4', s16, 4)],
     t1: [N('B4', dh, 4), N('C5', q, 5)],
@@ -59,15 +59,15 @@ export const preludiumE: Song = stykke({
     t14: [CH(['F#3', 'A3', 'E4'], e, '5 3 1', 'F♯+A+E'), CH(['F#3', 'A3', 'E4'], e, '5 3 1', 'F♯+A+E'), CH(['F#3', 'A3', 'E4'], e, '5 3 1', 'F♯+A+E'), CH(['F#3', 'A3', 'E4'], e, '5 3 1', 'F♯+A+E'), CH(['F3', 'A3', 'D#4'], e, '5 3 1', 'F+A+D♯'), CH(['F3', 'A3', 'D#4'], e, '5 3 1', 'F+A+D♯'), CH(['F3', 'A3', 'D#4'], e, '5 3 1', 'F+A+D♯'), CH(['F3', 'A3', 'D#4'], e, '5 3 1', 'F+A+D♯')],
     t15: [CH(['F3', 'G#3', 'D#4'], e, '5 3 1', 'F+G♯+D♯'), CH(['F3', 'G#3', 'D#4'], e, '5 3 1', 'F+G♯+D♯'), CH(['F3', 'G#3', 'D4'], e, '5 3 1', 'F+G♯+D'), CH(['F3', 'G#3', 'D4'], e, '5 3 1', 'F+G♯+D'), CH(['E3', 'G#3', 'D4'], e, '5 3 1', 'E+G♯+D'), CH(['E3', 'G#3', 'D4'], e, '5 3 1', 'E+G♯+D'), CH(['E3', 'G#3', 'D4'], e, '5 3 1', 'E+G♯+D'), CH(['E3', 'G#3', 'D4'], e, '5 3 1', 'E+G♯+D')],
     t16: [CH(['E3', 'G3', 'D4'], e, '5 3 1', 'E+G+D'), CH(['E3', 'G3', 'D4'], e, '5 3 1', 'E+G+D'), CH(['E3', 'G3', 'C#4'], e, '5 3 1', 'E+G+C♯'), CH(['E3', 'G3', 'C#4'], e, '5 3 1', 'E+G+C♯'), CH(['C#3', 'E3', 'A#3'], e, '5 3 1', 'C♯+E+A♯'), CH(['C#3', 'E3', 'A#3'], e, '5 3 1', 'C♯+E+A♯'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A')],
-    t17: [N('B2', e, 5), CH(['A3', 'C4', 'F#4', 'A4'], e, '5 4 2 1', 'A+C+F♯+A'), CH(['A3', 'C4', 'F#4', 'A4'], e, '5 4 2 1', 'A+C+F♯+A'), CH(['A3', 'C4', 'F#4', 'A4'], e, '5 4 2 1', 'A+C+F♯+A'), CH(['G3', 'B3', 'D#4', 'F#4'], e, '5 3 2 1', 'G+B+D♯+F♯'), CH(['G3', 'B3', 'E4'], e, '5 3 1', 'G+B+E'), CH(['G3', 'B3', 'E4'], e, '5 3 1', 'G+B+E'), CH(['G3', 'B3', 'E4'], e, '5 3 1', 'G+B+E')],
+    t17: [CH(['B1', 'B2'], e, '5 1', 'B+B'), CH(['A3', 'C4', 'F#4', 'A4'], e, '5 4 2 1', 'A+C+F♯+A'), CH(['A3', 'C4', 'F#4', 'A4'], e, '5 4 2 1', 'A+C+F♯+A'), CH(['A3', 'C4', 'F#4', 'A4'], e, '5 4 2 1', 'A+C+F♯+A'), CH(['G3', 'B3', 'D#4', 'F#4'], e, '5 3 2 1', 'G+B+D♯+F♯'), CH(['G3', 'B3', 'E4'], e, '5 3 1', 'G+B+E'), CH(['G3', 'B3', 'E4'], e, '5 3 1', 'G+B+E'), CH(['G3', 'B3', 'E4'], e, '5 3 1', 'G+B+E')],
     t18: [CH(['A3', 'C4', 'E4'], e, '5 3 1', 'A+C+E'), CH(['A3', 'C4', 'E4'], e, '5 3 1', 'A+C+E'), N('A2', e, 5), CH(['E3', 'F#3', 'C4'], e, '5 4 1', 'E+F♯+C'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A')],
     t19: [CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A')],
     t20: [CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'E3', 'B3'], e, '5 2 1', 'B+E+B'), CH(['B2', 'D#3', 'B3'], e, '5 3 1', 'B+D♯+B'), CH(['B2', 'D#3', 'B3'], e, '5 3 1', 'B+D♯+B'), CH(['B2', 'D#3', 'A3'], e, '5 3 1', 'B+D♯+A'), CH(['B2', 'D#3', 'A3'], e, '5 3 1', 'B+D♯+A')],
     t21: [CH(['C3', 'G3'], e, '5 1', 'C+G'), CH(['C3', 'G3'], e, '5 1', 'C+G'), CH(['C3', 'G3'], e, '5 1', 'C+G'), CH(['C3', 'G3'], e, '5 1', 'C+G'), CH(['C3', 'Bb3'], e, '5 1', 'C+B♭'), CH(['C3', 'Bb3'], e, '5 1', 'C+B♭'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A'), CH(['C3', 'E3', 'A3'], e, '5 3 1', 'C+E+A')],
     t22: [CH(['B2', 'E3', 'A3'], e, '5 2 1', 'B+E+A'), CH(['B2', 'E3', 'A3'], e, '5 2 1', 'B+E+A'), CH(['B2', 'E3', 'G#3'], e, '5 2 1', 'B+E+G♯'), CH(['B2', 'E3', 'G#3'], e, '5 2 1', 'B+E+G♯'), CH(['B2', 'E3', 'G3'], e, '5 2 1', 'B+E+G'), CH(['B2', 'E3', 'G3'], e, '5 2 1', 'B+E+G'), CH(['B2', 'E3', 'G3'], e, '5 2 1', 'B+E+G'), CH(['B2', 'E3', 'G3'], e, '5 2 1', 'B+E+G')],
     t23: [CH(['Bb2', 'C3', 'G3'], h, '5 4 1', 'B♭+C+G'), R(h)],
-    t24: [N('B2', h, 1), CH(['F#2', 'B2'], h, '5 1', 'F♯+B')],
-    t25: [N('E2', w, 5)],
+    t24: [CH(['B1', 'B2'], h, '5 1', 'B+B'), CH(['B1', 'F#2', 'B2'], h, '5 2 1', 'B+F♯+B')],
+    t25: [CH(['E1', 'E2'], w, '5 1', 'E+E')],
   },
   sections: [
     { id: 'chopin-1', title: 'Takt 1–8', tempo: 50, firstBar: 0, use: 'Opptakten og de første åtte taktene.', groups: [{ label: 'Largo', bars: span(0, 8) }] },

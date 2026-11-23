@@ -9,4 +9,8 @@ describe('casioText', () => {
   it('viser bare lyden når låten ikke har registreringsplass', () => {
     expect(casioText({ tone: 75 })).toBe('Lyd: 075 PIPE ORGAN 1');
   });
+
+  it('viser oktavforskyvningen når stykket trenger den', () => {
+    expect(casioText({ tone: 1, octave: -1 })).toBe('Lyd: 001 STAGE PIANO · oktav −1');
+  });
 });

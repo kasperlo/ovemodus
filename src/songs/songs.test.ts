@@ -108,9 +108,10 @@ describe.each(songs.map(s => [s.id, s] as const))('%s', (_id, song) => {
     });
   });
 
-  it('alle toner finnes på Casio CT-S400 (C2–C7)', () => {
-    [...used].forEach(k => song.bars[k].flatMap(pitches).forEach(m => { expect(m, k).toBeGreaterThanOrEqual(36); expect(m, k).toBeLessThanOrEqual(96); }));
-    [...usedLh].forEach(k => song.lh[k].flatMap(pitches).forEach(m => { expect(m, k).toBeGreaterThanOrEqual(36); expect(m, k).toBeLessThanOrEqual(96); }));
+  it('alle toner finnes på Casio CT-S400 (C2–C7, eller C1–C6 med oktav −1 i Casio-oppsettet)', () => {
+    const shift = 12 * (song.casio?.octave ?? 0), lo = 36 + shift, hi = 96 + shift;
+    [...used].forEach(k => song.bars[k].flatMap(pitches).forEach(m => { expect(m, k).toBeGreaterThanOrEqual(lo); expect(m, k).toBeLessThanOrEqual(hi); }));
+    [...usedLh].forEach(k => song.lh[k].flatMap(pitches).forEach(m => { expect(m, k).toBeGreaterThanOrEqual(lo); expect(m, k).toBeLessThanOrEqual(hi); }));
   });
 
   it('Casio-forslaget bruker kjente lyder, og split passer med splittpunktet F♯3', () => {

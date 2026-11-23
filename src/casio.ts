@@ -10,6 +10,11 @@ export interface CasioSetup {
   layer?: number;
   /** Lyden under splittpunktet (SPLIT, LOWER), standard F♯3. */
   lower?: number;
+  /**
+   * Oktavforskyvning på keyboardet, −1 eller 1. Med −1 spiller tangentene C2–C7 tonene C1–C6, så bassen i stykker som
+   * går under C2 kan stå som i originalen. Keyboardet sender da også MIDI-tonene en oktav lavere.
+   */
+  octave?: -1 | 1;
   /** Kort tips på norsk. */
   tip?: string;
 }
@@ -54,6 +59,7 @@ export function casioSounds(c: CasioSetup): string {
   const parts = [toneLabel(c.tone)];
   if (c.layer) parts.push(`lag: ${toneLabel(c.layer)}`);
   if (c.lower) parts.push(`split: ${toneLabel(c.lower)} i venstre hånd`);
+  if (c.octave) parts.push(`oktav ${c.octave > 0 ? '+1' : '−1'}`);
   return parts.join(' · ');
 }
 

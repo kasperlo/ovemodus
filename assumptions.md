@@ -251,7 +251,7 @@
 - **Forenklet og endret:**
   - Kanon: høyre hånd spiller første fiolin, venstre hånd grunnbassen. Takt 1–2 er bare bass, som i originalen. Trillen i takt 10 er sløyfet, og sluttakkorden i takt 11 (D-dur) er egen. Arrangementet stopper der, fordi kilden ikke har resten av variasjonene.
   - Preludium i C-dur: venstre hånd har to stemmer (bass og tenor). Her er de én stemme i anslagsrekkefølge: bassen som sekstendel, så tenoren holdt ut halvtakten (dobbeltpunktert fjerdedel, i takt 33–34 trippelpunktert halvnote).
-  - Preludium i e-moll: G𝄪5 i takt 16 er skrevet som A5, fordi appen ikke har dobbelte fortegn. H1 i bassen (takt 17 og 24) og E1 (takt 25) er flyttet en oktav opp, og faller bort fordi H2 og E2 allerede står i samme akkord. Forslagsnotene (takt 11 og 19) er sløyfet. Bindingen fra takt 8 til 9 er en pause. Akkordene i takt 24–25 står i bassystemet i originalen, men er en del av høyre hånds stemme og spilles av høyre hånd.
+  - Preludium i e-moll: G𝄪5 i takt 16 er skrevet som A5, fordi appen ikke har dobbelte fortegn. Bassen ned til E1 står som i originalen (se «Konsertversjoner»: oktav −1 på keyboardet). Forslagsnotene (takt 11 og 19) er sløyfet. Bindingen fra takt 8 til 9 er en pause. Akkordene i takt 24–25 står i bassystemet i originalen, men er en del av høyre hånds stemme og spilles av høyre hånd.
   - Menuett: forslagsnoten i takt 8 er sløyfet. Sluttakkorden i høyre hånd er H3–D4–G4 som i kilden.
 - **Hendene krysser midtre C** i alle fire (venstre hånd opp til E4 i Menuetten og A4 i Chopin, høyre hånd ned til H3 i Kanon og D3 i Bach), så de står i `HANDS_CROSS`.
 - **Fingersetting:** eget forslag, laget med samme optimering som for Für Elise og rettet for hånd. Menuetten følger vanlig fingersetting (D5 med 5 i takt 1, G4–F♯4 med 2–1). I Chopin har venstre hånds akkorder en fast regel: 5 på bassen, 1 øverst og midtfingeren etter avstanden (4 ved et heltonetrinn eller mindre, 3 opp til en stor ters, ellers 2), så like akkorder får like fingre.
@@ -284,7 +284,7 @@
   - Melodien og triolene i høyre hånd er to stemmer i originalen. Her er de én stemme: der de slår an samtidig, blir de en akkord.
   - Melodiens sekstendel etter en punktert åttendedel (takt 5–6, 10–11, 23–24, 42–43 og 46–47) spilles med tredje triolnote, ikke litt etter. Appen kan ikke vise begge rytmene i samme stemme, og dette er en vanlig måte å øve dem sammen på.
   - Triolnotene som står i bassystemet i originalen (stemmeskifte), spilles av høyre hånd og står i høyre hånds system.
-  - Bassoktavene går ned til F♯1 og G♯1. Toner under C2 er flyttet en oktav opp og faller bort når oktaven allerede har tonen (49 steder), så oktaven blir én tone.
+  - Bassoktavene går ned til F1. De står som i originalen (se «Konsertversjoner»: oktav −1 på keyboardet).
   - F𝄪 (takt 27 og 34) er skrevet som G, fordi appen ikke har dobbelte fortegn.
   - Bindinger over taktstreken i bassen (inn i takt 16, 18, 36, 37 og 52) er pauser.
   - Takt 29 begynner med en pause inne i en triol. Modellen tillater nå pauser i trioler (`T3(R(e), …)`).
@@ -317,6 +317,9 @@
   - Gjentatte akkordnavn står bare én gang i takten når akkordene er kortere enn en fjerdedel (Alberti- og akkordtakter i Mozart), ellers fløt de sammen.
 - **Ikke rettet, krever Kaspers valg:**
   - Kanon: en konsertversjon for klaver finnes ikke (originalen er for tre fioliner og bass). Alternativet er et fullt arrangement av alle variasjonene, eller å bytte ut stykket.
-  - Bassoktaver under C2 i Måneskinn og Chopin: med oktav −1 på CT-S400 får hele stykket plass (F♯1–G♯5 og E1–C6), og oktavene kan stå som i originalen. Det krever at Kasper setter oktaven når han spiller dem.
   - Måneskinn: melodiens sekstendel etter tredje triolnote krever to stemmer i høyre hånd, som appen ikke har.
   - En akkord godtas når én av tonene spilles. Det gjelder hele appen og hører til økten for øving og dømming.
+- **Kaspers svar** (via økten for løkke og tempotrapp): original bass med oktav −1 for Måneskinn og Chopin, et lengre Kanon-arrangement, og at MIDI skal kreve alle tonene i en akkord (det lager den andre økten).
+  - Oktav −1: `casio.octave: -1`. Keyboardet spiller og sender da tonene en oktav lavere, så tangentene C2–C7 dekker C1–C6. Stykkene har bassen som i originalen (F1–A3 i Måneskinn, E1 i Chopin). Valideringen godtar C1–C6 for slike stykker. Teksten i Casio-oppsettet sier fra («oktav −1»).
+  - Måneskinn går opp til D♯6 én gang (takt 35). Den tonen er spilt en oktav lavere, fordi C6 er øverste tangent med oktav −1.
+  - Lengre Kanon: de senere variasjonene finnes fritt bare i Seiffert-utgaven (Organum, Kistner & Siegel; Seiffert døde 1948) på IMSLP, og IMSLP krever at man godtar vilkårene før nedlasting. Venter på Kaspers valg: laste ned selv, godta vilkårene, eller egne variasjoner over grunnbassen.
