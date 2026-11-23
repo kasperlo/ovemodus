@@ -12,7 +12,7 @@ Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, vise
 
 Appen er publisert på https://kasperlo.github.io/ovemodus/ fra `main` via GitHub Actions (`.github/workflows/deploy.yml`): typesjekk, Vitest og Playwright må være grønne før den publiseres. Pull requests testes, men publiseres ikke.
 
-Steg 1, 2 og 3 er gjort, og iPad-delen av steg 4. Venstre hånd kan øves alene (trinn 1). Import av egne noter (MusicXML) er laget. Begge hender samtidig virker med MIDI og skjermtastatur (trinn 2) og med mikrofon (trinn 3). Mikrofonen med begge hender er bare testet på kunstige opptak, ikke på iPad med ekte keyboard. Für Elise ligger inne som helt stykke, med 32-deler, trioler og venstre hånd over midtre C.
+Steg 1, 2 og 3 er gjort, og iPad-delen av steg 4. Venstre hånd kan øves alene (trinn 1). Import av egne noter (MusicXML) er laget. Begge hender samtidig virker med MIDI og skjermtastatur (trinn 2) og med mikrofon (trinn 3). Mikrofonen med begge hender er bare testet på kunstige opptak, ikke på iPad med ekte keyboard. Für Elise ligger inne som helt stykke, med 32-deler, trioler og venstre hånd over midtre C. Man kan øve på noen takter om gangen, i løkke og med tempotrapp.
 
 ## Kommandoer
 
@@ -40,9 +40,12 @@ Appen trenger en server (ES-moduler virker ikke fra `file://`). Prototypen åpne
 - **Input:** mikrofon (én hånd eller begge), Web MIDI (USB-keyboard; den andre hånden ignoreres, delt ved midtre C), eller klikk på skjermtastaturet.
 - **Vent på meg:** står stille til riktig tone kommer. Tid måles fra første riktige tone. Klikk på en note eller bokstavbrikke for å starte derfra (da lagres ikke rekord).
 - **Spill i takt:** én takt med innteller, metronom, valgfri venstre hånd. Hver tone dømmes treff/bom innenfor et tidsvindu. Resultat i prosent og gjennomsnittlig timing. Rekorden er høyeste tempo med minst 90 % treff.
+- **Øv på noen takter:** «Takt … til …» under «Hva vil du øve på?» velger et utsnitt av delen (`state.range`, fra 0). Modellen bygges av bare de taktene (`sliceSection` i `src/practice/range.ts`), så alt annet virker uendret. Notearket viser taktnummeret først på hver linje, og utsnittet beholder numrene fra delen. Utsnitt, tempo, rekorder og fremgang huskes per utsnitt.
+- **Gjenta til jeg stopper** (`settings.loop`): «Vent på meg» starter på nytt med en gang. «Spill i takt» får ny inntelling etter 1 s pause, og tempotrappen (`src/practice/ladder.ts`) går opp 5 BPM fra 90 % treff og ned 5 under 70 %, til måltempoet (standard: delens tempo). Løkkekortet over notene viser de siste rundene og har egen start og stopp.
+- **Beste tempo per dag:** liten graf under knappene i oppsettet (`src/ui/days.ts`), fra alle runder i takt med minst 90 % treff.
 - **Hør hvordan det går:** appen spiller delen selv og viser tangentene.
 - **Visning:** noteark (abcjs) med fingersetting over og tonenavn under, eller bokstavbrikker. Gul markør = neste tone, blå = riktig, oransje = riktig etter bom (Vent på meg), rød = bom. I takt-modus står ◂ (for tidlig) eller ▸ (for sent) under tonenavnet når avviket er minst 30 ms. Spiller du feil i «Vent på meg», vises tonen du spilte som en blek rød spøkelsesnote ved siden av.
-- Innstillinger og rekorder lagres i `localStorage` under nøkkelen `dovregubben-ovemodus-v1`.
+- Innstillinger, rekorder og fremgang lagres i `localStorage` under nøkkelen `dovregubben-ovemodus-v1` (versjon 2, `parseStore` i `src/storage.ts` leser også versjon 1). Hele delen har samme nøkler som før (`delA|vent`), et utsnitt har `delA|t5-8|vent`.
 - **iPad på notestativet:** under 1040 px kan oppsettet felles sammen til én linje (`#btnSetup`, huskes i `setupOpen`). Fra 740 px står neste tone og noter side om side. Over 1040 px er layouten som før, og oppsettet vises alltid.
 - **Skjermlås:** `src/wakeLock.ts` holder skjermen våken mens mikrofonen er på, MIDI er koblet til eller en runde spilles.
 - **PWA:** `vite-plugin-pwa` med `registerType: 'prompt'`. Alt i builden forhåndslagres. Google Fonts lagres ved første besøk, så appen virker uten nett etter det. `src/ui/update.ts` ser etter ny versjon ved oppstart, hver gang appen hentes fram igjen (`visibilitychange`, viktig på iPad som holder appen i minnet) og hver halvtime. Finnes det en, vises «Oppdater» nederst. Appen laster aldri på nytt av seg selv midt i en økt.
@@ -56,7 +59,7 @@ Låtene er skrevet som takter i åttedeler (`s32=0.25, s16=0.5, s16d=0.75, e=1, 
 - `DY('A2', 'E3', q)`: to toner i venstre hånd (fingre `5 1` som standard), vises som «A+E».
 - `R(q)`: pause. `ed` er punktert åttendedel, `qd` punktert fjerdedel. `N('D4', h, 1, { fermata: true })` gir fermat. Bindinger over taktstrek finnes ikke.
 - `...T3(N('A3', s16, 1), N('C4', s16, 2), N('E4', s16, 3))`: triol med varighetene som i noten. Plassene legges på et rutenett av 1/48 åttedel (`snap` i `place`), så hendene slår an sammen etter en triol.
-- En låt (`Song`) har `key` (ABC, f.eks. `Am`, `F`, `Cm`), `meter` (`{ beats, unit }`), `bars` (høyre hånd), `lh` (venstre hånd, hele takter med pauser) og `sections`. Hver del er grupper av takter (`[høyrehåndsnøkkel, venstrehåndsnøkkel]`) med en etikett. Del-id-ene er unike på tvers av låter, fordi testkroken og lagringen bruker dem.
+- En låt (`Song`) har `key` (ABC, f.eks. `Am`, `F`, `Cm`), `meter` (`{ beats, unit }`), `bars` (høyre hånd), `lh` (venstre hånd, hele takter med pauser) og `sections`. Hver del er grupper av takter (`[høyrehåndsnøkkel, venstrehåndsnøkkel]`) med en etikett. Del-id-ene er unike på tvers av låter, fordi testkroken og lagringen bruker dem. `firstBar` i en del er taktnummeret til første takt når delen begynner midt i et stykke (standard 1).
 - Låtene ligger i `src/songs/` og registreres i `src/songs/index.ts` med kategori (låt, stykke, egne, klassisk).
 
 `build(song, section, hand)` gir `{ bars, other, items, steps, acc, total, barLen }`. `steps` er alle toner og akkorder for hånden man øver på, i rekkefølge (uten pauser). `acc` er den andre hånden til avspilling. Både dømming, tastatur, bokstavbrikker og noteark bygger på `steps`, så de kan aldri komme i utakt. Taktarten styrer inntelling (minst fire slag), metronomslag (punktert fjerdedel i 6/8 og 3/8) og bjelker i notearket.
@@ -97,10 +100,11 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - Takter per linje (`lineRanges`): høyst `perLine`, færre når taktene i snitt har mer enn ni toner. Ellers flyter tonenavnene under 32-deler sammen. Trioler (`(3`) og 32-deler bjelkes per åttendedel.
 - Spøkelsesnoten plasseres fra notehodet til noten man skulle spille: ett diatonisk trinn er en åttedel av høyden på notesystemet (`sheet.halfSpace`). Logikken står i `src/notation/staff.ts`.
 - Timingmerker, spøkelsesnote og markør ligger i egne SVG-elementer (`abc-overlay`, `abc-cursor`) og lages på nytt når arket tegnes.
+- Taktnummer: `%%barnumbers 0` og `%%setbarnb`. abcjs 6.4.4 krasjer på `%%setbarnb` før første notelinje, så `%%sep 0 0 0` står foran.
 
 ## Testkroken
 
-`window.ovemodus` (`input`, `setSection`, `setMode`, `setTempo`, `startRun`, `stopRun`, `state`) brukes av testene. Den settes i `src/testHook.ts`. Behold formen. Typene står i `tests/e2e/helpers.ts`.
+`window.ovemodus` (`input`, `setSection`, `setMode`, `setTempo`, `startRun`, `stopRun`, `setRange`, `setLoop`, `setTarget`, `state`) brukes av testene. Den settes i `src/testHook.ts`. Behold formen. Typene står i `tests/e2e/helpers.ts`.
 
 ## Kodeoppdeling
 
@@ -109,7 +113,7 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 - `src/notation/`: `abc.ts` (`toAbc`, rent), `sheet.ts` (abcjs-tegning og markør)
 - `src/audio/synth.ts`: AudioContext, toner og metronomklikk
 - `src/input/`: `pitch.ts` (YIN + Goertzel, rent), `twohands.ts` (begge hender, rent), `mic.ts`, `midi.ts`
-- `src/practice/`: `input.ts` (felles inngang for alle kilder), `wait.ts` (vent på meg), `takt.ts` (spill i takt og demo), `judge.ts` (rene regler), `progress.ts`, `session.ts` (del, modus, visning, hopp til note)
+- `src/practice/`: `input.ts` (felles inngang for alle kilder), `wait.ts` (vent på meg), `takt.ts` (spill i takt og demo), `judge.ts` (rene regler), `range.ts` (utsnitt, rent), `ladder.ts` (tempotrapp og runder, rent), `progress.ts`, `session.ts` (del, utsnitt, løkke, modus, visning, hopp til note)
 - `src/ui/`: `dom.ts` (alle elementer), `view.ts` (`refresh` og alt som tegnes), `keyboard.ts`, `strip.ts`
 - `src/songs/`: `dovregubben.ts`, `gameshow.ts` (egne lyder, variantene er deler), `klassisk.ts` (de første klassiske temaene og hjelperen `klassisk`), `klaver.ts` (hele Für Elise, laget med skript fra Mutopia, og gameshow-temaer), `marsjer.ts`, `opera.ts` og `orkester.ts` (flere klassiske temaer, kilder i assumptions.md), `index.ts` (register og `findSection`)
 - `src/casio.ts`: lydforslag og registreringer for Casio CT-S400
@@ -173,4 +177,4 @@ Kjør testene grønne etter hvert steg.
    Legg `webServer` med `vite preview` i `playwright.config.ts`, og Vitest for rene funksjoner: tonedeteksjon på syntetiske toner med inharmoniske overtoner, `toAbc`, `build` og dømming.
 2. **Flere låter:** låtvelger + delvelger, skill Dovregubben og gameshow-effektene. Valideringstest: hver takt fyller taktarten, fingre er 1–5, venstre hånd holder seg innenfor takten.
 3. ✅ **PWA og GitHub Pages:** GitHub Actions som tester og publiserer (`base: './'`), `vite-plugin-pwa` (offline, kan installeres). Med HTTPS virker mikrofonen også på iPad og mobil. Web MIDI finnes ikke i Safari, så på iPad er det bare mikrofon og skjermtastatur.
-4. **Ideer videre:** nedtellingsmodus som blir raskere for hver runde (som `noter/lyd/dovregubben-nedtelling.mp3`), loop av én takt, venstre hånd via MIDI, import av ABC eller MusicXML fra MuseScore, kalibrering av forsinkelse, statistikk over tid. ✅ Layout for stående iPad og skjermlås. Neste for iPad: la notearket bruke ledig høyde på store iPader (12,9″), og liggende iPad.
+4. **Ideer videre:** nedtellingsmodus som blir raskere for hver runde (som `noter/lyd/dovregubben-nedtelling.mp3`), ✅ loop av noen takter med tempotrapp, venstre hånd via MIDI, import av ABC eller MusicXML fra MuseScore, kalibrering av forsinkelse, statistikk over tid. ✅ Layout for stående iPad og skjermlås. Neste for iPad: la notearket bruke ledig høyde på store iPader (12,9″), og liggende iPad.

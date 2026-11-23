@@ -90,6 +90,8 @@ describe('parseMusicXml', () => {
   it('lange stykker deles i deler på 16 takter', () => {
     const many = { ...s, rh: Array.from({ length: 40 }, () => s.rh[1]), lh: [] };
     expect(toSong(many).sections.map(x => x.title)).toEqual(['Hele', 'Takt 1–16', 'Takt 17–32', 'Takt 33–40']);
+    // Taktnumrene i notearket og i valget av takter følger stykket, ikke delen
+    expect(toSong(many).sections.map(x => x.firstBar ?? 1)).toEqual([1, 1, 17, 33]);
   });
 });
 

@@ -26,7 +26,13 @@ export const els = {
   casioTable: byId<HTMLTableElement>('casioTable'), sfxKeys: byId('sfxKeys'),
   songTitle: byId('songTitle'), subText: byId('subText'),
   optLHText: byId('optLHText'), optAccText: byId('optAccText'), optLHStaffText: byId('optLHStaffText'),
-  segView: byId('segView'), sheet: byId('sheet'), optLHStaff: byId<HTMLInputElement>('optLHStaff'), optLHStaffLabel: byId('optLHStaffLabel')
+  segView: byId('segView'), sheet: byId('sheet'), optLHStaff: byId<HTMLInputElement>('optLHStaff'), optLHStaffLabel: byId('optLHStaffLabel'),
+  rangeRow: byId('rangeRow'), rangeFrom: byId<HTMLSelectElement>('rangeFrom'), rangeTo: byId<HTMLSelectElement>('rangeTo'),
+  btnWholePart: byId<HTMLButtonElement>('btnWholePart'),
+  optLoop: byId<HTMLInputElement>('optLoop'), targetRow: byId('targetRow'), optTarget: byId<HTMLSelectElement>('optTarget'), loopHelp: byId('loopHelp'),
+  loopCard: byId('loopCard'), loopTitle: byId('loopTitle'), loopTempo: byId('loopTempo'), loopRounds: byId('loopRounds'),
+  btnLoopGo: byId<HTMLButtonElement>('btnLoopGo'),
+  days: byId('days'), daysWhat: byId('daysWhat'), daysPlot: byId('daysPlot'), daysTable: byId<HTMLTableElement>('daysTable')
 };
 
 /** Knappene i en knappegruppe (`.seg`). */

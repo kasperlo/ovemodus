@@ -157,6 +157,10 @@ export function toAbc(model: Model, perLine: number, showOther: boolean): string
   const clefs = { rh: staffClefs(model.staffs.rh, 'treble'), lh: staffClefs(model.staffs.lh, 'bass') };
   const mine: Hand = hand === 'lh' ? 'lh' : 'rh';
   const out = ['X:1', `M:${song.meter.beats}/${song.meter.unit}`, 'L:1/8', `K:${song.key}` + (!two && clefs[mine][0] === 'bass' ? ' clef=bass' : '')];
+  // Taktnummer først på hver linje, så man ser hvilke takter man velger når man øver på et utsnitt
+  out.push('%%barnumbers 0');
+  // abcjs 6.4.4 krasjer på %%setbarnb før første notelinje. En usynlig skillelinje (%%sep 0 0 0) først unngår det.
+  if (model.firstBar !== 1) out.push('%%sep 0 0 0', `%%setbarnb ${model.firstBar}`);
   if (two) out.push('%%score {RH LH}', `V:RH clef=${clefs.rh[0]}`, `V:LH clef=${clefs.lh[0]}`);
   const voice = (h: Hand): Voice => ({ annotate: hand === h || hand === 'both', label: (hand === 'lh') === (h === 'lh') });
   for (const [i, to] of lineRanges(model, perLine)) {

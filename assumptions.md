@@ -217,3 +217,25 @@
 - **Deler:** «Tema» er gameshow-delen `elise` (samme id, takter, tempo og registrering 8-2, ny tittel fordi låten nå har flere deler). Nye deler: Mellomspill, F-dur, 32-deler, Orgelpunkt, Orgelpunkt 2, Arpeggio og Hele stykket, på rundt åtte takter hver. Standardtempo 50–60 for øvedelene; originalen har fjerdedel = 72.
 - **Kategori:** ny kategori «Klaverstykker (lettest først)» øverst i låtvelgeren. Für Elise er flyttet dit fra gameshow-temaene. Gameshow-delen finnes fortsatt som «Tema».
 - **Ikke gjort:** MusicXML-importen avviser fortsatt trioler. Modellen har nå det som trengs for å støtte dem.
+
+## 2026-11-23 – Øve på noen takter: utsnitt, løkke og tempotrapp
+
+- **Kontekst:** Kasper vil lære hele stykker, som Für Elise. Appen kunne starte fra en note i «Vent på meg», men ikke gjenta noen takter eller øke tempoet litt etter litt.
+- **Utsnitt:** fra takt til takt innenfor delen, valgt med to nedtrekkslister under «Hva vil du øve på?». Modellen bygges av bare de taktene (`sliceSection` og så `build`), så dømming, tastatur, bokstaver, noteark, mikrofon og avspilling virker som før. Notearket viser bare utsnittet.
+  - Forkastet: hele delen i notearket med utsnittet markert. Da måtte all dømming og tidsregning hoppe over steg utenfor utsnittet, og en feil der gir feil dømming.
+  - Ikke laget: å velge første og siste note ved å trykke i notearket. Hele takter passer med inntellingen i «Spill i takt». Kan legges til senere.
+  - Tastaturet regnes ut fra hele delen, så det ikke hopper når man bytter utsnitt.
+- **Taktnummer:** notearket viser taktnummeret først på hver linje (`%%barnumbers 0`), i grått så det ikke forveksles med fingertallene. Bokstavvisningen viser nummeret foran hver takt. Et utsnitt beholder numrene fra delen (`firstBar` og `%%setbarnb`). Numrene teller fra 1 i hver del, fordi delene er satt sammen av grupper (Del A, Del A igjen). Importerte deler på 16 takter får numrene fra stykket.
+  - abcjs 6.4.4 krasjer på `%%setbarnb` før første notelinje. En usynlig skillelinje (`%%sep 0 0 0`) foran unngår det.
+- **Løkke i «Spill i takt»:** ny inntelling før hver runde, etter 1 s pause der resultatet vises. Forkastet: rett videre uten inntelling. Tempoet kan ha endret seg, og hånden må tilbake til starten av utsnittet.
+- **Løkke i «Vent på meg»:** begynner på nytt med en gang, så neste tone teller. Tid og bom står i hintet og i løkkekortet. Siste godkjente tone huskes, så mikrofonen ikke tar utklangen for første tone i neste runde.
+- **Tempotrapp:** minst 90 % treff gir 5 BPM opp, under 70 % gir 5 ned, ellers samme tempo. 90 % er samme grense som for rekord. Tempoet går ikke over målet. Står man over målet, holdes tempoet etter gode runder. Målet er delens standardtempo til man velger et annet (per del). Minste tempo er 50.
+- **Tempo per utsnitt:** hvert utsnitt husker sitt eget tempo. Et nytt utsnitt starter i tempoet til hele delen, og tempotrappen endrer ikke tempoet til hele delen.
+- **Lagring:** samme nøkkel (`dovregubben-ovemodus-v1`), nå versjon 2. Hele delen har samme nøkler som før, så gamle rekorder og tempo gjelder fortsatt. Et utsnitt har `|t5-8` etter del-id-en, tellt fra 1 i delen. Nytt: `settings.ranges`, `settings.loop`, `settings.target` og `progress` (de 12 siste rundene og beste tempo per dag de siste 60 dagene, per del, utsnitt, hånd og modus). `parseStore` sjekker formen på alt, gir standardverdier for det som mangler, og beholder ukjente felter.
+  - Kjent risiko: en fane med den gamle versjonen åpen samtidig med den nye. Den gamle lagrer bare `settings` og `rec`, så `progress` kan forsvinne. Sjelden, og bare fremgangen går tapt.
+  - Endres takter i en innebygd del senere, kan et lagret utsnitt peke på andre takter. Et utsnitt som ikke lenger passer i delen, slettes.
+- **Beste tempo per dag:** fra alle runder i takt med minst 90 %, med eller uten løkke. Liten linjegraf under knappene i oppsettet, bare dager det er øvd, med tabell for skjermlesere. Y-aksen starter ikke på null, fordi forskjellene er på 5 BPM.
+- **iPad:** løkkekortet står over notearket. Venstre kolonne bestemmer høyden på scenen, så kortet gjør den ikke høyere: tastaturet slutter på 904 px ved 768×1024 med og uten løkke (testet). Kortet har egen start og stopp, så oppsettet kan være skjult under øving. Resultatet mellom rundene har ingen knapper eller merke, så kortet for neste tone holder samme høyde og tastaturet ikke hopper hver runde.
+- **Rettet i forbifarten:** hintet «Denne delen har bare høyre hånd.» ble visket ut med en gang (`resetProgress` kom etter).
+- **Funnet, ikke rettet:** notearkets maksimale høyde (318 px) virker ikke når arket er høyere enn det. abcjs (`responsive: 'resize'`) setter høyden med `padding-bottom`, og den begrenses ikke av `max-height`. Hele stykket i Dovregubben blir rundt 1300 px høyt ved 1366 px bredde, og siden må rulles. Gjelder også før denne endringen, og blir viktigere med hele stykker. Et utsnitt på noen takter unngår det.
+- **Oppfølging:** test løkken på iPad i notestativet, med mikrofon og CT-S400. Vurder å velge utsnitt ved å trykke i notearket.

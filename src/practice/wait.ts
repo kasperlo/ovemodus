@@ -1,6 +1,6 @@
 import { pc } from '../music/theory';
-import { elapsed, spell, state } from '../state';
-import { setWaitRecord, waitRecord } from '../storage';
+import { elapsed, partId, spell, state } from '../state';
+import { progressOf, setProgress, setWaitRecord, store, waitRecord } from '../storage';
 import { els } from '../ui/dom';
 import { flashKey } from '../ui/keyboard';
 import { clearGhost, showGhost } from '../notation/sheet';
@@ -8,6 +8,7 @@ import { celebrate, fmtSec, markStep, refresh, renderStats, setHint, shakeStep }
 import type { InputEvent } from './input';
 import type { Hand, Step } from '../music/song';
 import { handOf, matches, matchesPart } from './judge';
+import { addRound, dayKey } from './ladder';
 import { resetProgress } from './progress';
 import { setMode } from './session';
 
@@ -79,12 +80,16 @@ function finishWait(): void {
   state.finished = true;
   state.tEnd = performance.now();
   const secs = elapsed();
-  const prev = waitRecord(state.sec.id, state.hand);
+  const part = partId();
+  const prev = waitRecord(part, state.hand);
   let badge: string | null = null;
   if (!state.partial && (!prev || secs < prev.time)) {
-    setWaitRecord(state.sec.id, state.hand, { time: secs, misses: state.misses });
+    setWaitRecord(part, state.hand, { time: secs, misses: state.misses });
     badge = prev ? 'Ny rekord!' : null;
   }
+  // En runde som startet midt i, kan ikke sammenlignes med de andre
+  if (!state.partial) setProgress(part, state.hand, 'vent', addRound(progressOf(part, state.hand, 'vent'), { at: Date.now(), time: secs, misses: state.misses }, dayKey(new Date())));
+  if (store.settings.loop) { again(secs, badge); return; }
   const n = state.model.steps.length;
   state.result = {
     label: 'Ferdig!', big: fmtSec(secs), small: true,
@@ -93,5 +98,17 @@ function finishWait(): void {
     badge,
     actions: [['Én gang til', () => { resetProgress(); refresh(); }, true], ['Prøv i takt', () => setMode('takt')]]
   };
+  celebrate();
+}
+
+/**
+ * Løkke: begynner på nytt med en gang, så neste tone teller. Tiden og bommene står i hintet og i løkkekortet.
+ * Siste tone huskes, fordi mikrofonen kan høre den klinge ut og ellers tro at første tone er spilt.
+ */
+function again(secs: number, badge: string | null): void {
+  const last = state.lastAcc, misses = state.misses;
+  resetProgress();
+  state.lastAcc = last;
+  setHint(`${badge ? badge + ' ' : ''}${fmtSec(secs)}, ${misses} bom. Fra start igjen.`, 'ok');
   celebrate();
 }

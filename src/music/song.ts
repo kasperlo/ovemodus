@@ -117,6 +117,8 @@ export interface Section {
   groups: SectionGroup[];
   /** Kort om bruken, vises i appen. */
   use?: string;
+  /** Taktnummeret til første takt, når delen begynner midt i stykket. Standard 1. */
+  firstBar?: number;
 }
 
 export type SongCategory = 'låt' | 'stykke' | 'egne' | 'klassisk' | 'mine';
@@ -214,6 +216,8 @@ export interface Model {
    * ellers laveste tone i høyre hånd. `null` når hendene overlapper, og da ignoreres ingen toner.
    */
   split: number | null;
+  /** Taktnummeret til første takt (`Section.firstBar`). */
+  firstBar: number;
 }
 
 function place(events: BarEvent[], start: number, label: string | null, out: Item[]): Bar {
@@ -270,7 +274,7 @@ export function build(song: Song, sec: Section, hand: PracticeHand = 'rh'): Mode
     list.forEach((x, i) => { x.si = i; });
     return list;
   };
-  const base = { song, hand, barLen: len, staffs, total: pos, split: splitPoint(song, sec) };
+  const base = { song, hand, barLen: len, staffs, total: pos, split: splitPoint(song, sec), firstBar: sec.firstBar ?? 1 };
   if (hand !== 'both') {
     const steps = stepsOf(hand);
     const other: Hand = hand === 'rh' ? 'lh' : 'rh';

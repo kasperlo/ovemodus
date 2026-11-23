@@ -1,7 +1,9 @@
 import { build, type Model, type PracticeHand, type Section, type Song, type Step } from './music/song';
 import { sciName, octOf, pc } from './music/theory';
+import { TEMPO_MAX, TEMPO_MIN } from './practice/ladder';
+import { rangeKey, type BarRange } from './practice/range';
 import { songs } from './songs';
-import type { Mode } from './storage';
+import { partKey, store, type Mode } from './storage';
 
 export type ClueAction = [text: string, fn: () => void, primary?: boolean];
 
@@ -24,6 +26,8 @@ export const state = {
   sec: firstSection as Section,
   hand: 'rh' as PracticeHand,
   model: build(firstSong, firstSection) as Model,
+  /** Taktene man øver på i delen, eller `null` for hele delen. `model` er bygd av bare disse taktene. */
+  range: null as BarRange | null,
   mode: 'vent' as Mode,
   tempo: 100,
   cur: 0,
@@ -60,7 +64,11 @@ export const run = {
   lastBeat: -1,
   bus: null as GainNode | null,
   /** Avvik i sekunder for hvert treff. */
-  offsets: [] as number[]
+  offsets: [] as number[],
+  /** Løkke: neste runde starter når pausen etter forrige runde er over. */
+  pending: false,
+  /** Løkke: runde nummer så mange siden løkken startet. */
+  round: 0
 };
 
 export const mic = {
@@ -81,6 +89,13 @@ export function expectedStep(): Step | undefined {
   const tt = (performance.now() - run.t0) / 1000;
   return steps.find(s => !s.judged && tt <= (s.t ?? 0) + (s.win ?? 0));
 }
+
+/** Delen og utsnittet man øver på, som nøkkel i lagringen: `delA` eller `delA|t5-8`. */
+export const partId = (): string => partKey(state.sec.id, rangeKey(state.range));
+
+/** Måltempoet for tempotrappen: valgt for delen, ellers delens standardtempo. */
+export const targetTempo = (): number =>
+  store.settings.target[state.sec.id] ?? Math.max(TEMPO_MIN, Math.min(TEMPO_MAX, Math.round(state.sec.tempo / 5) * 5));
 
 export function currentIndex(): number {
   if (run.active) return run.cursor;

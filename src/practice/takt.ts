@@ -1,15 +1,20 @@
 import { audio, audioCtx, click, masterBus, tone } from '../audio/synth';
 import { clickLength, countInBars, type Hand, type PracticeHand, type Step } from '../music/song';
 import { pc } from '../music/theory';
-import { avgOffsetMs, mic, run, spell, state, type RunKind } from '../state';
-import { setTaktRecord, taktRecord } from '../storage';
+import { avgOffsetMs, mic, partId, run, spell, state, targetTempo, type RunKind } from '../state';
+import { progressOf, setProgress, setTaktRecord, store, taktRecord } from '../storage';
 import { els } from '../ui/dom';
 import { flashKey } from '../ui/keyboard';
 import { celebrate, markStep, markTiming, refresh, setHint } from '../ui/view';
 import { keepAwake } from '../wakeLock';
 import type { InputEvent } from './input';
 import { RECORD_MIN_PCT, handOf, hitWindow, matches, matchesPart, timingText } from './judge';
+import { addRound, dayKey, ladderText, nextTempo } from './ladder';
 import { TEMPO_MAX, TEMPO_MIN, resetProgress, setTempo } from './progress';
+
+/** Pause mellom rundene i løkken, så man rekker å se resultatet før neste inntelling. */
+export const LOOP_PAUSE_MS = 1000;
+let nextRound: number | undefined;
 
 /**
  * Når appen spiller den andre hånden gjennom høyttaleren, hører mikrofonen den også.
@@ -32,7 +37,9 @@ function settle(s: Step): void {
 
 /** Starter «Spill i takt» (innteller + metronom) eller demo (appen spiller selv). */
 export function startRun(kind: RunKind): void {
+  const continues = kind === 'takt' && run.pending;
   stopRun(true);
+  run.round = continues ? run.round + 1 : 1;
   const ac = audio();
   resetProgress();
   const M = state.model;
@@ -71,8 +78,26 @@ export function startRun(kind: RunKind): void {
   refresh();
 }
 
+/**
+ * Avlyser neste runde i løkken hvis den står og venter. Resultatet av forrige runde blir stående,
+ * med en knapp for å starte igjen i stedet for «Stopp».
+ */
+export function cancelNextRound(): boolean {
+  if (!run.pending) return false;
+  clearTimeout(nextRound);
+  nextRound = undefined;
+  run.pending = false;
+  keepAwake('run', false);
+  if (state.result) state.result.actions = [[store.settings.loop ? 'Start løkken igjen' : 'Én gang til', () => startRun('takt'), true]];
+  return true;
+}
+
 export function stopRun(quiet?: boolean): void {
-  if (!run.active) return;
+  const waited = cancelNextRound();
+  if (!run.active) {
+    if (waited && !quiet) refresh();
+    return;
+  }
   run.active = false;
   keepAwake('run', false);
   const bus = run.bus;
@@ -182,35 +207,46 @@ function judgeTaktBoth(m: number, tt: number, ev: InputEvent): void {
 function finishRun(): void {
   const kind = run.kind;
   run.active = false;
-  keepAwake('run', false);
   const bus = run.bus;
   setTimeout(() => { try { bus!.disconnect(); } catch { /* ignorer */ } }, 1500);
-  if (kind === 'takt') {
-    // Med begge hender teller hver hånd sin del som én tone
-    const units = state.model.steps.flatMap(s => s.parts ? handsOf(s).map(h => s.parts![h]!.judged) : [s.judged]);
-    const n = units.length, hits = units.filter(j => j === 'hit').length;
-    const pct = Math.round(100 * hits / n);
-    const prev = taktRecord(state.sec.id, state.hand);
-    let badge: string | null = null;
-    if (pct >= RECORD_MIN_PCT && (!prev || state.tempo > prev.tempo)) {
-      setTaktRecord(state.sec.id, state.hand, { tempo: state.tempo, pct });
-      badge = prev ? 'Ny rekord!' : 'Rekord lagret';
-    }
-    const timing = run.offsets.length ? timingText(avgOffsetMs()) : 'Ingen treff denne gangen. Prøv et lavere tempo.';
-    const faster = Math.min(TEMPO_MAX, state.tempo + 10), slower = Math.max(TEMPO_MIN, state.tempo - 10);
+  if (kind !== 'takt') {
+    keepAwake('run', false);
+    state.result = null;
+    resetProgress();
+    refresh();
+    return;
+  }
+  // Med begge hender teller hver hånd sin del som én tone
+  const units = state.model.steps.flatMap(s => s.parts ? handsOf(s).map(h => s.parts![h]!.judged) : [s.judged]);
+  const n = units.length, hits = units.filter(j => j === 'hit').length;
+  const pct = Math.round(100 * hits / n);
+  const part = partId(), tempo = state.tempo;
+  const prev = taktRecord(part, state.hand);
+  let badge: string | null = null;
+  if (pct >= RECORD_MIN_PCT && (!prev || tempo > prev.tempo)) {
+    setTaktRecord(part, state.hand, { tempo, pct });
+    badge = prev ? 'Ny rekord!' : 'Rekord lagret';
+  }
+  setProgress(part, state.hand, 'takt', addRound(progressOf(part, state.hand, 'takt'), { at: Date.now(), tempo, pct }, dayKey(new Date())));
+  const timing = run.offsets.length ? timingText(avgOffsetMs()) : 'Ingen treff denne gangen. Prøv et lavere tempo.';
+  if (store.settings.loop) {
+    // Kortet holder samme høyde som under runden (uten merke og knapper), så tastaturet ikke hopper hver runde
+    const target = targetTempo();
+    const next = nextTempo(tempo, pct, target);
+    const label = `Runde ${run.round}${badge ? ' · ' + badge.replace('!', '').toLowerCase() : ''}`;
+    state.result = { label, big: pct + ' %', small: true, sub: `${hits} av ${n} i takt ved ${tempo} BPM`, then: `${ladderText(next, target)} ${timing}`, badge: null, actions: [] };
+    setTempo(next.tempo, true);
+    run.pending = true;
+    nextRound = window.setTimeout(() => { nextRound = undefined; if (run.pending) startRun('takt'); }, LOOP_PAUSE_MS);
+  } else {
+    keepAwake('run', false);
+    const faster = Math.min(TEMPO_MAX, tempo + 10), slower = Math.max(TEMPO_MIN, tempo - 10);
     const next: [string, () => void] = pct >= RECORD_MIN_PCT
       ? [`Litt raskere (${faster} BPM)`, () => { setTempo(faster, true); startRun('takt'); }]
       : [`Litt saktere (${slower} BPM)`, () => { setTempo(slower, true); startRun('takt'); }];
-    state.result = {
-      label: 'Runden er ferdig', big: pct + ' %', small: true,
-      sub: `${hits} av ${n} toner i takt ved ${state.tempo} BPM`,
-      then: timing, badge,
-      actions: [['Én gang til', () => startRun('takt'), true], next]
-    };
-    if (pct >= RECORD_MIN_PCT) celebrate();
-  } else {
-    state.result = null;
-    resetProgress();
+    const sub = `${hits} av ${n} toner i takt ved ${tempo} BPM`;
+    state.result = { label: 'Runden er ferdig', big: pct + ' %', small: true, sub, then: timing, badge, actions: [['Én gang til', () => startRun('takt'), true], next] };
   }
+  if (pct >= RECORD_MIN_PCT) celebrate();
   refresh();
 }

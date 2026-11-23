@@ -1,6 +1,6 @@
 // Importerte låter lagres bare i nettleseren på denne enheten (localStorage). De publiseres aldri.
 
-import { CH, N, R, type BarEvent, type SectionGroup, type Song } from '../music/song';
+import { CH, N, R, type BarEvent, type Section, type SectionGroup, type Song } from '../music/song';
 import type { StoredEvent, StoredSong } from './musicxml';
 
 const KEY = 'ovemodus-mine-noter-v1';
@@ -41,11 +41,11 @@ export function toSong(s: StoredSong): Song {
   s.lh.forEach((b, i) => { lh[`l${i}`] = b.map(event); });
   const pairs = s.rh.map((_, i): [string, string | null] => [`r${i}`, s.lh.length ? `l${i}` : null]);
   const group = (from: number, to: number, label: string): SectionGroup => ({ label, bars: pairs.slice(from, to) });
-  const sections = [{ id: `${s.id}-hele`, title: 'Hele', tempo: s.tempo, groups: [group(0, pairs.length, s.title)] }];
+  const sections: Section[] = [{ id: `${s.id}-hele`, title: 'Hele', tempo: s.tempo, groups: [group(0, pairs.length, s.title)] }];
   if (pairs.length > CHUNK) {
     for (let i = 0; i < pairs.length; i += CHUNK) {
       const to = Math.min(pairs.length, i + CHUNK);
-      sections.push({ id: `${s.id}-t${i + 1}`, title: `Takt ${i + 1}–${to}`, tempo: s.tempo, groups: [group(i, to, `Takt ${i + 1}`)] });
+      sections.push({ id: `${s.id}-t${i + 1}`, title: `Takt ${i + 1}–${to}`, tempo: s.tempo, groups: [group(i, to, `Takt ${i + 1}`)], firstBar: i + 1 });
     }
   }
   return {

@@ -1,8 +1,11 @@
 import { clickLength, countInBars, type Hand, type Section, type Step, type StepStatus } from '../music/song';
 import { clearOverlay, sheet, paintSheet, paintTiming, sheetCursor } from '../notation/sheet';
-import { timingClass } from '../practice/judge';
-import { avgOffsetMs, currentIndex, elapsed, mic, run, state, type ClueAction } from '../state';
-import { taktRecord, waitRecord } from '../storage';
+import { RECORD_MIN_PCT, timingClass } from '../practice/judge';
+import { LADDER_DOWN_PCT } from '../practice/ladder';
+import { barCount, barNumber, rangeText } from '../practice/range';
+import { avgOffsetMs, currentIndex, elapsed, mic, partId, run, state, targetTempo, type ClueAction } from '../state';
+import { progressOf, store, taktRecord, waitRecord, type Round } from '../storage';
+import { renderDays } from './days';
 import { els, segButtons } from './dom';
 import { setTargets } from './keyboard';
 import { chipEls, scrollChip } from './strip';
@@ -68,6 +71,7 @@ export function refresh(): void {
   setTargets(cur, showKeys ? steps[ci + 1] : null, run.active && run.kind === 'demo', done);
   renderClue(ci);
   renderStats();
+  renderLoop();
   updateButtons();
 }
 
@@ -124,7 +128,8 @@ function renderClue(ci: number): void {
     const tt = (performance.now() - run.t0) / 1000;
     if (run.kind === 'takt' && tt < run.countIn) {
       const beat = Math.floor(tt / (run.clickLen * run.e8));
-      setClue('Gjør deg klar', beat < 0 ? '…' : String(Math.max(1, run.countInClicks - beat)), `${run.tempo} BPM`, 'Første tone: ' + steps[0].name);
+      const round = store.settings.loop ? ` · runde ${run.round}` : '';
+      setClue('Gjør deg klar', beat < 0 ? '…' : String(Math.max(1, run.countInClicks - beat)), `${run.tempo} BPM${round}`, 'Første tone: ' + steps[0].name);
       return;
     }
     const s = steps[ci];
@@ -134,7 +139,8 @@ function renderClue(ci: number): void {
     return;
   }
   if (state.mode === 'takt') {
-    setClue('Spill i takt', `${state.tempo} BPM`, `Trykk «Start i takt». Du får ${countInText()} før første tone.`, 'Første tone: ' + steps[0].name + fingerText(steps[0]), { small: true });
+    const sub = store.settings.loop ? `Trykk «Start i takt». Du får ${countInText()} før hver runde.` : `Trykk «Start i takt». Du får ${countInText()} før første tone.`;
+    setClue('Spill i takt', `${state.tempo} BPM`, sub, 'Første tone: ' + steps[0].name + fingerText(steps[0]), { small: true });
     return;
   }
   const s = steps[state.cur];
@@ -152,7 +158,7 @@ function countInText(): string {
 }
 
 function recText(): string {
-  const id = state.sec.id;
+  const id = partId();
   if (state.mode === 'vent') {
     const r = waitRecord(id, state.hand);
     return r ? fmtSec(r.time) : '–';
@@ -188,15 +194,87 @@ export function setHint(text: string, kind = ''): void {
   if (text) hintTimer = window.setTimeout(() => { els.hint.textContent = ''; els.hint.className = 'hint'; }, 2600);
 }
 
+/** Valgene for takter i oppsettet. Alternativene lages på nytt bare når delen er en annen. */
+export function renderRange(): void {
+  const sec = state.sec, n = barCount(sec), key = `${sec.id}|${n}`;
+  if (els.rangeFrom.dataset.part !== key) {
+    const opts = Array.from({ length: n }, (_, i) => `<option value="${i}">${barNumber(sec, i)}</option>`).join('');
+    els.rangeFrom.innerHTML = opts;
+    els.rangeTo.innerHTML = opts;
+    els.rangeFrom.dataset.part = key;
+  }
+  els.rangeFrom.value = String(state.range ? state.range.from : 0);
+  els.rangeTo.value = String(state.range ? state.range.to : n - 1);
+  els.rangeRow.hidden = n < 2;
+  els.btnWholePart.hidden = !state.range;
+}
+
+/** Tekst og farge for én runde i løkkekortet. */
+function roundChip(r: Round, takt: boolean): { big: string; small: string; kind: string; text: string } {
+  if (takt) {
+    const pct = r.pct ?? 0;
+    return { big: `${pct} %`, small: `${r.tempo}`, kind: pct >= RECORD_MIN_PCT ? 'good' : pct >= LADDER_DOWN_PCT ? 'meh' : 'weak', text: `${pct} % treff ved ${r.tempo} BPM` };
+  }
+  const misses = r.misses ?? 0;
+  return { big: fmtSec(r.time ?? 0), small: `${misses} bom`, kind: misses === 0 ? 'good' : 'meh', text: `${fmtSec(r.time ?? 0)} og ${misses} bom` };
+}
+
+const handName = (): string => state.hand === 'lh' ? 'venstre hånd' : state.hand === 'both' ? 'begge hender' : '';
+
+let loopSig = '';
+
+/** Løkkekortet (siste runder og tempoet), valgene for løkken og grafen over beste tempo per dag. */
+function renderLoop(): void {
+  const on = store.settings.loop, takt = state.mode === 'takt';
+  const p = progressOf(partId(), state.hand, state.mode);
+  const sig = JSON.stringify([on, takt, partId(), state.hand, state.tempo, targetTempo(), p?.rounds.slice(-5), takt && p?.days]);
+  if (sig === loopSig) return;
+  loopSig = sig;
+  els.optLoop.checked = on;
+  els.targetRow.hidden = els.loopHelp.hidden = !(on && takt);
+  els.optTarget.value = String(targetTempo());
+  els.loopCard.hidden = !on;
+  els.loopTitle.textContent = `Løkke · ${state.range ? rangeText(state.sec, state.range) : 'hele delen'}`;
+  els.loopTempo.textContent = takt ? `${state.tempo} BPM · mål ${targetTempo()}` : '';
+  els.loopRounds.innerHTML = '';
+  const rounds = p?.rounds.slice(-5) ?? [];
+  if (!rounds.length) {
+    const li = document.createElement('li');
+    li.className = 'none';
+    li.textContent = 'Rundene dine vises her.';
+    els.loopRounds.append(li);
+  }
+  rounds.forEach(r => {
+    const c = roundChip(r, takt);
+    const li = document.createElement('li');
+    li.className = c.kind;
+    li.innerHTML = '<b aria-hidden="true"></b><span aria-hidden="true"></span><span class="visually-hidden"></span>';
+    li.children[0].textContent = c.big;
+    li.children[1].textContent = c.small;
+    li.children[2].textContent = c.text;
+    els.loopRounds.append(li);
+  });
+  const days = takt ? p?.days ?? {} : {};
+  els.days.hidden = !Object.keys(days).length;
+  els.daysWhat.textContent = [state.range ? rangeText(state.sec, state.range) : '', handName()].filter(Boolean).map(t => '· ' + t).join(' ');
+  if (!els.days.hidden) renderDays(days);
+}
+
 export function updateButtons(): void {
+  const going = (run.active && run.kind === 'takt') || run.pending;
   els.btnGo.hidden = state.mode !== 'takt';
-  els.btnGo.textContent = run.active && run.kind === 'takt' ? 'Stopp' : 'Start i takt';
+  els.btnGo.textContent = going ? 'Stopp' : 'Start i takt';
+  // Løkkekortet har egen start og stopp, så oppsettet kan være skjult på iPad
+  els.btnLoopGo.hidden = state.mode !== 'takt';
+  els.btnLoopGo.textContent = going ? 'Stopp' : 'Start';
   els.btnDemo.textContent = run.active && run.kind === 'demo' ? 'Stopp avspillingen' : 'Hør hvordan det går';
   segButtons(els.segSection).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sec === state.sec.id)));
   segButtons(els.segMode).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === state.mode)));
   els.btnMic.textContent = mic.on ? 'Slå av mikrofon' : 'Bruk mikrofon';
-  els.setupSum.textContent = [state.sec.title, state.hand === 'lh' ? 'Venstre hånd' : state.hand === 'both' ? 'Begge hender' : '', state.mode === 'vent' ? 'Vent på meg' : 'Spill i takt', `${state.tempo} BPM`]
-    .filter(Boolean).join(' · ');
+  els.setupSum.textContent = [
+    state.sec.title, state.range ? rangeText(state.sec, state.range) : '', state.hand === 'lh' ? 'Venstre hånd' : state.hand === 'both' ? 'Begge hender' : '',
+    state.mode === 'vent' ? 'Vent på meg' : 'Spill i takt', store.settings.loop ? 'Gjenta' : '', `${state.tempo} BPM`
+  ].filter(Boolean).join(' · ');
 }
 
 export function setSetupOpen(open: boolean): void {

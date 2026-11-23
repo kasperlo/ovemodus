@@ -4,7 +4,8 @@ import { micFrame, toggleMic } from './input/mic';
 import { sheet, sheetPerLine } from './notation/sheet';
 import { emitInput } from './practice/input';
 import { resetProgress, setTempo } from './practice/progress';
-import { drawSheet, setHand, setMode, setSection, setView } from './practice/session';
+import { drawSheet, setHand, setLoop, setMode, setRange, setSection, setTarget, setView } from './practice/session';
+import { TEMPO_MAX, TEMPO_MIN } from './practice/ladder';
 import { runFrame, startRun, stopRun } from './practice/takt';
 import { songs } from './songs';
 import { SFX_KEYS, casioSounds } from './casio';
@@ -101,9 +102,24 @@ els.btnSetup.addEventListener('click', () => {
   save();
   setSetupOpen(store.settings.setupOpen);
 });
-els.btnGo.addEventListener('click', () => {
-  if (run.active && run.kind === 'takt') stopRun(false); else startRun('takt');
+els.rangeFrom.addEventListener('change', () => {
+  const from = Number(els.rangeFrom.value);
+  setRange({ from, to: Math.max(from, Number(els.rangeTo.value)) });
 });
+els.rangeTo.addEventListener('change', () => {
+  const to = Number(els.rangeTo.value);
+  setRange({ from: Math.min(to, Number(els.rangeFrom.value)), to });
+});
+els.btnWholePart.addEventListener('click', () => {
+  setRange(null);
+  els.rangeFrom.focus(); // knappen skjules, så fokus må et sted
+});
+els.optLoop.addEventListener('change', () => setLoop(els.optLoop.checked));
+for (let t = TEMPO_MIN; t <= TEMPO_MAX; t += 5) els.optTarget.add(new Option(`${t} BPM`, String(t)));
+els.optTarget.addEventListener('change', () => setTarget(Number(els.optTarget.value)));
+[els.btnGo, els.btnLoopGo].forEach(b => b.addEventListener('click', () => {
+  if ((run.active && run.kind === 'takt') || run.pending) stopRun(false); else startRun('takt');
+}));
 els.btnDemo.addEventListener('click', () => {
   if (run.active && run.kind === 'demo') stopRun(false); else startRun('demo');
 });
@@ -116,7 +132,7 @@ els.tempo.addEventListener('input', () => setTempo(Number(els.tempo.value)));
 initMicDiag();
 els.optSens.value = store.settings.sens || 'middels';
 els.optSens.addEventListener('change', () => { store.settings.sens = els.optSens.value as Sensitivity; save(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && run.active) stopRun(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && (run.active || run.pending)) stopRun(false); });
 
 /* ---------- Løkke ---------- */
 let lastStatT = 0;
@@ -143,5 +159,5 @@ setView(store.settings.view);
 if (document.fonts && document.fonts.ready) void document.fonts.ready.then(() => { if (!els.sheet.hidden) { drawSheet(); refresh(); } });
 requestAnimationFrame(frame);
 
-installTestHook({ setSection, setMode, setTempo, startRun, stopRun });
+installTestHook({ setSection, setMode, setTempo, startRun, stopRun, setRange, setLoop, setTarget });
 initUpdates();

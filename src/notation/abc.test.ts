@@ -37,7 +37,7 @@ describe('keyAccidentals', () => {
 describe('toAbc', () => {
   it('del A, to takter per linje', () => {
     expect(toAbc(model('delA'), 2, false)).toBe([
-      'X:1', 'M:4/4', 'L:1/8', 'K:Am',
+      'X:1', 'M:4/4', 'L:1/8', 'K:Am', '%%barnumbers 0',
       '"^Del A"!1!A!2!B!3!c!4!d !5!e!3!c !5!e2 | !4!^d!2!B !4!d2 !4!=d!2!_B !4!d2 |',
       'w: A B C D E C E | D♯ B D♯ D B♭ D',
       '!1!A!2!B!3!c!1!d !2!e!1!c!2!e!5!a | !4!g!2!e!1!c!2!e !4!g4 |]',
@@ -80,31 +80,39 @@ describe('toAbc', () => {
   it('venstre hånd alene: bassnøkkel, fingersetting og tonenavn på kvintene', () => {
     const abc = toAbc(model('delA', 'lh'), 2, false).split('\n');
     expect(abc[3]).toBe('K:Am clef=bass');
-    expect(abc[4]).toBe('"^Del A"!5!!1![A,,E,]2 !5!!1![A,,E,]2 !5!!1![A,,E,]2 !5!!1![A,,E,]2 | !5!!1![A,,E,]2 !5!!1![A,,E,]2 !5!!1![A,,E,]2 !5!!1![A,,E,]2 |');
-    expect(abc[5]).toBe('w: A+E A+E A+E A+E | A+E A+E A+E A+E');
+    expect(abc[5]).toBe('"^Del A"!5!!1![A,,E,]2 !5!!1![A,,E,]2 !5!!1![A,,E,]2 !5!!1![A,,E,]2 | !5!!1![A,,E,]2 !5!!1![A,,E,]2 !5!!1![A,,E,]2 !5!!1![A,,E,]2 |');
+    expect(abc[6]).toBe('w: A+E A+E A+E A+E | A+E A+E A+E A+E');
   });
 
   it('venstre hånd med høyre hånd vist: høyre øverst uten fingre, tonenavn under venstre', () => {
     const abc = toAbc(model('riktig', 'lh'), 4, true).split('\n');
-    expect(abc.slice(4, 7)).toEqual(['%%score {RH LH}', 'V:RH clef=treble', 'V:LH clef=bass']);
-    expect(abc[7]).toBe('[V:RH] C/E/G/c/ [CEGc]6 |]');
-    expect(abc[8]).toBe('[V:LH] "^Riktig svar – fanfare"z2 !5!!1![C,,C,]6 |]');
-    expect(abc[9]).toBe('w: C+C');
+    expect(abc.slice(5, 8)).toEqual(['%%score {RH LH}', 'V:RH clef=treble', 'V:LH clef=bass']);
+    expect(abc[8]).toBe('[V:RH] C/E/G/c/ [CEGc]6 |]');
+    expect(abc[9]).toBe('[V:LH] "^Riktig svar – fanfare"z2 !5!!1![C,,C,]6 |]');
+    expect(abc[10]).toBe('w: C+C');
   });
 
   it('begge hender: begge systemer med fingre og tonenavn, etiketten bare øverst', () => {
     const abc = toAbc(model('riktig', 'both'), 4, false).split('\n');
-    expect(abc.slice(4, 7)).toEqual(['%%score {RH LH}', 'V:RH clef=treble', 'V:LH clef=bass']);
-    expect(abc[7]).toBe('[V:RH] "^Riktig svar – fanfare"!1!C/!2!E/!3!G/!5!c/ !1!!2!!3!!5![CEGc]6 |]');
-    expect(abc[8]).toBe('w: C E G C C');
-    expect(abc[9]).toBe('[V:LH] z2 !5!!1![C,,C,]6 |]');
-    expect(abc[10]).toBe('w: C+C');
+    expect(abc.slice(5, 8)).toEqual(['%%score {RH LH}', 'V:RH clef=treble', 'V:LH clef=bass']);
+    expect(abc[8]).toBe('[V:RH] "^Riktig svar – fanfare"!1!C/!2!E/!3!G/!5!c/ !1!!2!!3!!5![CEGc]6 |]');
+    expect(abc[9]).toBe('w: C E G C C');
+    expect(abc[10]).toBe('[V:LH] z2 !5!!1![C,,C,]6 |]');
+    expect(abc[11]).toBe('w: C+C');
   });
 
   it('begge hender: venstre hånds fingre vises bare når de endrer seg, og i starten av linjen', () => {
     const lines = toAbc(model('delA', 'both'), 2, false).split('\n').filter(l => l.startsWith('[V:LH]'));
     expect(lines[0]).toBe('[V:LH] !5!!1![A,,E,]2 [A,,E,]2 [A,,E,]2 [A,,E,]2 | [A,,E,]2 [A,,E,]2 [A,,E,]2 [A,,E,]2 |');
     expect(lines[1].startsWith('[V:LH] !5!!1![A,,E,]2 [A,,E,]2')).toBe(true);
+  });
+
+  it('taktnummer først på hver linje, og fra riktig takt når delen begynner midt i stykket', () => {
+    expect(toAbc(model('delA'), 2, false).split('\n')).toContain('%%barnumbers 0');
+    expect(toAbc(model('delA'), 2, false)).not.toContain('%%setbarnb');
+    const { song, sec } = findSection('hele');
+    const abc = toAbc(build(song, { ...sec, firstBar: 5 }), 2, false).split('\n');
+    expect(abc.slice(4, 7)).toEqual(['%%barnumbers 0', '%%sep 0 0 0', '%%setbarnb 5']);
   });
 
   it('toneart og taktart fra låten, og fortegn ut fra tonearten', () => {

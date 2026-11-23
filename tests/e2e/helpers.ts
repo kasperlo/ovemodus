@@ -8,6 +8,10 @@ export interface OvemodusHook {
   setTempo(bpm: number, quiet?: boolean): void;
   startRun(kind: 'takt' | 'demo'): void;
   stopRun(quiet?: boolean): void;
+  /** Takt `first` til `last` i delen, tellt fra 1. Uten argumenter: hele delen. */
+  setRange(first?: number, last?: number): void;
+  setLoop(on: boolean): void;
+  setTarget(bpm: number): void;
   readonly state: {
     section: string;
     mode: 'vent' | 'takt';
@@ -24,6 +28,11 @@ export interface OvemodusHook {
     sheet: { ok: boolean; count: number; perLine: number; cursorW: number };
     /** `rh` og `lh` finnes bare når man øver begge hender. */
     notes: { m: number; t: number; judged: string | null; rh?: number; lh?: number }[];
+    tempo: number;
+    /** Taktene man øver på, tellt fra 1 i delen. `null` for hele delen. */
+    range: { first: number; last: number } | null;
+    /** `pending`: neste runde i løkken starter etter pausen. `rounds`: lagrede runder for delen, hånden og modusen. */
+    loop: { on: boolean; pending: boolean; round: number; target: number; rounds: { at: number; tempo?: number; pct?: number; time?: number; misses?: number }[] };
   };
 }
 

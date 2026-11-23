@@ -8,7 +8,7 @@ export function renderStrip(model: Model, onJump: (si: number) => void): void {
   els.strip.innerHTML = '';
   chipEls = [];
   let barsEl: HTMLElement | null = null;
-  model.bars.forEach(bar => {
+  model.bars.forEach((bar, bi) => {
     if (bar.label) {
       const lab = document.createElement('div');
       lab.className = 'grp-label'; lab.textContent = bar.label;
@@ -18,6 +18,11 @@ export function renderStrip(model: Model, onJump: (si: number) => void): void {
     }
     const b = document.createElement('div');
     b.className = 'bar';
+    const no = document.createElement('span');
+    no.className = 'no';
+    no.textContent = String(model.firstBar + bi);
+    no.title = `Takt ${model.firstBar + bi}`;
+    b.append(no);
     bar.items.forEach(it => {
       const c = document.createElement('div');
       c.className = 'chip' + (it.type === 'rest' ? ' rest' : it.type === 'chord' ? ' chord' : '');

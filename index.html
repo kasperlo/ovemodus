@@ -51,6 +51,13 @@
         <button type="button" data-hand="lh" aria-pressed="false">Venstre hånd</button>
         <button type="button" data-hand="both" aria-pressed="false">Begge hender</button>
       </div>
+      <div class="range pick-row" id="rangeRow" role="group" aria-label="Takter du øver på">
+        <label for="rangeFrom">Takt</label>
+        <select id="rangeFrom" aria-label="Fra takt"></select>
+        <label for="rangeTo">til</label>
+        <select id="rangeTo" aria-label="Til takt"></select>
+        <button type="button" class="btn ghost" id="btnWholePart" hidden>Hele delen</button>
+      </div>
     </section>
 
     <section class="step">
@@ -85,11 +92,25 @@
         <output id="tempoOut" for="tempo">100 BPM</output>
       </div>
       <label class="opt" for="optAcc"><input type="checkbox" id="optAcc" checked> <span id="optAccText">Spill venstre hånd for meg</span></label>
+      <label class="opt" for="optLoop"><input type="checkbox" id="optLoop"> Gjenta til jeg stopper</label>
+      <div class="opt target" id="targetRow" hidden>
+        <label for="optTarget">Tempotrapp opp til</label>
+        <select id="optTarget"></select>
+      </div>
+      <p class="use" id="loopHelp" hidden>Etter en runde med minst 90 % treff går tempoet opp 5 BPM, til målet. Under 70 % går det ned 5.</p>
       <div class="row go">
         <button type="button" class="btn primary" id="btnGo" hidden>Start i takt</button>
         <button type="button" class="btn" id="btnDemo">Hør hvordan det går</button>
         <button type="button" class="btn ghost" id="btnReset">Start på nytt</button>
       </div>
+      <figure class="days" id="days" hidden>
+        <figcaption>Beste tempo per dag <span id="daysWhat"></span></figcaption>
+        <div class="days-plot" id="daysPlot"></div>
+        <table class="visually-hidden" id="daysTable">
+          <thead><tr><th scope="col">Dag</th><th scope="col">Beste tempo med minst 90 % treff</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </figure>
     </section>
     </div>
   </aside>
@@ -122,6 +143,12 @@
           <label class="opt" for="optLHStaff" id="optLHStaffLabel"><input type="checkbox" id="optLHStaff"> <span id="optLHStaffText">Vis venstre hånd</span></label>
           <span class="music-tip">Klikk på en note for å starte derfra</span>
         </div>
+        <section class="loop" id="loopCard" aria-labelledby="loopTitle" hidden>
+          <h2 class="loop-title" id="loopTitle">Løkke</h2>
+          <span class="loop-tempo" id="loopTempo"></span>
+          <ol class="rounds" id="loopRounds" aria-label="Siste runder"></ol>
+          <button type="button" class="btn primary" id="btnLoopGo" hidden>Start</button>
+        </section>
         <div class="sheet" id="sheet" aria-label="Noteark for høyre hånd med fingersetting og tonenavn"></div>
         <div class="strip" id="strip" aria-label="Takter med tonenavn og fingersetting" hidden></div>
       </div>
@@ -152,6 +179,10 @@
     <div class="help-card">
       <h3>Spill i takt</h3>
       <p>Du får fire klikk, så går siden videre i tempoet du har valgt. Etterpå ser du hvor mange toner du traff i tide. Øk tempoet litt for hver runde, som i nedtellingen.</p>
+    </div>
+    <div class="help-card">
+      <h3>Øv på noen takter</h3>
+      <p>Velg takter under «Hva vil du øve på?», og huk av for «Gjenta til jeg stopper». Da starter taktene på nytt av seg selv. I takt får du ny inntelling før hver runde, og tempoet går opp 5 BPM etter en god runde og ned 5 etter en svak, til måltempoet.</p>
     </div>
   </div>
   <p class="help-note">Bokstavene og fingersettingen er de samme som i notearket. B heter H på norsk. Høyre hånd spiller fra midtre C og opp, venstre hånd under.</p>

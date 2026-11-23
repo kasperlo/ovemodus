@@ -1,16 +1,17 @@
 import { casioText } from '../casio';
-import { build, type Hand, type PracticeHand } from '../music/song';
+import { build, type Hand, type PracticeHand, type Section } from '../music/song';
 import { sciName } from '../music/theory';
 import { renderSheet, sheet } from '../notation/sheet';
 import { findSection } from '../songs';
-import { mic, run, state } from '../state';
+import { mic, partId, run, state } from '../state';
 import { save, store, type Mode, type View } from '../storage';
 import { els, segButtons } from '../ui/dom';
 import { KB_RANGE, keyboardRange, renderKeyboard } from '../ui/keyboard';
 import { renderStrip } from '../ui/strip';
-import { micListeningText, refresh, renderSegments, setHint, setStatus } from '../ui/view';
+import { micListeningText, refresh, renderRange, renderSegments, setHint, setStatus } from '../ui/view';
 import { resetProgress, setTempo } from './progress';
-import { stopRun } from './takt';
+import { normalizeRange, rangeText, sliceSection, type BarRange } from './range';
+import { cancelNextRound, stopRun } from './takt';
 
 export function drawSheet(): void {
   renderSheet(els.sheet, state.model, els.optLHStaff.checked, jumpTo);
@@ -41,33 +42,54 @@ function handTexts(): void {
   if (mic.on) setStatus(micListeningText(), 'ok');
 }
 
-/** Bygger modellen på nytt for valgt del og hånd, og tegner alt som avhenger av den. */
+/** Delen man øver på: hele delen, eller bare taktene i utsnittet. */
+const practiceSection = (): Section => state.range ? sliceSection(state.sec, state.range) : state.sec;
+
+/** Bygger modellen på nytt for valgt del, utsnitt og hånd, og tegner alt som avhenger av den. */
 function load(): void {
   stopRun(true);
-  state.model = build(state.song, state.sec, state.hand);
-  // Importerte noter kan mangle én hånd. Da øves den andre.
+  let note = '';
+  let sec = practiceSection();
+  state.model = build(state.song, sec, state.hand);
+  // Et utsnitt med bare pauser kan ikke øves. Da øves hele delen.
+  if (state.range && !build(state.song, sec, 'both').steps.length) {
+    note = `${rangeText(state.sec, state.range)} har ingen toner. Du øver på hele delen.`;
+    state.range = null;
+    delete store.settings.ranges[state.sec.id];
+    save();
+    sec = state.sec;
+    state.model = build(state.song, sec, state.hand);
+  }
+  // Importerte noter, og noen utsnitt, kan mangle én hånd. Da øves den andre.
   if (!state.model.steps.length && state.hand !== 'both') {
     const other: Hand = state.hand === 'rh' ? 'lh' : 'rh';
-    const alt = build(state.song, state.sec, other);
+    const alt = build(state.song, sec, other);
     if (alt.steps.length) {
       state.hand = other;
       state.model = alt;
-      setHint(`Denne delen har bare ${other === 'rh' ? 'høyre' : 'venstre'} hånd.`, '');
+      note = `${state.range ? 'Disse taktene' : 'Denne delen'} har bare ${other === 'rh' ? 'høyre' : 'venstre'} hånd.`;
     }
   }
-  const hasLh = build(state.song, state.sec, 'lh').steps.length > 0;
+  const hasLh = build(state.song, sec, 'lh').steps.length > 0;
   els.segHand.querySelectorAll<HTMLButtonElement>('button[data-hand="lh"], button[data-hand="both"]').forEach(b => { b.disabled = !hasLh; });
-  if (state.hand === 'both' && !hasLh) { state.hand = 'rh'; state.model = build(state.song, state.sec, 'rh'); }
+  if (state.hand === 'both' && !hasLh) { state.hand = 'rh'; state.model = build(state.song, sec, 'rh'); }
+  // Tastaturet følger hele delen, så det ikke hopper når man bytter utsnitt
+  const all = state.range ? build(state.song, state.sec, state.hand).steps : state.model.steps;
   renderKeyboard(state.hand === 'both'
-    ? keyboardRange(state.model.steps, KB_RANGE.both, 48)
-    : keyboardRange(state.model.steps, KB_RANGE[state.hand]));
+    ? keyboardRange(all, KB_RANGE.both, 48)
+    : keyboardRange(all, KB_RANGE[state.hand]));
   renderStrip(state.model, jumpTo);
   handTexts();
+  renderRange();
   sheet.dirty = true;
   drawSheet();
   resetProgress();
+  if (note) setHint(note, '');
   refresh();
 }
+
+/** Tempoet som sist ble brukt for delen og utsnittet. Et nytt utsnitt starter i tempoet til hele delen. */
+const savedTempo = (): number => store.settings.tempo[partId()] || store.settings.tempo[state.sec.id] || state.sec.tempo;
 
 export function setSection(id: string): void {
   const { song, sec } = findSection(id);
@@ -80,9 +102,39 @@ export function setSection(id: string): void {
   els.btnDeleteSong.hidden = song.category !== 'mine';
   els.secCasio.textContent = song.casio ? `Casio CT-S400 – ${casioText(song.casio)}.${song.casio.tip ? ' ' + song.casio.tip : ''}` : '';
   store.settings.section = sec.id;
-  setTempo(store.settings.tempo[sec.id] || sec.tempo, true);
+  const r = store.settings.ranges[sec.id];
+  state.range = normalizeRange(sec, r ? { from: r[0], to: r[1] } : null);
+  if (r && !state.range) delete store.settings.ranges[sec.id]; // delen har færre takter enn da utsnittet ble valgt
+  setTempo(savedTempo(), true);
   save();
   load();
+}
+
+/** Øv på noen av taktene i delen, eller hele delen (`null`). */
+export function setRange(r: BarRange | null): void {
+  state.range = normalizeRange(state.sec, r);
+  if (state.range) store.settings.ranges[state.sec.id] = [state.range.from, state.range.to];
+  else delete store.settings.ranges[state.sec.id];
+  setTempo(savedTempo(), true);
+  save();
+  load();
+}
+
+/** Gjenta: delen eller utsnittet starter på nytt av seg selv når det er ferdig. */
+export function setLoop(on: boolean): void {
+  store.settings.loop = on;
+  els.optLoop.checked = on;
+  save();
+  // En runde som pågår, spilles ferdig. Står neste runde og venter, startes den ikke.
+  if (!on) cancelNextRound();
+  refresh();
+}
+
+/** Måltempoet for tempotrappen i denne delen. */
+export function setTarget(bpm: number): void {
+  store.settings.target[state.sec.id] = bpm;
+  save();
+  refresh();
 }
 
 export function setHand(hand: PracticeHand): void {

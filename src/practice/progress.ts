@@ -1,7 +1,10 @@
-import { run, state } from '../state';
+import { partId, run, state } from '../state';
 import { save, store } from '../storage';
 import { els } from '../ui/dom';
 import { clearMarks, refresh, setHint } from '../ui/view';
+import { TEMPO_MAX, TEMPO_MIN } from './ladder';
+
+export { TEMPO_MAX, TEMPO_MIN };
 
 export function resetProgress(): void {
   state.cur = 0; state.hits = 0; state.misses = 0; state.extra = 0;
@@ -18,14 +21,13 @@ export function resetProgress(): void {
   setHint('');
 }
 
-export const TEMPO_MIN = 50, TEMPO_MAX = 220;
-
+/** Setter tempoet. Det huskes per del, og for seg for hvert utsnitt av delen. */
 export function setTempo(v: number, quiet?: boolean): void {
   v = Math.max(TEMPO_MIN, Math.min(TEMPO_MAX, Math.round(v / 5) * 5));
   state.tempo = v;
   els.tempo.value = String(v);
   els.tempoOut.textContent = `${v} BPM`;
-  store.settings.tempo[state.sec.id] = v;
+  store.settings.tempo[partId()] = v;
   save();
   if (!quiet) refresh();
 }
