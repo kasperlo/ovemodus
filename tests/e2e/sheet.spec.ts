@@ -114,3 +114,22 @@ test('med redusert bevegelse rulles arket med en gang, uten animasjon', async ({
   expect(c.top).toBeGreaterThanOrEqual(0);
   expect(c.top).toBeLessThan(60);
 });
+
+test('to stemmer i én hånd: melodien over triolene i Måneskinn farges sammen med triolen, og sekstendelen kommer etter tredje triolnote', async ({ page }) => {
+  await page.evaluate(() => { const o = window.ovemodus; o.setSection('maane-1'); o.setRange(5, 5); });
+  const st = await page.evaluate(() => window.ovemodus.state);
+  expect(st.sheet.ok).toBe(true);
+  // Tolv triolnoter og sekstendelen. Den punkterte åttendedelen slås an sammen med triolnote 10.
+  expect(st.steps).toBe(13);
+  expect(st.notes.slice(9).map(n => n.m)).toEqual([56, 61, 64, 68]);
+  const melody = page.locator('#sheet .abcjs-note.abcjs-v1');
+  await expect(melody).toHaveCount(2);
+  await expect(page.locator('#sheet .abcjs-note.abcjs-v0')).toHaveCount(12);
+
+  await playTo(page, 9);
+  await expect(melody.nth(0)).toHaveClass(/n-done/);
+  await expect(melody.nth(1)).not.toHaveClass(/n-done/);
+  await playTo(page, 12);
+  await expect(melody.nth(1)).toHaveClass(/n-done/);
+  expect(await page.evaluate(() => window.ovemodus.state.finished)).toBe(true);
+});

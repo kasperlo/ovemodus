@@ -1,5 +1,5 @@
 import abcjs from 'abcjs';
-import type { Hand, Item, Model, Step, StepStatus } from '../music/song';
+import type { Hand, Model, Step, StepStatus } from '../music/song';
 import { timingClass } from '../practice/judge';
 import { abcNote, homeClef, staffClefs, toAbc, type Clef } from './abc';
 import { BASS_BOTTOM, TREBLE_BOTTOM, ghostMidi, ghostPitch, ledgerSteps, staffStep } from './staff';
@@ -19,9 +19,12 @@ interface NotePart {
   lyric: Box | null;
 }
 
-/** Ett steg i notearket: én note, eller én i hvert notesystem når man øver begge hender. */
+/**
+ * Ett steg i notearket: noten i hver stemme som slår an, per hånd. Det er én note, men to når begge stemmene i en
+ * hånd slår an samtidig, og én i hvert notesystem når man øver begge hender.
+ */
 interface SheetNote {
-  parts: Partial<Record<Hand, NotePart>>;
+  parts: Partial<Record<Hand, NotePart[]>>;
   /** Markøren dekker alle delene. */
   box: Box | null;
 }
@@ -103,7 +106,14 @@ function noteFrom(elemset: SVGElement[]): NotePart | null {
   return { g, box: union(parts.map(bbox)), head, lyric: lyricEl ? bbox(lyricEl) : null };
 }
 
-const partsOf = (n: SheetNote | undefined): NotePart[] => n ? Object.values(n.parts).filter((p): p is NotePart => !!p) : [];
+const partsOf = (n: SheetNote | undefined): NotePart[] => n ? Object.values(n.parts).flatMap(p => p ?? []) : [];
+
+/** Noten med tonenavnet under, der timingmerket skal stå. */
+const labelled = (list: NotePart[] | undefined): NotePart | undefined => list?.find(p => p.lyric) ?? list?.[0];
+
+/** Noten med det laveste notehodet. Spøkelsesnoten måles fra den, som fra laveste tone i en akkord. */
+const lowest = (list: NotePart[] | undefined): NotePart | undefined =>
+  list?.filter(p => p.head).sort((a, b) => (b.head!.y + b.head!.h) - (a.head!.y + a.head!.h))[0];
 
 /** Kobler hver bjelke til stegene den binder sammen, ut fra hvor notehalsene står. */
 function findBeams(svg: SVGSVGElement): Beam[] {
@@ -119,18 +129,34 @@ function findBeams(svg: SVGSVGElement): Beam[] {
   }).filter(beam => beam.steps.length > 0);
 }
 
-/** Noteelementene (uten pauser) i første stemme i et notesystem, i rekkefølge. */
-function voiceNotes(tunes: ReturnType<typeof abcjs.renderAbc>, staffIdx: number): VoiceElem[] {
+/** Noteelementene (uten pauser) i én stemme i et notesystem, i rekkefølge. */
+function voiceNotes(tunes: ReturnType<typeof abcjs.renderAbc>, staffIdx: number, voiceIdx: number): VoiceElem[] {
   const list: VoiceElem[] = [];
   (tunes[0]?.lines || []).forEach(line => {
-    const v = line.staff?.[staffIdx]?.voices?.[0] as VoiceElem[] | undefined;
+    const v = line.staff?.[staffIdx]?.voices?.[voiceIdx] as VoiceElem[] | undefined;
     if (v) v.forEach(el => { if (el.el_type === 'note' && !el.rest) list.push(el); });
   });
   return list;
 }
 
+/**
+ * Noteelementene i en hånds notesystem etter plassen i delen, én per stemme som slår an der: hovedstemmen er stemme 1
+ * og den ekstra stemmen (`Model.uppers`) stemme 2. `ok` er usann når antallet noter i en stemme ikke stemmer.
+ */
+function handNotes(tunes: ReturnType<typeof abcjs.renderAbc>, model: Model, h: Hand, staffIdx: number): { at: Map<number, VoiceElem[]>; ok: boolean } {
+  const at = new Map<number, VoiceElem[]>();
+  let ok = true;
+  [model.staffs[h], model.uppers[h]].forEach((bars, v) => {
+    if (!bars) return;
+    const els = voiceNotes(tunes, staffIdx, v);
+    const its = bars.flatMap(b => b.items).filter(it => it.type !== 'rest');
+    if (els.length !== its.length) ok = false;
+    its.forEach((it, i) => { if (els[i]) at.set(it.pos, [...(at.get(it.pos) ?? []), els[i]]); });
+  });
+  return { at, ok };
+}
+
 const elemsOf = (el: VoiceElem): SVGElement[] => (el.abselem?.elemset || []).filter((x): x is SVGElement => Boolean(x));
-const countSteps = (bars: { items: Item[] }[]): number => bars.reduce((n, b) => n + b.items.filter(it => it.type !== 'rest').length, 0);
 
 export const sheetPerLine = (container: HTMLElement): number => container.clientWidth >= 900 ? 4 : 2;
 
@@ -139,7 +165,7 @@ export function renderSheet(container: HTMLElement, model: Model, otherChecked: 
   sheet.notes = []; sheet.beams = []; sheet.map = new Map(); sheet.cursor = null; sheet.overlay = null; sheet.ok = false;
   if (container.hidden || !container.clientWidth) { sheet.dirty = true; return; }
   sheet.dirty = false;
-  sheet.clefs = { rh: staffClefs(model.staffs.rh, 'treble'), lh: staffClefs(model.staffs.lh, 'bass') };
+  sheet.clefs = { rh: staffClefs(model.staffs.rh, 'treble', model.uppers.rh), lh: staffClefs(model.staffs.lh, 'bass', model.uppers.lh) };
   sheet.barLen = model.barLen;
   container.innerHTML = '';
   // abcjs (responsive: 'resize') gir elementet den tegner i høyde med padding-bottom og overflow: hidden.
@@ -167,35 +193,25 @@ export function renderSheet(container: HTMLElement, model: Model, otherChecked: 
   const staffBox = staff ? bbox(staff) : null;
   if (staffBox) sheet.halfSpace = staffBox.h / 8;
 
-  if (both) {
-    // Høyre hånd er notesystem 1 og venstre system 2. Hvert steg peker på sin note i hvert system.
-    const lists = { rh: voiceNotes(tunes, 0), lh: voiceNotes(tunes, 1) };
-    sheet.ok = lists.rh.length === countSteps(model.staffs.rh) && lists.lh.length === countSteps(model.staffs.lh);
-    model.steps.forEach(st => {
-      const parts: SheetNote['parts'] = {};
-      (['rh', 'lh'] as const).forEach(h => {
-        const idx = st.parts?.[h]?.idx;
-        const el = idx == null ? undefined : lists[h][idx];
-        const n = el && noteFrom(elemsOf(el));
-        if (!n) return;
-        parts[h] = n;
-        sheet.map.set(el, st.si);
+  // Høyre hånd står alltid øverst i pianosystemet, så venstre hånd er system 2 når begge vises. Hvert steg peker på
+  // notene som slår an på samme plass, i hver stemme og hvert system.
+  const hands: Hand[] = both ? ['rh', 'lh'] : [model.hand === 'lh' ? 'lh' : 'rh'];
+  const notes = hands.map(h => ({ h, ...handNotes(tunes, model, h, h === 'lh' && showOther ? 1 : 0) }));
+  sheet.ok = notes.every(n => n.ok);
+  model.steps.forEach(st => {
+    const parts: SheetNote['parts'] = {};
+    notes.forEach(({ h, at }) => {
+      if (both && !st.parts?.[h]) return;
+      const list = (at.get(st.pos) ?? []).flatMap(el => {
+        const n = noteFrom(elemsOf(el));
+        if (n) sheet.map.set(el, st.si);
+        return n ? [n] : [];
       });
-      sheet.notes[st.si] = { parts, box: union(Object.values(parts).map(p => p!.box)) };
+      if (list.length) parts[h] = list;
+      else sheet.ok = false;
     });
-  } else {
-    // Høyre hånd står alltid øverst i pianosystemet, så venstre hånd er system 2 når begge vises
-    const hand: Hand = model.hand === 'lh' ? 'lh' : 'rh';
-    const list = voiceNotes(tunes, hand === 'lh' && showOther ? 1 : 0);
-    sheet.ok = list.length === model.steps.length;
-    list.forEach((el, i) => {
-      if (i >= model.steps.length) return;
-      const n = noteFrom(elemsOf(el));
-      if (!n) return;
-      sheet.map.set(el, i);
-      sheet.notes[i] = { parts: { [hand]: n }, box: n.box };
-    });
-  }
+    sheet.notes[st.si] = { parts, box: union(Object.values(parts).flatMap(l => l!.map(p => p.box))) };
+  });
   if (!sheet.ok) console.warn('Noteark: notene stemmer ikke med stegene', model.song.id, model.hand);
   sheet.beams = findBeams(svg);
   sheet.lineTop = [];
@@ -241,7 +257,7 @@ export function paintSheet(si: number, status: StepStatus | null, steps: Step[])
  */
 export function paintTiming(si: number, offsetS: number | null, hand?: Hand): void {
   const n = sheet.notes[si];
-  const p = hand ? n?.parts[hand] : partsOf(n)[0];
+  const p = labelled(hand ? n?.parts[hand] : partsOf(n));
   if (!p || !sheet.overlay) return;
   const key = hand ?? 'en';
   sheet.overlay.querySelector(`.abc-timing[data-si="${si}"][data-hand="${key}"]`)?.remove();
@@ -267,7 +283,7 @@ export function showGhost(step: Step, played: number, anyOctave: boolean, hand?:
   clearGhost();
   const n = sheet.notes[step.si];
   const h: Hand = hand ?? (n?.parts.lh && !n.parts.rh ? 'lh' : 'rh');
-  const p = n?.parts[h];
+  const p = lowest(n?.parts[h]);
   if (!p?.head || !sheet.overlay) return;
   const target = step.parts?.[h];
   const targetMidi = target ? target.midis[0] : step.type === 'chord' ? step.midis[0] : step.midi;

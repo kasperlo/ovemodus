@@ -1,6 +1,6 @@
 import abcjs from 'abcjs';
 import { describe, expect, it } from 'vitest';
-import { barLength, build, type BarEvent, type PracticeHand } from '../music/song';
+import { barLength, build, type BarEvent, type Hand, type PracticeHand } from '../music/song';
 import { isKnownKey, toAbc } from '../notation/abc';
 import { songs } from '.';
 import { CT_S400_TONES } from '../casio';
@@ -20,6 +20,14 @@ describe.each(songs.map(s => [s.id, s] as const))('%s', (_id, song) => {
   const len = barLength(song.meter);
   const used = new Set<string>(), usedLh = new Set<string>();
   song.sections.forEach(sec => sec.groups.forEach(g => g.bars.forEach(([rh, lh]) => { used.add(rh); if (lh) usedLh.add(lh); })));
+  /** Alle takter som brukes, stemme for stemme: hovedstemmen og den ekstra stemmen (`upper`) i hver hånd. */
+  const voices: { where: string; hand: Hand; events: BarEvent[] }[] = [
+    ...[...used].map(k => ({ where: `høyre ${k}`, hand: 'rh' as Hand, events: song.bars[k] ?? [] })),
+    ...[...usedLh].map(k => ({ where: `venstre ${k}`, hand: 'lh' as Hand, events: song.lh[k] ?? [] })),
+    ...[...used].flatMap(k => song.upper?.rh?.[k] ? [{ where: `høyre ${k} øverst`, hand: 'rh' as Hand, events: song.upper.rh[k] }] : []),
+    ...[...usedLh].flatMap(k => song.upper?.lh?.[k] ? [{ where: `venstre ${k} øverst`, hand: 'lh' as Hand, events: song.upper.lh[k] }] : [])
+  ];
+  const pitchesIn = (hand: Hand): number[] => voices.filter(v => v.hand === hand).flatMap(v => v.events.flatMap(pitches));
 
   it('standardtempo kan stilles inn med glidebryteren (50–220, steg på 5)', () => {
     song.sections.forEach(sec => { expect(sec.tempo % 5, sec.id).toBe(0); expect(sec.tempo).toBeGreaterThanOrEqual(50); expect(sec.tempo).toBeLessThanOrEqual(220); });
@@ -33,14 +41,9 @@ describe.each(songs.map(s => [s.id, s] as const))('%s', (_id, song) => {
 
   it('alle takter som brukes, finnes og fyller taktarten', () => {
     // Trioler gir tredjedeler, så summen sammenlignes med litt slingringsmonn
-    used.forEach(k => {
-      expect(song.bars[k], `høyre ${k}`).toBeDefined();
-      expect(song.bars[k].reduce((s, ev) => s + ev.d, 0), `høyre ${k}`).toBeCloseTo(len, 9);
-    });
-    usedLh.forEach(k => {
-      expect(song.lh[k], `venstre ${k}`).toBeDefined();
-      expect(song.lh[k].reduce((s, ev) => s + ev.d, 0), `venstre ${k}`).toBeCloseTo(len, 9);
-    });
+    used.forEach(k => expect(song.bars[k], `høyre ${k}`).toBeDefined());
+    usedLh.forEach(k => expect(song.lh[k], `venstre ${k}`).toBeDefined());
+    voices.forEach(v => expect(v.events.reduce((s, ev) => s + ev.d, 0), v.where).toBeCloseTo(len, 9));
   });
 
   it('trioler kommer i hele grupper på tre og starter på en hel åttendedel', () => {
@@ -58,12 +61,11 @@ describe.each(songs.map(s => [s.id, s] as const))('%s', (_id, song) => {
       const n = events.filter(ev => ev.triplet).length;
       expect(n % 3, where).toBe(0);
     };
-    used.forEach(k => check(song.bars[k], `høyre ${k}`));
-    usedLh.forEach(k => check(song.lh[k], `venstre ${k}`));
+    voices.forEach(v => check(v.events, v.where));
   });
 
   it('fingre er 1–5, én per tone, og følger tonehøyden', () => {
-    const check = (events: BarEvent[], hand: 'rh' | 'lh', key: string) => events.forEach(ev => {
+    const check = (events: BarEvent[], hand: Hand, key: string) => events.forEach(ev => {
       if (ev.type === 'rest') return;
       const f = fingers(ev), p = pitches(ev);
       expect(f.length, `${hand} ${key}`).toBe(p.length);
@@ -75,43 +77,77 @@ describe.each(songs.map(s => [s.id, s] as const))('%s', (_id, song) => {
         expect(hand === 'rh' ? f[i] > f[i - 1] : f[i] < f[i - 1], `${hand} ${key}: fingre ${ev.type === 'chord' ? ev.f : ''}`).toBe(true);
       }
     });
-    used.forEach(k => check(song.bars[k], 'rh', k));
-    usedLh.forEach(k => check(song.lh[k], 'lh', k));
+    voices.forEach(v => check(v.events, v.hand, v.where));
   });
 
   it.skipIf(HANDS_CROSS.has(song.id))('høyre hånd fra midtre C og opp, venstre under (MIDI skiller hendene der)', () => {
-    used.forEach(k => song.bars[k].flatMap(pitches).forEach(m => expect(m, `høyre ${k}`).toBeGreaterThanOrEqual(60)));
-    usedLh.forEach(k => song.lh[k].flatMap(pitches).forEach(m => expect(m, `venstre ${k}`).toBeLessThan(60)));
+    pitchesIn('rh').forEach(m => expect(m, 'høyre').toBeGreaterThanOrEqual(60));
+    pitchesIn('lh').forEach(m => expect(m, 'venstre').toBeLessThan(60));
   });
 
-  it('notearket får én note per steg i hver del og hånd (samme kobling som sheet.ok)', () => {
-    const notesIn = (abc: string, staff: number): number => {
+  it('notearket får én note per tone i hver stemme, del og hånd (samme kobling som sheet.ok)', () => {
+    const notesIn = (abc: string, staff: number, voice: number): number => {
       const tune = abcjs.parseOnly(abc)[0];
       expect(tune.warnings ?? [], abc.slice(0, 300)).toEqual([]);
-      return tune.lines.reduce((n, line) => n + (line.staff?.[staff]?.voices?.[0] ?? [])
+      return tune.lines.reduce((n, line) => n + (line.staff?.[staff]?.voices?.[voice] ?? [])
         .filter(el => el.el_type === 'note' && !(el as { rest?: unknown }).rest).length, 0);
     };
-    const count = (bars: { items: { type: string }[] }[]) => bars.reduce((n, b) => n + b.items.filter(it => it.type !== 'rest').length, 0);
+    const count = (bars: { items: { type: string }[] }[] | null) => (bars ?? []).reduce((n, b) => n + b.items.filter(it => it.type !== 'rest').length, 0);
+    const check = (abc: string, m: ReturnType<typeof build>, h: Hand, staff: number, where: string) => {
+      expect(notesIn(abc, staff, 0), where).toBe(count(m.staffs[h]));
+      expect(notesIn(abc, staff, 1), `${where}, stemme 2`).toBe(count(m.uppers[h]));
+    };
     song.sections.forEach(sec => {
       (['rh', 'lh', 'both'] as PracticeHand[]).forEach(hand => {
         const m = build(song, sec, hand);
         const where = `${sec.id} ${hand}`;
         if (hand === 'both') {
           const abc = toAbc(m, 4, true);
-          expect(notesIn(abc, 0), where).toBe(count(m.staffs.rh));
-          expect(notesIn(abc, 1), where).toBe(count(m.staffs.lh));
+          check(abc, m, 'rh', 0, where);
+          check(abc, m, 'lh', 1, where);
         } else {
-          expect(notesIn(toAbc(m, 4, false), 0), where).toBe(m.steps.length);
-          expect(notesIn(toAbc(m, 2, true), hand === 'lh' ? 1 : 0), `${where} + andre hånd`).toBe(m.steps.length);
+          if (!m.uppers[hand]) expect(count(m.staffs[hand]), where).toBe(m.steps.length);
+          check(toAbc(m, 4, false), m, hand, 0, where);
+          check(toAbc(m, 2, true), m, hand, hand === 'lh' ? 1 : 0, `${where} + andre hånd`);
         }
       });
     });
   });
 
+  it.skipIf(!song.upper)('ekstra stemme: til takter som finnes, ikke samme tone som hovedstemmen samtidig, og fingrene på plass', () => {
+    (['rh', 'lh'] as Hand[]).forEach(h => Object.keys(song.upper?.[h] ?? {}).forEach(k => {
+      expect((h === 'rh' ? song.bars : song.lh)[k], `${h} ${k}`).toBeDefined();
+    }));
+    const tones = (it: { type: string; midi?: number; midis?: number[]; f?: string }) =>
+      it.type === 'rest' ? [] : (it.type === 'chord' ? it.midis! : [it.midi!]).map((m, i) => ({ m, f: Number(it.f!.split(' ')[i]) }));
+    song.sections.forEach(sec => (['rh', 'lh'] as Hand[]).forEach(h => {
+      const m = build(song, sec, h);
+      const uppers = m.uppers[h];
+      if (!uppers) return;
+      m.staffs[h].forEach((bar, i) => bar.items.forEach(it => {
+        const where = `${sec.id} ${h} takt ${i + 1} plass ${it.pos - bar.start}`;
+        uppers[i].items.forEach(u => {
+          if (u.type === 'rest' || u.pos > it.pos || it.pos >= u.pos + u.d) return;
+          tones(u).forEach(o => tones(it).forEach(t => {
+            // Samme tone som slås an samtidig, står bare i hovedstemmen
+            if (u.pos === it.pos) expect(t.m, `${where}: samme tone i begge stemmene`).not.toBe(o.m);
+            // Under en tone den ekstra stemmen holder, brukes fingrene på den andre siden, eller samme finger på samme tangent
+            if (t.m === o.m) expect(t.f, `${where}: samme tangent`).toBe(o.f);
+            else if (t.m < o.m) expect(h === 'rh' ? t.f < o.f : t.f > o.f, `${where}: finger ${t.f} under ${o.f}`).toBe(true);
+          }));
+        });
+      }));
+      // Toner som slås an samtidig i begge stemmene: fingrene følger tonehøyden, som i en akkord
+      m.steps.forEach(s => {
+        const f = tones(s);
+        for (let j = 1; j < f.length; j++) expect(h === 'rh' ? f[j].f > f[j - 1].f : f[j].f < f[j - 1].f, `${sec.id} ${h} ${s.sci}: fingre ${s.f}`).toBe(true);
+      });
+    }));
+  });
+
   it('alle toner finnes på Casio CT-S400 (C2–C7, eller C1–C6 med oktav −1 i Casio-oppsettet)', () => {
     const shift = 12 * (song.casio?.octave ?? 0), lo = 36 + shift, hi = 96 + shift;
-    [...used].forEach(k => song.bars[k].flatMap(pitches).forEach(m => { expect(m, k).toBeGreaterThanOrEqual(lo); expect(m, k).toBeLessThanOrEqual(hi); }));
-    [...usedLh].forEach(k => song.lh[k].flatMap(pitches).forEach(m => { expect(m, k).toBeGreaterThanOrEqual(lo); expect(m, k).toBeLessThanOrEqual(hi); }));
+    voices.forEach(v => v.events.flatMap(pitches).forEach(m => { expect(m, v.where).toBeGreaterThanOrEqual(lo); expect(m, v.where).toBeLessThanOrEqual(hi); }));
   });
 
   it('Casio-forslaget bruker kjente lyder, og split passer med splittpunktet F♯3', () => {
@@ -123,8 +159,8 @@ describe.each(songs.map(s => [s.id, s] as const))('%s', (_id, song) => {
       expect(c.reg[1]).toBeGreaterThanOrEqual(1); expect(c.reg[1]).toBeLessThanOrEqual(4);
     }
     if (!c.lower) return;
-    usedLh.forEach(k => song.lh[k].flatMap(pitches).forEach(m => expect(m, `venstre ${k} under F♯3`).toBeLessThan(54)));
-    used.forEach(k => song.bars[k].flatMap(pitches).forEach(m => expect(m, `høyre ${k} fra F♯3`).toBeGreaterThanOrEqual(54)));
+    pitchesIn('lh').forEach(m => expect(m, 'venstre under F♯3').toBeLessThan(54));
+    pitchesIn('rh').forEach(m => expect(m, 'høyre fra F♯3').toBeGreaterThanOrEqual(54));
   });
 
   it('hver del har toner i begge hender', () => {

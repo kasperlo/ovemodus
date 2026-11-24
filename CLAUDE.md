@@ -7,12 +7,12 @@ Kaspers app for å øve på keyboard. Appen lytter via mikrofon eller MIDI, vise
 - Appen er Vite + TypeScript uten rammeverk (`index.html`, `src/`). abcjs 6.4.4 kommer fra npm.
 - `prototype/ovemodus.html` er den opprinnelige appen i én fil. Den er referansen for oppførselen og kan fortsatt testes (`npm run test:e2e:prototype`).
 - `tests/e2e/` har Playwright-tester som kjører mot `vite preview`. Åtte av dem bruker falsk mikrofon som spiller pianoopptak fra `tests/fixtures/`. Spec-ene for nye funksjoner (`ipad`, `sheet`, `micdiag`, `hands`) hoppes over mot prototypen.
-- `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon (også begge hender, der `twohands.wav.test.ts` kjører opptakene gjennom detektoren), `build`, `toAbc`, dømming, og `songs.test.ts` som validerer alle låtene (takter fyller taktarten, fingre 1–5 i riktig rekkefølge, høyre hånd fra midtre C og opp og venstre under, unntatt klaverstykker der hendene krysser (`HANDS_CROSS`), trioler i hele grupper, alt innenfor C2–C7 (C1–C6 når `casio.octave` er −1), Casio-oppsett, standardtempo i steg på 5, og at abcjs gir én note per steg i hver del og hånd).
+- `src/**/*.test.ts` har Vitest-tester for rene funksjoner: tonedeteksjon (også begge hender, der `twohands.wav.test.ts` kjører opptakene gjennom detektoren), `build`, `toAbc`, dømming, og `songs.test.ts` som validerer alle låtene (takter fyller taktarten, fingre 1–5 i riktig rekkefølge, høyre hånd fra midtre C og opp og venstre under, unntatt klaverstykker der hendene krysser (`HANDS_CROSS`), trioler i hele grupper, alt innenfor C2–C7 (C1–C6 når `casio.octave` er −1), Casio-oppsett, standardtempo i steg på 5, og at abcjs gir én note per tone i hver stemme, del og hånd. En ekstra stemme (`upper`) har ikke samme tone som hovedstemmen samtidig, og fingrene under en melodinote som holdes, er lavere enn melodiens).
 - `noter/` har LilyPond-kildene til notearket (PDF), lydfilene (MP3) og skriptet som lager dem.
 
 Appen er publisert på https://kasperlo.github.io/ovemodus/ fra `main` via GitHub Actions (`.github/workflows/deploy.yml`): typesjekk, Vitest og Playwright må være grønne før den publiseres. Pull requests testes, men publiseres ikke.
 
-Steg 1, 2 og 3 er gjort, og iPad-delen av steg 4. Venstre hånd kan øves alene (trinn 1). Import av egne noter (MusicXML) er laget. Begge hender samtidig virker med MIDI og skjermtastatur (trinn 2) og med mikrofon (trinn 3). Mikrofonen med begge hender er bare testet på kunstige opptak, ikke på iPad med ekte keyboard. Für Elise og seks andre klaverstykker ligger inne som hele stykker, med 32-deler, trioler og venstre hånd over midtre C. Man kan øve på noen takter om gangen, i løkke og med tempotrapp.
+Steg 1, 2 og 3 er gjort, og iPad-delen av steg 4. Venstre hånd kan øves alene (trinn 1). Import av egne noter (MusicXML) er laget. Begge hender samtidig virker med MIDI og skjermtastatur (trinn 2) og med mikrofon (trinn 3). Mikrofonen med begge hender er bare testet på kunstige opptak, ikke på iPad med ekte keyboard. Für Elise og seks andre klaverstykker ligger inne som hele stykker, med 32-deler, trioler og venstre hånd over midtre C. En hånd kan ha to stemmer, og melodien i Måneskinn står i egen stemme over triolene. Man kan øve på noen takter om gangen, i løkke og med tempotrapp.
 
 ## Kommandoer
 
@@ -62,8 +62,9 @@ Låtene er skrevet som takter i åttedeler (`s32=0.25, s16=0.5, s16d=0.75, e=1, 
 - `...T3(N('A3', s16, 1), N('C4', s16, 2), N('E4', s16, 3))`: triol med varighetene som i noten (også med pause, `T3(R(e), N(…), N(…))`). Plassene legges på et rutenett av 1/48 åttedel (`snap` i `place`), så hendene slår an sammen etter en triol.
 - En låt (`Song`) har `key` (ABC, f.eks. `Am`, `F`, `Cm`), `meter` (`{ beats, unit }`), `bars` (høyre hånd), `lh` (venstre hånd, hele takter med pauser) og `sections`. Hver del er grupper av takter (`[høyrehåndsnøkkel, venstrehåndsnøkkel]`) med en etikett. Del-id-ene er unike på tvers av låter, fordi testkroken og lagringen bruker dem. `firstBar` i en del er taktnummeret til første takt når delen begynner midt i et stykke (standard 1).
 - Låtene ligger i `src/songs/` og registreres i `src/songs/index.ts` med kategori (låt, stykke, egne, klassisk).
+- To stemmer i én hånd: `upper` i låten (`{ rh: { t4: [...] } }`, samme taktnøkler som `bars` og `lh`) er en ekstra stemme med halsene opp over hovedstemmen, som melodien over triolene i Måneskinn. `build` slår stemmene sammen etter plassen, så et steg er alt hånden slår an samtidig. Samme tone i begge stemmene teller én gang, og stegets varighet er den korteste tonen.
 
-`build(song, section, hand)` gir `{ bars, other, items, steps, acc, total, barLen }`. `steps` er alle toner og akkorder for hånden man øver på, i rekkefølge (uten pauser). `acc` er den andre hånden til avspilling. Både dømming, tastatur, bokstavbrikker og noteark bygger på `steps`, så de kan aldri komme i utakt. Taktarten styrer inntelling (minst fire slag), metronomslag (punktert fjerdedel i 6/8 og 3/8) og bjelker i notearket.
+`build(song, section, hand)` gir `{ bars, staffs, uppers, items, steps, acc, total, barLen }`. `steps` er alle toner og akkorder for hånden man øver på, i rekkefølge (uten pauser). `acc` er den andre hånden til avspilling. Både dømming, tastatur, bokstavbrikker og noteark bygger på `steps`, så de kan aldri komme i utakt. Taktarten styrer inntelling (minst fire slag), metronomslag (punktert fjerdedel i 6/8 og 3/8) og bjelker i notearket.
 
 ## Tonegjenkjenning (mikrofon) – beslutninger og feller
 
@@ -92,7 +93,9 @@ Dette er den delen som har tatt mest prøving. Ikke endre den uten å kjøre mik
 ## Noteark (abcjs) – feller
 
 - ABC lages av samme data (`toAbc(model, perLine, showLH)`), aldri skrevet for hånd.
-- Kobling note ↔ tone: noteelementene i `tune.lines[].staff[0].voices[0]` (uten pauser) i rekkefølge. Antallet sjekkes mot `steps` (`sheet.ok`).
+- Kobling note ↔ tone: noteelementene (uten pauser) i hver stemme i `tune.lines[].staff[n].voices[v]`, i rekkefølge, koblet til steget med samme plass i delen (`handNotes`). Hovedstemmen er `voices[0]`, den ekstra stemmen `voices[1]`. Antallet i hver stemme sjekkes (`sheet.ok`).
+- To stemmer i ett system: `%%score (RH RH2)` med `stem=down` og `stem=up`. Pausene i den ekstra stemmen er usynlige (`x`). Der begge stemmene slår an samtidig, står fingre og navn ved hovedstemmen (`sharedAt`), ellers står de oppå hverandre.
+- abcjs 6.4.4 lar en pause bruke opp en `*` (note uten navn) i `w:`, og da forskyves navnene. En pause rett foran en note uten navn får derfor sin egen `*`.
 - Markøren er et `<rect>` lagt først i SVG-en, plassert med `getBBox()` på `abselem.elemset`. `getBBox` virker ikke på skjulte elementer, så arket tegnes først når det er synlig, og tegnes på nytt etter at fontene har lastet.
 - abcjs (`responsive: 'resize'`) setter høyden på elementet den tegner i med `padding-bottom` og `overflow: hidden`, så det kan verken begrenses eller rulle. Arket tegnes derfor i `.sheet-music` inne i `#sheet`, og `#sheet` ruller (maks 318 px). `follow` i `sheet.ts` ruller linjen med markøren til toppen når markøren bytter linje (linjenummer fra klassen `abcjs-lN`, toppen fra `.abcjs-staff-wrapper`).
 - abcjs fanger klikk på hele SVG-en. I tester må man klikke på koordinatene til noten, ikke på elementet.

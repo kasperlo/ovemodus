@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { findSection } from '../songs';
 import { dovregubben } from '../songs/dovregubben';
-import { N, R, T3, barLength, beamGroup, build, clickLength, countInBars, e, q, s16, type PracticeHand, type Song } from './song';
+import { CH, N, R, T3, barLength, beamGroup, build, clickLength, countInBars, e, ed, h, mergeTones, q, s16, type PracticeHand, type Song } from './song';
 import { parsePitch, sciName } from './theory';
 
 const model = (id: string, hand: PracticeHand = 'rh') => { const { song, sec } = findSection(id); return build(song, sec, hand); };
@@ -66,8 +66,8 @@ describe('build', () => {
     // 26 toner i høyre hånd, og én kvint i venstre (siste slag i takt 4) der høyre hånd holder en lang tone
     expect(m.steps).toHaveLength(27);
     expect(m.steps[0]).toMatchObject({ pos: 0, midis: [45, 52, 69], name: 'A / A+E' });
-    expect(m.steps[0].parts?.rh).toMatchObject({ midis: [69], f: '1', idx: 0 });
-    expect(m.steps[0].parts?.lh).toMatchObject({ midis: [45, 52], f: '5 1', idx: 0 });
+    expect(m.steps[0].parts?.rh).toMatchObject({ midis: [69], f: '1' });
+    expect(m.steps[0].parts?.lh).toMatchObject({ midis: [45, 52], f: '5 1' });
     expect(m.steps[1].parts?.lh).toBeUndefined();
     const lhOnly = m.steps.filter(s => s.parts?.lh && !s.parts.rh);
     expect(lhOnly.map(s => s.pos)).toEqual([30]);
@@ -143,5 +143,60 @@ describe('forsiringer', () => {
     const m = build(song, song.sections[0], 'both');
     expect(m.steps[0].ornaments).toEqual({ grace: [65, 69] });
     expect(m.steps[1].ornaments).toEqual({ trill: 77 });
+  });
+});
+
+describe('to stemmer i én hånd', () => {
+  // Melodi over trioler, som i Måneskinn: punktert åttendedel og sekstendel mot trioler på samme slag
+  const song: Song = {
+    id: 'v', title: 'V', by: '', category: 'mine', key: 'C', meter: { beats: 2, unit: 4 },
+    bars: { a: [...T3(N('G3', e, 1), N('C4', e, 2), N('E4', e, 3)), ...T3(N('G3', e, 1), N('C4', e, 2), N('E4', e, 3))] },
+    lh: { a: [N('C3', h, 5)] },
+    upper: { rh: { a: [R(q), N('G4', ed, 5), N('G4', s16, 5)] } },
+    sections: [{ id: 'v1', title: 'V', tempo: 60, groups: [{ label: 'V', bars: [['a', 'a']] }] }]
+  };
+
+  it('stemmene slås sammen etter plassen: felles anslag blir én akkord, sekstendelen kommer etter tredje triolnote', () => {
+    const m = build(song, song.sections[0], 'rh');
+    expect(m.steps.map(s => s.pos * 6)).toEqual([0, 4, 8, 12, 16, 20, 21]);
+    expect(m.steps[3]).toMatchObject({ type: 'chord', midis: [55, 67], f: '1 5', name: 'G+G' });
+    expect(m.steps[5]).toMatchObject({ type: 'note', midi: 64, f: '3' });
+    expect(m.steps[6]).toMatchObject({ type: 'note', midi: 67, f: '5', d: s16 });
+    expect(m.steps.map(s => s.si)).toEqual([0, 1, 2, 3, 4, 5, 6]);
+    expect(m.bars[0].items).toEqual(m.items);
+  });
+
+  it('varigheten til et steg er den korteste tonen i steget, som når stemmene er skrevet som akkord', () => {
+    const m = build(song, song.sections[0], 'rh');
+    expect(m.steps[3].d * 3).toBeCloseTo(2, 9);
+    expect(m.steps[5].d * 3).toBeCloseTo(2, 9);
+  });
+
+  it('notearket får hver stemme for seg, og bare hånden med to stemmer har den ekstra', () => {
+    const m = build(song, song.sections[0], 'rh');
+    expect(m.staffs.rh[0].items.filter(it => it.type !== 'rest')).toHaveLength(6);
+    expect(m.uppers.rh?.[0].items.map(it => it.type)).toEqual(['rest', 'note', 'note']);
+    expect(m.uppers.lh).toBeNull();
+  });
+
+  it('venstre hånd: begge stemmene i høyre hånd blir akkompagnement med sin egen varighet', () => {
+    const m = build(song, song.sections[0], 'lh');
+    expect(m.steps).toHaveLength(1);
+    expect(m.acc).toHaveLength(8);
+    expect(m.acc).toContainEqual({ pos: 2, d: ed, midis: [67] });
+  });
+
+  it('begge hender: hver hånd sin del, med stemmene i høyre hånd slått sammen', () => {
+    const m = build(song, song.sections[0], 'both');
+    expect(m.steps).toHaveLength(7);
+    expect(m.steps[0].parts?.lh).toMatchObject({ midis: [48] });
+    expect(m.steps[3].parts?.rh).toMatchObject({ midis: [55, 67], f: '1 5' });
+    expect(m.steps[6]).toMatchObject({ pos: 3.5, midis: [67] });
+  });
+
+  it('samme tone i begge stemmene teller én gang, og akkorder får tonene nedenfra', () => {
+    const g = N('G3', e, 1);
+    expect(mergeTones([g, N('G3', q, 1)])).toBe(g);
+    expect(mergeTones([CH(['C4', 'E4'], e, '1 3', 'C+E'), N('A3', q, 1)])).toMatchObject({ midis: [57, 60, 64], names: ['A', 'C', 'E'], f: '1 1 3', name: 'A+C+E' });
   });
 });

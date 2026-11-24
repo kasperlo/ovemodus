@@ -281,8 +281,8 @@
 - **Metode:** som for de andre stykkene. Parseren måtte i tillegg forstå variabler, `\tag`, transponering, `\afterGrace`, pauser plassert på en tonehøyde (`d\rest`) og bundne akkorder. Begge filer stemmer med MIDI-filene (bortsett fra forslagsnoter).
 - **Sonata facile:** «Hele satsen» er uten repetisjonene (73 takter), fordi med dem blir det 146 takter med sekstendeler. Trillene (takt 4, 15, 17, 25, 59, 61 og 70) er hovedtonen, og forslagsnotene er sløyfet. Venstre hånds Alberti-bass har fast fingersetting 5-1-3-1 (5-1-2-1 når midttonen ligger en kvart eller mer over bassen), og skalaene i venstre hånd i takt 50–53 vanlig skalafingersetting.
 - **Måneskinnssonaten:**
-  - Melodien og triolene i høyre hånd er to stemmer i originalen. Her er de én stemme: der de slår an samtidig, blir de en akkord.
-  - Melodiens sekstendel etter en punktert åttendedel (takt 5–6, 10–11, 23–24, 42–43 og 46–47) spilles med tredje triolnote, ikke litt etter. Appen kan ikke vise begge rytmene i samme stemme, og dette er en vanlig måte å øve dem sammen på.
+  - Melodien og triolene i høyre hånd er to stemmer i originalen. Her er de én stemme: der de slår an samtidig, blir de en akkord. Endret 2026-11-24: melodien er en egen stemme (se under).
+  - Melodiens sekstendel etter en punktert åttendedel (takt 5–6, 10–11, 23–24, 42–43 og 46–47) spilles med tredje triolnote, ikke litt etter. Appen kan ikke vise begge rytmene i samme stemme, og dette er en vanlig måte å øve dem sammen på. Rettet 2026-11-24.
   - Triolnotene som står i bassystemet i originalen (stemmeskifte), spilles av høyre hånd og står i høyre hånds system.
   - Bassoktavene går ned til F1. De står som i originalen (se «Konsertversjoner»: oktav −1 på keyboardet).
   - F𝄪 (takt 27 og 34) er skrevet som G, fordi appen ikke har dobbelte fortegn.
@@ -320,7 +320,7 @@
   - Gjentatte akkordnavn står bare én gang i takten når akkordene er kortere enn en fjerdedel (Alberti- og akkordtakter i Mozart), ellers fløt de sammen.
 - **Ikke rettet, krever Kaspers valg:**
   - Kanon: en konsertversjon for klaver finnes ikke (originalen er for tre fioliner og bass). Alternativet er et fullt arrangement av alle variasjonene, eller å bytte ut stykket.
-  - Måneskinn: melodiens sekstendel etter tredje triolnote krever to stemmer i høyre hånd, som appen ikke har.
+  - Måneskinn: melodiens sekstendel etter tredje triolnote krever to stemmer i høyre hånd, som appen ikke har. Løst 2026-11-24.
   - En akkord godtas når én av tonene spilles. Det gjelder hele appen og hører til økten for øving og dømming.
 - **Kaspers svar** (via økten for løkke og tempotrapp): original bass med oktav −1 for Måneskinn og Chopin, et lengre Kanon-arrangement, og at MIDI skal kreve alle tonene i en akkord (det lager den andre økten).
   - Oktav −1: `casio.octave: -1`. Keyboardet spiller og sender da tonene en oktav lavere, så tangentene C2–C7 dekker C1–C6. Stykkene har bassen som i originalen (F1–A3 i Måneskinn, E1 i Chopin). Valideringen godtar C1–C6 for slike stykker. Teksten i Casio-oppsettet sier fra («oktav −1»).
@@ -354,3 +354,17 @@
   - Delene følger variasjonene: takt 1–10, 11–18, 19–26, 27–34, 35–42, 43–50 og 51–57. Del-id-ene `kanon-1` og `kanon-2` er brukt om igjen, så rekorder fra det korte arrangementet gjelder nå andre takter.
   - Fingersettingen er et eget forslag fra samme skript som de andre stykkene, ikke gjennomgått takt for takt.
 - **Oppfølging:** prøv fingersettingen i 32-delene (takt 19–22 og 35–38) og oktavsprangene (takt 27–30) på keyboardet.
+
+## 2026-11-24 – To stemmer i én hånd: melodien i Måneskinn
+
+- **Kontekst:** i Måneskinn spiller høyre hånd trioler og melodi samtidig. Melodiens sekstendel etter punktert åttendedel kommer etter tredje triolnote (på 3/4 av slaget). Med én stemme per hånd lå den på tredje triolnote (se 2026-11-23).
+- **Datamodell:** `Song.upper` er en ekstra stemme per hånd med samme taktnøkler som `bars` og `lh`. `build` plasserer den med `place` og slår stemmene sammen etter plassen (rutenett 1/48 åttedel), så stegene er alt som slås an samtidig. Samme tone i begge stemmene samtidig teller én gang. `Model.uppers` gir den ekstra stemmen til notearket.
+- **Varighet på et steg:** den korteste tonen i steget, som når stemmene var skrevet som akkord. Da er tidsvinduet i «Spill i takt» og lengden i avspillingen de samme som før for alle steg som fantes. Sekstendelen er nytt steg med egen varighet. Reglene for dømming er ikke endret.
+- **Avspilling:** «Hør hvordan det går» spiller stegene som før, så melodien klinger like kort som triolen den slås an med. Den andre hånden spilles med hver stemmes egne varigheter.
+- **Notearket:** begge stemmene står i samme system (`%%score (RH RH2)`), hovedstemmen med halsene ned og melodien med halsene opp. Pausene i melodien vises ikke (`x`). Kobling note ↔ steg går etter plassen i delen, med en note per stemme som slår an (`handNotes` i `sheet.ts`). Der begge stemmene slår an samtidig, står fingrene og navnet for begge ved hovedstemmen, som for en akkord (`G♯+G♯`), ellers ville de stått oppå hverandre. En gjentatt tone i melodien med samme finger (sekstendelen etter den punkterte åttendedelen) står uten navn og finger, som gjentatte akkorder. Med navn fløt den sammen med navnet under tredje triolnote.
+- **Feil funnet i abcjs 6.4.4:** en `*` i `w:`-linjen (note uten navn) blir brukt opp av en pause som står foran noten, og da havner navnene etter under feil note. En pause rett foran en note uten navn får nå sin egen `*`. Det rettet også eksisterende feil: i «Tiden er ute» (Buzzer og Alarm) og venstre hånd i Für Elise (delen Arpeggio) stod akkordnavn under feil akkord.
+- **Måneskinn:** melodien er hentet fra Mutopia-filen (`topmain`) med et skript og satt inn som `upper.rh` i takt 5–27 og 42–60. Triolene er de samme som før, uten melodien. Rytmen og varighetene til alle 97 melodinotene stemmer med MIDI-filen fra Mutopia. Stegene er de samme som før, bortsett fra de ti sekstendelene (takt 5–6, 10–11, 23–24, 42–43 og 46–47), som nå er egne steg etter tredje triolnote.
+- **Ikke i egen stemme:** der melodien er samme tone som triolen samtidig (takt 15 og 23 på første slag, takt 28–31, 37–40, 63 og 65), står den bare i triolene, som før. Melodien holder tonen lenger enn triolen, men det er samme tangent.
+- **Fingersetting:** med melodien holdt spilte 23 triolgrupper med samme finger som melodien (oftest 5 under melodiens 5). De har fått 1-2-4, eller 1-2-3 når avstanden opp til øverste triolnote er under en liten ters eller melodien tas med 4. Valideringen i `songs.test.ts` sjekker at fingrene under en holdt melodinote er lavere enn melodiens.
+- **Oppfølging:** venstre hånd i takt 60–67 har også to stemmer i originalen (G♯ over en holdt C♯). Den står fortsatt som akkord med punktert halvnote, og kan legges i `upper.lh` på samme måte. Demoen kunne spille melodien med full lengde.
+

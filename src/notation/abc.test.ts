@@ -1,5 +1,6 @@
+import abcjs from 'abcjs';
 import { describe, expect, it } from 'vitest';
-import { build, type PracticeHand } from '../music/song';
+import { N, R, T3, build, e, ed, h, q, s16, type PracticeHand, type Song } from '../music/song';
 import { findSection } from '../songs';
 import { abcDur, abcNote, keyAccidentals, lineRanges, staffClefs, toAbc, trillUpper } from './abc';
 
@@ -196,5 +197,61 @@ describe('toAbc', () => {
     const m = model('elise-32');
     expect(lineRanges(m, 2).slice(0, 3)).toEqual([[0, 1], [1, 2], [2, 3]]);
     expect(lineRanges(m, 4)[0]).toEqual([0, 3]);
+  });
+});
+
+describe('to stemmer i én hånd', () => {
+  // Melodi over trioler, som i Måneskinn: punktert åttendedel og sekstendel mot triolene på andre slag
+  const songWith = (sixteenth: string): Song => ({
+    id: 'v', title: 'V', by: '', category: 'mine', key: 'C', meter: { beats: 2, unit: 4 },
+    bars: { a: [...T3(N('G3', e, 1), N('C4', e, 2), N('E4', e, 3)), ...T3(N('G3', e, 1), N('C4', e, 2), N('E4', e, 3))] },
+    lh: { a: [N('C3', h, 5)] },
+    upper: { rh: { a: [R(q), N('G4', ed, 5), N(sixteenth, s16, 5)] } },
+    sections: [{ id: 'v1', title: 'V', tempo: 60, groups: [{ label: 'V', bars: [['a', 'a']] }] }]
+  });
+  const abcOf = (hand: PracticeHand, other = false, sixteenth = 'A4') => {
+    const song = songWith(sixteenth);
+    return toAbc(build(song, song.sections[0], hand), 4, other);
+  };
+
+  it('den ekstra stemmen står i samme system med halsene opp, uten synlige pauser', () => {
+    const abc = abcOf('rh').split('\n');
+    expect(abc.slice(5, 8)).toEqual(['%%score (RH RH2)', 'V:RH clef=treble stem=down', 'V:RH2 clef=treble stem=up']);
+    expect(abc[8]).toBe('[V:RH] (3"^V"!1!G,!2!C!3!E (3!1!!5!G,!2!C!3!E |]');
+    expect(abc[10]).toBe('[V:RH2] x2 G3/2!5!A/ |]');
+  });
+
+  it('fingre og navn ved felles anslag står ved hovedstemmen, og den ekstra stemmen har navn der den slår an alene', () => {
+    const abc = abcOf('rh').split('\n');
+    expect(abc[9]).toBe('w: G C E G+G C E');
+    expect(abc[11]).toBe('w: * * A');
+  });
+
+  it('en gjentatt tone i den ekstra stemmen står uten navn og finger, som gjentatte akkorder', () => {
+    const abc = abcOf('rh', false, 'G4').split('\n');
+    expect(abc[10]).toBe('[V:RH2] x2 G3/2G/ |]');
+    expect(abc).toHaveLength(11);
+  });
+
+  it('abcjs setter navnet under riktig note, også når en pause står foran en note uten navn', () => {
+    const notes = (abc: string, staff: number, voice: number) => abcjs.parseOnly(abc)[0].lines
+      .flatMap(l => (l.staff?.[staff]?.voices?.[voice] ?? []) as { el_type: string; rest?: unknown; lyric?: { syllable: string }[] }[])
+      .filter(el => el.el_type === 'note' && !el.rest).map(el => (el.lyric ?? []).map(l => l.syllable).join(''));
+    expect(notes(abcOf('rh'), 0, 1)).toEqual(['', 'A']);
+    // «Tiden er ute»: akkord, pause, samme akkord uten navn, pause, akkord
+    expect(notes(toAbc(model('tidute'), 4, false), 0, 0)).toEqual(['B+F', '', 'B+F']);
+  });
+
+  it('begge hender: høyre hånds to stemmer i øverste system, venstre hånd under', () => {
+    const abc = abcOf('both').split('\n');
+    expect(abc.slice(5, 9)).toEqual(['%%score {(RH RH2) LH}', 'V:RH clef=treble stem=down', 'V:RH2 clef=treble stem=up', 'V:LH clef=bass']);
+    expect(abc.filter(l => l.startsWith('[V:'))).toHaveLength(3);
+  });
+
+  it('venstre hånd med høyre hånd vist: begge stemmene i høyre hånd, uten fingre og navn', () => {
+    const abc = abcOf('lh', true).split('\n');
+    expect(abc).toContain('[V:RH] (3G,CE (3G,CE |]');
+    expect(abc).toContain('[V:RH2] x2 G3/2A/ |]');
+    expect(abc.filter(l => l.startsWith('w: '))).toEqual(['w: C']);
   });
 });
