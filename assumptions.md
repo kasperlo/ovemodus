@@ -325,7 +325,7 @@
 - **Kaspers svar** (via økten for løkke og tempotrapp): original bass med oktav −1 for Måneskinn og Chopin, et lengre Kanon-arrangement, og at MIDI skal kreve alle tonene i en akkord (det lager den andre økten).
   - Oktav −1: `casio.octave: -1`. Keyboardet spiller og sender da tonene en oktav lavere, så tangentene C2–C7 dekker C1–C6. Stykkene har bassen som i originalen (F1–A3 i Måneskinn, E1 i Chopin). Valideringen godtar C1–C6 for slike stykker. Teksten i Casio-oppsettet sier fra («oktav −1»).
   - Måneskinn går opp til D♯6 én gang (takt 35). Den tonen er spilt en oktav lavere, fordi C6 er øverste tangent med oktav −1.
-  - Lengre Kanon: de senere variasjonene finnes fritt bare i Seiffert-utgaven (Organum, Kistner & Siegel; Seiffert døde 1948) på IMSLP, og IMSLP krever at man godtar vilkårene før nedlasting. Venter på Kaspers valg: laste ned selv, godta vilkårene, eller egne variasjoner over grunnbassen.
+  - Lengre Kanon: de senere variasjonene finnes fritt bare i Seiffert-utgaven (Organum, Kistner & Siegel; Seiffert døde 1948) på IMSLP, og IMSLP krever at man godtar vilkårene før nedlasting. Venter på Kaspers valg: laste ned selv, godta vilkårene, eller egne variasjoner over grunnbassen. Løst 2026-11-24: Kasper valgte å godta vilkårene, se under.
 
 
 ## 2026-11-23 – Hele akkorden med MIDI
@@ -340,3 +340,17 @@
 - **Ikke med skjermtastaturet:** der trykker man én tangent om gangen, så det blir tungvint. Én tone er nok, som før.
 - **iPad:** ingen nettleser på iPad har Web MIDI (alle bruker WebKit). Apper som legger Web MIDI inn i en nettleser, for eksempel «Web MIDI Browser», kan virke, men er ikke testet. Ellers må appen pakkes som en egen iPad-app.
 
+## 2026-11-24 – Kanon: hele kanonen etter Seiffert-utgaven
+
+- **Kontekst:** Kasper ville ha et lengre Kanon-arrangement med flere variasjoner, og svarte «Godta IMSLP» på hvilken kilde det skulle bygge på.
+- **Kilde:** Seiffert-utgaven (Organum, Reihe III Nr. 24, Kistner & Siegel, Leipzig 1929; Max Seiffert døde 1948, Public Domain). Stemmene for fiolin I–III og violoncello fra IMSLP (#83324, #919846, #919847 og #919848, skannet 2010). Vilkårene på IMSLP er godtatt i nettleseren i appen etter Kaspers ja.
+- **Hvordan:** fiolin I er transkribert takt for takt fra skannet. Notehodene er funnet med bildeanalyse, og rytme, fortegn og triller er lest i bildene. Kanonen gir en kontroll, fordi fiolin II og III spiller det samme to og fire takter senere. Tonehøydene stemmer med notehodene som ble funnet i fiolin II (548 av 576 toner) og fiolin III (496 av 560). Resten er toner analysen ikke fant der, og ingen av dem motsier transkripsjonen. C uten kryss i takt 44, 46 og 49 er sjekket mot fiolin III.
+- **Beslutninger:**
+  - Høyre hånd spiller fiolin I, som har alle variasjonene etter tur. Venstre hånd spiller bassen fra violoncellostemmen (D3 A2 H2 F♯2, G2 D2 G2 A2). Fiolin II og III er utelatt, fordi de gjentar fiolin I.
+  - Sluttakkorden i takt 57 har tonene fra alle tre fiolinene (A4, D5 og F♯5) i høyre hånd og D3 i venstre, som en fjerdedel med pauser etter, som i noten.
+  - Bindinger: A4 bundet fra takt 47 blir en pause i takt 48. F♯4 i takt 48 (åttedel bundet til punktert åttedel, 2,5 åttedeler) blir en fjerdedel og en sekstendelspause, fordi notearket ikke kan skrive 2,5 åttedeler.
+  - Trillene i takt 10 og 40 er med. Dynamikk, buer og strøk er ikke med.
+  - Tempo 55: Seiffert skriver Sostenuto, ♩ = 56. «Poco meno» i takt 39 er ikke med.
+  - Delene følger variasjonene: takt 1–10, 11–18, 19–26, 27–34, 35–42, 43–50 og 51–57. Del-id-ene `kanon-1` og `kanon-2` er brukt om igjen, så rekorder fra det korte arrangementet gjelder nå andre takter.
+  - Fingersettingen er et eget forslag fra samme skript som de andre stykkene, ikke gjennomgått takt for takt.
+- **Oppfølging:** prøv fingersettingen i 32-delene (takt 19–22 og 35–38) og oktavsprangene (takt 27–30) på keyboardet.
